@@ -7,13 +7,13 @@
 ## Как установить
 
 1) Откройте проект Unity с версией 6.0 или выше
-2) В самом верху нажмите вкладку Window
-3) Выберите Package Management -> Package Manager
-4) Нажмите на плюсик слева сверху
-5) Выберите Install package from git URL...
-6) Вставьте следующий текст и нажмите клавишу Enter или кнопку Install
+2) Нажмите на значок коробочки слева сверху (если не нашли, то в самом верху нажмите вкладку Window и выберите Package Management -> Package Manager)
+3) Скопируйте следующий текст:
 
    `https://github.com/Zlat-Algo/Runity.git`
 
-8) Нажмите кнопку Download
-9) Нажмите кнопку Install
+4) Нажмите на плюсик слева сверху
+5) Выберите Install package from git URL...
+6) Вставьте скопированный текст и нажмите клавишу Enter или кнопку Install
+7) Нажмите кнопку Download
+8) Нажмите кнопку Install
