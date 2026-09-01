@@ -24,6 +24,7 @@ public class Камера : RunityComponent
     }
 }
 
+#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(Камера))]
 public class КамераEditor : RunityEditor<Камера>
@@ -40,3 +41,4 @@ public class КамераEditor : RunityEditor<Камера>
             (title, value) => EditorGUILayout.Toggle(title, value));
     }
 }
+#endif

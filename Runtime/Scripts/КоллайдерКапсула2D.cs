@@ -27,6 +27,7 @@ public class КоллайдерКапсула2D : Коллайдер2D
     }*/
 }
 
+#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(КоллайдерКапсула2D))]
 public class КоллайдерКапсула2DEditor : RunityEditor<КоллайдерКапсула2D>
@@ -45,3 +46,4 @@ public class КоллайдерКапсула2DEditor : RunityEditor<Колла�
     }
 
 }
+#endif

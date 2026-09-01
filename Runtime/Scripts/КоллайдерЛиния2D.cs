@@ -27,6 +27,7 @@ public class КоллайдерЛиния2D : Коллайдер2D
     }*/
 }
 
+#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(КоллайдерЛиния2D))]
 public class КоллайдерЛиния2DEditor : RunityEditor<КоллайдерЛиния2D>
@@ -45,3 +46,4 @@ public class КоллайдерЛиния2DEditor : RunityEditor<Коллайд�
     }
 
 }
+#endif
