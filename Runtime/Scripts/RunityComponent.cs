@@ -4,6 +4,7 @@ using System.Reflection;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class RunityComponent : MonoBehaviourPlus
 {
@@ -13,6 +14,11 @@ public class RunityComponent : MonoBehaviourPlus
 #if UNITY_EDITOR
 public abstract class RunityEditor<T> : Editor where T : RunityComponent
 {
+    protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
+    {
+        return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
+    }
+
     protected void Текст(string message)
     {
         EditorGUILayout.HelpBox(message, MessageType.None);

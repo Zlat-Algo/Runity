@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviourPlus
 {
-    public float speed;
-    public GameObject bulletPrefab;
+    public float скорость;
+    public GameObject префабПули;
 
     void Start()
     {
@@ -14,25 +14,25 @@ public class Player : MonoBehaviourPlus
 
     void OnMove(InputValue value)
     {
-        физическоеТело2D.движение = value.GetVector2() * speed;
+        физическоеТело2D.движение = value.ИзвлечьV2() * скорость;
     }
 
     void OnShoot()
     {
-        GameObject bullet = Заспавнить(bulletPrefab).УстановитьПоворот2D(45);
-        bullet.GetComponent<Rigidbody2D>().linearVelocity = mouseWorldDirection;
-        bullet.transform.localScale *= 0.5f;
+        GameObject новаяПуля = Заспавнить(префабПули).УстановитьПоворот2D(45);
+        новаяПуля.НайтиКомпонент<ФизическоеТело2D>().движение = Направление2D(1, 0);
+        новаяПуля.transform.localScale *= 0.5f;
     }
 
     void OnShootHold()
     {
-        отрисовщикСпрайта.УстановитьЦвет(Color.wheat);
+        отрисовщикСпрайта.УстановитьЦвет(Цвета.пшеничный);
     }
 
     void OnMegaShoot()
     {
-        Заспавнить(bulletPrefab, transform.position, mouseWorldPosition, true).НайтиКомпонент<ФизическоеТело2D>().движение = mouseWorldDirection;
-        НайтиКомпонент<SpriteRenderer>().color = Color.white;
+        Заспавнить(префабПули, transform.position, mouseWorldPosition, да).НайтиКомпонент<ФизическоеТело2D>().движение = Направление2D(1, 0);
+        НайтиКомпонент<Спрайтер>().цвет = Цвета.белый;
     }
 
     void Update()

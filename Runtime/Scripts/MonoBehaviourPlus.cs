@@ -7,9 +7,12 @@ using Object = UnityEngine.Object;
 
 public class MonoBehaviourPlus : MonoBehaviour
 {
-    public GameObject объект => gameObject;
-    public string имя => name;
-    public Transform трансформация => transform;
+    protected bool да => true;
+    protected bool нет => false;
+
+    //public GameObject объект => gameObject;
+    //public string имя => name;
+    //public Transform трансформация => transform;
 
 
     Rigidbody _rigidbody = null;
@@ -360,7 +363,7 @@ public static class ExtentionsPlus
         public static bool GetBool(this InputValue inputValue) => inputValue.Get<bool>();
         public static int GetInt(this InputValue inputValue) => inputValue.Get<int>();
         public static float GetFloat(this InputValue inputValue) => (float)inputValue.Get<double>();
-        public static Vector2 GetVector2(this InputValue inputValue) => inputValue.Get<Vector2>();
+        public static Vector2 ИзвлечьV2(this InputValue inputValue) => inputValue.Get<Vector2>();
         public static Vector3 GetVector3(this InputValue inputValue) => inputValue.Get<Vector3>();
     #endregion
 

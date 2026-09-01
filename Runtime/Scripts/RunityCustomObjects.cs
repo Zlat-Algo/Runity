@@ -51,5 +51,13 @@ public class RunityCustomObjects
 
         newObj.AddComponent<Спавнер>();
     }
+
+    [MenuItem("GameObject/Runity/Управление", false, 0)]
+    private static void Управление(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Управление");
+
+        newObj.AddComponent<Управление>();
+    }
 }
 #endif

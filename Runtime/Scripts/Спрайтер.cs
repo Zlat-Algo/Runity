@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public enum РежимСпрайтера { Обычный, Плитка, Рамка}
 
@@ -122,7 +123,7 @@ public class СпрайтEditor : RunityEditor<Спрайтер>
 
         Пробел();
 
-        Кнопка("Заполнить спрайт", () => { component.спрайт = Resources.Load<Sprite>("БелыйКвадрат"); });
+        Кнопка("Заполнить спрайт", () => { component.спрайт = НайтиАссет<Sprite>("1c08e50202374ce42bca6cb30aa4bbbf"); });
     }
 }
 #endif
