@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "displayName": "Runity",
   "description": "Русскоязычное высокоуровневое расширение для Unity! Создано для того, чтобы снизить порог входа для начинающих разработчиков.",
-  "unity": "6.0"
+  "unity": "6.0",
+  "dependencies": {
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.textmeshpro": "3.0.6"
+  }
 }
