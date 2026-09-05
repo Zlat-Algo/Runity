@@ -86,7 +86,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
     protected void НачатьГоризонтальнуюГруппу() => EditorGUILayout.BeginHorizontal();
     protected void ЗакончитьГоризонтальнуюГруппу() => EditorGUILayout.EndHorizontal();
 
-    protected T component => (T)target;
+    protected T компонент => (T)target;
 
     protected T[] components
     {
@@ -106,7 +106,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
         if (targets.Length < 2)
             return false;
 
-        TValue первое = getter(component);
+        TValue первое = getter(компонент);
 
         foreach (T объект in components)
         {
@@ -158,7 +158,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TValue value = drawer(
             new GUIContent(title),
-            Get(component)
+            Get(компонент)
         );
 
         if (EditorGUI.EndChangeCheck())
@@ -201,7 +201,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        Диапазон value = Get(component);
+        Диапазон value = Get(компонент);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
@@ -280,7 +280,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        Диапазон value = Get(component);
+        Диапазон value = Get(компонент);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
@@ -355,7 +355,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        bool2 value = Get(component);
+        bool2 value = Get(компонент);
         /*GUILayout.Label(title);
         GUILayout.Label("X", GUILayout.Width(25));
         value.x = EditorGUILayout.Toggle(value.x, GUILayout.Width(25));
@@ -411,7 +411,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TValue value = drawer(
             new GUIContent(title),
-            Get(component)
+            Get(компонент)
         );
 
         if (EditorGUI.EndChangeCheck())
@@ -437,7 +437,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TEnum value = (TEnum)EditorGUILayout.EnumPopup(
             label: title,
-            getter(component)
+            getter(компонент)
         );
 
         if (EditorGUI.EndChangeCheck())
