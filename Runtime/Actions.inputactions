@@ -77,6 +77,24 @@
                     "processors": "",
                     "interactions": "Press(behavior=2)",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Использовать",
+                    "type": "Button",
+                    "id": "6a056e19-84ee-4f6d-a841-d36b85304cda",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Ускорение",
+                    "type": "Button",
+                    "id": "8d8a8e84-f02d-43d9-8172-020a0ee37e4d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -226,7 +244,7 @@
                 {
                     "name": "",
                     "id": "8d704b20-2ab1-4ddf-b06f-bc12425f693e",
-                    "path": "<Gamepad>/buttonWest",
+                    "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -297,6 +315,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "Выход",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fecda9eb-06dc-4dbf-a0be-1862425badea",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Использовать",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f504ecd6-1047-4e90-905b-002571987239",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Использовать",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a8d07a4f-06f4-4f4c-a095-fecda3df89c8",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ускорение",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bf2314d2-26b3-4179-b703-29db85be7a77",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ускорение",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
