@@ -45,7 +45,7 @@ public class Управление : RunityComponent
         вперёдНажато = данные.isPressed;
         вперёдУдерживается = данные.isPressed;
         вперёдОтжато = !данные.isPressed;
-        вперёдИзменено = да;
+        //вперёдИзменено = да;
     }
 
 
@@ -58,7 +58,7 @@ public class Управление : RunityComponent
         влевоНажато = данные.isPressed;
         влевоУдерживается = данные.isPressed;
         влевоОтжато = !данные.isPressed;
-        влевоИзменено = да;
+        //влевоИзменено = да;
     }
 
     public static bool назадНажато { get; private set; }
@@ -70,7 +70,7 @@ public class Управление : RunityComponent
         назадНажато = данные.isPressed;
         назадУдерживается = данные.isPressed;
         назадОтжато = !данные.isPressed;
-        назадИзменено = да;
+        //назадИзменено = да;
     }
 
     public static bool вправоНажато { get; private set; }
@@ -82,7 +82,7 @@ public class Управление : RunityComponent
         вправоНажато = данные.isPressed;
         вправоУдерживается = данные.isPressed;
         вправоОтжато = !данные.isPressed;
-        вправоИзменено = да;
+        //вправоИзменено = да;
     }
 
     public static bool движениеНачато { get; private set; }
@@ -106,7 +106,7 @@ public class Управление : RunityComponent
         пробелНажат = данные.isPressed;
         пробелУдерживается = данные.isPressed;
         пробелОтжат = !данные.isPressed;
-        пробелИзменено = да;
+        //пробелИзменено = да;
     }
 
     public static bool выходНажат { get; private set; }
@@ -118,7 +118,7 @@ public class Управление : RunityComponent
         выходНажат = данные.isPressed;
         выходУдерживается = данные.isPressed;
         выходОтжат = !данные.isPressed;
-        выходИзменено = да;
+        //выходИзменено = да;
     }
 
     public static bool ЛКМНажата { get; private set; }
@@ -130,7 +130,7 @@ public class Управление : RunityComponent
         ЛКМНажата = данные.isPressed;
         ЛКМУдерживается = данные.isPressed;
         ЛКМОтжата = !данные.isPressed;
-        ЛКМИзменено = да;
+        //ЛКМИзменено = да;
     }
 
     public static bool ПКМНажата { get; private set; }
@@ -142,7 +142,31 @@ public class Управление : RunityComponent
         ПКМНажата = данные.isPressed;
         ПКМУдерживается = данные.isPressed;
         ПКМОтжата = !данные.isPressed;
-        ПКМИзменено = да;
+        //ПКМИзменено = да;
+    }
+
+    public static bool ИспользоватьНажато { get; private set; }
+    public static bool ИспользоватьУдерживается { get; private set; }
+    public static bool ИспользоватьОтжато { get; private set; }
+    static bool ИспользоватьИзменено;
+    void OnИспользовать(InputValue данные)
+    {
+        ИспользоватьНажато = данные.isPressed;
+        ИспользоватьУдерживается = данные.isPressed;
+        ИспользоватьОтжато = !данные.isPressed;
+        //ИспользоватьИзменено = да;
+    }
+
+    public static bool УскорениеНажато { get; private set; }
+    public static bool УскорениеУдерживается { get; private set; }
+    public static bool УскорениеОтжато { get; private set; }
+    static bool УскорениеИзменено;
+    void OnУскорение(InputValue данные)
+    {
+        УскорениеНажато = данные.isPressed;
+        УскорениеУдерживается = данные.isPressed;
+        УскорениеОтжато = !данные.isPressed;
+        //УскорениеИзменено = да;
     }
 
     void Update()
@@ -214,6 +238,18 @@ public class Управление : RunityComponent
         {
             ПКМНажата = false;
             ПКМОтжата = false;
+        }
+        if (ИспользоватьИзменено) ИспользоватьИзменено = false;
+        else
+        {
+            ИспользоватьНажато = false;
+            ИспользоватьОтжато = false;
+        }
+        if (УскорениеИзменено) УскорениеИзменено = false;
+        else
+        {
+            УскорениеНажато = false;
+            УскорениеОтжато = false;
         }
     }
 

@@ -8,7 +8,12 @@ using UnityEngine;
 public class Камера : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Camera>();
-    void OnValidate() => Awake();
+    private void OnEnable() => главная = this;
+    void OnValidate()
+    {
+        Awake();
+        OnEnable();
+    }
     public Camera оригинал => (Camera)оригинальныйКомпонент;
 
     public Color фоновыйЦвет
@@ -22,6 +27,8 @@ public class Камера : RunityComponent
         get => !оригинал.orthographic;
         set => оригинал.orthographic = !value;
     }
+
+    public static Камера главная;
 }
 
 #if UNITY_EDITOR

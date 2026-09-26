@@ -1,18 +1,19 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class MonoBehaviourPlus : MonoBehaviour
 {
-    protected bool да => true;
-    protected bool нет => false;
+    protected static bool да => true;
+    protected static bool нет => false;
 
-    //public GameObject объект => gameObject;
-    //public string имя => name;
-    //public Transform трансформация => transform;
+    public GameObject объект => gameObject;
+    public string имя => name;
+    public Transform трансформация => transform;
 
 
     Rigidbody _rigidbody = null;
@@ -354,6 +355,9 @@ public class MonoBehaviourPlus : MonoBehaviour
             UnityEditor.EditorApplication.ExitPlaymode();
         #endif
     }
+
+    protected void Удалить(Object объект) => Destroy(объект);
+    protected void Удалить(Object объект, float время) => Destroy(объект, время);
 }
 
 public static class ExtentionsPlus
@@ -634,9 +638,13 @@ public static class ExtentionsPlus
     public static ТипКомпонента НайтиКомпонент<ТипКомпонента>(this GameObject gameObject) => gameObject.GetComponent<ТипКомпонента>();
     public static Component НайтиКомпонент(this GameObject gameObject, string имяКомпонента) => gameObject.GetComponent(имяКомпонента);
 
-    public static Диапазон УстановитьРежим(this Диапазон диапазон, bool режимДиапазона)
+    /*public static Диапазон УстановитьРежим(this Диапазон диапазон, bool режимДиапазона)
     {
         диапазон.диапазон = режимДиапазона;
         return диапазон;
-    }
+    }*/
+
+    public static void Вызвать(this UnityEvent unityEvent) => unityEvent.Invoke();
+
+    public static GameObject ВзятьВесьОбъект(this Component component) => component.gameObject;
 }

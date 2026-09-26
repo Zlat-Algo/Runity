@@ -59,5 +59,21 @@ public class RunityCustomObjects
 
         newObj.AddComponent<Управление>();
     }
+
+    [MenuItem("GameObject/Runity/Передвижение/Навигационная карта", false, 0)]
+    private static void НавигационнаяКарта(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Навигационная карта");
+
+        newObj.AddComponent<НавигационнаяКарта>();
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Навигационный агент", false, 0)]
+    private static void НавигационныйАгент(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Навигационный агент");
+
+        newObj.AddComponent<НавигационныйАгент>();
+    }
 }
 #endif

@@ -63,9 +63,9 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUILayout.Space(ширина);
     }
 
-    protected TObj Объект<TObj>(GUIContent title, UnityEngine.Object obj) where TObj : UnityEngine.Object
+    protected TObj Объект<TObj>(GUIContent title, UnityEngine.Object obj, bool fromScene = false) where TObj : UnityEngine.Object
     {
-        return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), false);
+        return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), fromScene);
     }
 
     protected void НачатьСобытия()
