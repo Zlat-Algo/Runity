@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviourPlus
 {
-    public float скорость;
-    public GameObject префабПули;
+    public float speed;
+    public GameObject bulletPrefab;
 
     void Start()
     {
@@ -14,36 +14,29 @@ public class Player : MonoBehaviourPlus
 
     void OnMove(InputValue value)
     {
-        физическоеТело2D.движение = value.ИзвлечьV2() * скорость;
+        физическоеТело2D.движение = value.GetVector2() * speed;
     }
 
     void OnShoot()
     {
-        GameObject новаяПуля = Заспавнить(префабПули).УстановитьПоворот2D(45);
-        новаяПуля.НайтиКомпонент<ФизическоеТело2D>().движение = Направление2D(1, 0);
-        новаяПуля.transform.localScale *= 0.5f;
+        GameObject bullet = Заспавнить(bulletPrefab).УстановитьПоворот2D(45);
+        bullet.GetComponent<Rigidbody2D>().linearVelocity = mouseWorldDirection;
+        bullet.transform.localScale *= 0.5f;
     }
 
     void OnShootHold()
     {
-        отрисовщикСпрайта.УстановитьЦвет(Цвета.пшеничный);
+        отрисовщикСпрайта.УстановитьЦвет(Color.wheat);
     }
 
     void OnMegaShoot()
     {
-        Заспавнить(префабПули, transform.position, mouseWorldPosition, да).НайтиКомпонент<ФизическоеТело2D>().движение = Направление2D(1, 0);
-        НайтиКомпонент<Спрайтер>().цвет = Цвета.белый;
+        Заспавнить(bulletPrefab, transform.position, mouseWorldPosition, true).НайтиКомпонент<ФизическоеТело2D>().движение = mouseWorldDirection;
+        НайтиКомпонент<SpriteRenderer>().color = Color.white;
     }
 
     void Update()
     {
-        if (Управление.вперёдУдерживается)
-        {
-            Консоль.Напечатать("Бегу, дорогуша");
-        }
-        else if (Управление.назадУдерживается)
-        {
-            Консоль.Напечатать("Да ну нафиг");
-        }
+        //трансформация.УстановитьX(6);
     }
 }

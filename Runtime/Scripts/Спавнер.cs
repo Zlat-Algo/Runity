@@ -63,7 +63,6 @@ public class Спавнер : RunityComponent
     }
 }
 
-#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(Спавнер))]
 public class СпавнерEditor : RunityEditor<Спавнер>
@@ -97,7 +96,6 @@ public class СпавнерEditor : RunityEditor<Спавнер>
 
         Пробел();
 
-        Кнопка("Срочный спавн", компонент.СрочныйСпавн);
+        Кнопка("Срочный спавн", component.СрочныйСпавн);
     }
 }
-#endif

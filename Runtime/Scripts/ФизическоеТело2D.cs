@@ -130,7 +130,7 @@ public class ФизическоеТело2DEditor : RunityEditor<Физичес�
 
         Пробел();
 
-        if (компонент.режим == РежимФизическогоТела.Динамичное)
+        if (component.режим == РежимФизическогоТела.Динамичное)
         {
             Синхрополе("Масса", x => x.масса,
                 (title, value) => EditorGUILayout.FloatField(title, value));

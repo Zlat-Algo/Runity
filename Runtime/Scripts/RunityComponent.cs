@@ -4,7 +4,7 @@ using System.Reflection;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using static UnityEngine.Rendering.DebugUI;
 
 public class RunityComponent : MonoBehaviourPlus
 {
@@ -14,11 +14,6 @@ public class RunityComponent : MonoBehaviourPlus
 #if UNITY_EDITOR
 public abstract class RunityEditor<T> : Editor where T : RunityComponent
 {
-    protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
-    {
-        return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
-    }
-
     protected void Текст(string message)
     {
         EditorGUILayout.HelpBox(message, MessageType.None);
@@ -63,9 +58,9 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUILayout.Space(ширина);
     }
 
-    protected TObj Объект<TObj>(GUIContent title, UnityEngine.Object obj, bool fromScene = false) where TObj : UnityEngine.Object
+    protected TObj Объект<TObj>(GUIContent title, UnityEngine.Object obj) where TObj : UnityEngine.Object
     {
-        return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), fromScene);
+        return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), false);
     }
 
     protected void НачатьСобытия()
@@ -86,7 +81,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
     protected void НачатьГоризонтальнуюГруппу() => EditorGUILayout.BeginHorizontal();
     protected void ЗакончитьГоризонтальнуюГруппу() => EditorGUILayout.EndHorizontal();
 
-    protected T компонент => (T)target;
+    protected T component => (T)target;
 
     protected T[] components
     {
@@ -106,7 +101,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
         if (targets.Length < 2)
             return false;
 
-        TValue первое = getter(компонент);
+        TValue первое = getter(component);
 
         foreach (T объект in components)
         {
@@ -158,7 +153,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TValue value = drawer(
             new GUIContent(title),
-            Get(компонент)
+            Get(component)
         );
 
         if (EditorGUI.EndChangeCheck())
@@ -201,7 +196,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        Диапазон value = Get(компонент);
+        Диапазон value = Get(component);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
@@ -280,7 +275,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        Диапазон value = Get(компонент);
+        Диапазон value = Get(component);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
@@ -355,7 +350,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        bool2 value = Get(компонент);
+        bool2 value = Get(component);
         /*GUILayout.Label(title);
         GUILayout.Label("X", GUILayout.Width(25));
         value.x = EditorGUILayout.Toggle(value.x, GUILayout.Width(25));
@@ -411,7 +406,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TValue value = drawer(
             new GUIContent(title),
-            Get(компонент)
+            Get(component)
         );
 
         if (EditorGUI.EndChangeCheck())
@@ -437,7 +432,7 @@ public abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TEnum value = (TEnum)EditorGUILayout.EnumPopup(
             label: title,
-            getter(компонент)
+            getter(component)
         );
 
         if (EditorGUI.EndChangeCheck())

@@ -27,7 +27,6 @@ public class КоллайдерКруг2D : Коллайдер2D
     }*/
 }
 
-#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(КоллайдерКруг2D))]
 public class КоллайдерКруг2DEditor : RunityEditor<КоллайдерКруг2D>
@@ -46,4 +45,3 @@ public class КоллайдерКруг2DEditor : RunityEditor<Коллайде�
     }
 
 }
-#endif

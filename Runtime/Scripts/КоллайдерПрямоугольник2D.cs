@@ -28,7 +28,6 @@ public class КоллайдерПрямоугольник2D : Коллайдер
     }*/
 }
 
-#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(КоллайдерПрямоугольник2D))]
 public class КоллайдерПрямоугольник2DEditor : RunityEditor<КоллайдерПрямоугольник2D>
@@ -47,4 +46,3 @@ public class КоллайдерПрямоугольник2DEditor : RunityEditor
     }
 
 }
-#endif

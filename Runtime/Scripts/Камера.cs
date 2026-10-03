@@ -8,12 +8,7 @@ using UnityEngine;
 public class Камера : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Camera>();
-    private void OnEnable() => главная = this;
-    void OnValidate()
-    {
-        Awake();
-        OnEnable();
-    }
+    void OnValidate() => Awake();
     public Camera оригинал => (Camera)оригинальныйКомпонент;
 
     public Color фоновыйЦвет
@@ -27,11 +22,8 @@ public class Камера : RunityComponent
         get => !оригинал.orthographic;
         set => оригинал.orthographic = !value;
     }
-
-    public static Камера главная;
 }
 
-#if UNITY_EDITOR
 [CanEditMultipleObjects]
 [CustomEditor(typeof(Камера))]
 public class КамераEditor : RunityEditor<Камера>
@@ -48,4 +40,3 @@ public class КамераEditor : RunityEditor<Камера>
             (title, value) => EditorGUILayout.Toggle(title, value));
     }
 }
-#endif

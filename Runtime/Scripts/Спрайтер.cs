@@ -1,6 +1,5 @@
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public enum РежимСпрайтера { Обычный, Плитка, Рамка}
 
@@ -109,13 +108,13 @@ public class СпрайтEditor : RunityEditor<Спрайтер>
 
         Пробел();
 
-        if (компонент.режим == РежимСпрайтера.Плитка)
+        if (component.режим == РежимСпрайтера.Плитка)
         {
             Синхрополе("Целые кусочки плитки", x => x.целыеКусочкиПлитки,
                 (title, value) => EditorGUILayout.ToggleLeft(title, value));
         }
 
-        if (компонент.режим == РежимСпрайтера.Плитка || компонент.режим == РежимСпрайтера.Рамка)
+        if (component.режим == РежимСпрайтера.Плитка || component.режим == РежимСпрайтера.Рамка)
         {
             Синхрополе("Размер", x => x.размер,
                 (title, value) => EditorGUILayout.Vector2Field(title, value));
@@ -123,7 +122,7 @@ public class СпрайтEditor : RunityEditor<Спрайтер>
 
         Пробел();
 
-        Кнопка("Заполнить спрайт", () => { компонент.спрайт = НайтиАссет<Sprite>("1c08e50202374ce42bca6cb30aa4bbbf"); });
+        Кнопка("Заполнить спрайт", () => { component.спрайт = Resources.Load<Sprite>("БелыйКвадрат"); });
     }
 }
 #endif

@@ -1,16 +1,12 @@
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class MonoBehaviourPlus : MonoBehaviour
 {
-    protected static bool да => true;
-    protected static bool нет => false;
-
     public GameObject объект => gameObject;
     public string имя => name;
     public Transform трансформация => transform;
@@ -355,9 +351,6 @@ public class MonoBehaviourPlus : MonoBehaviour
             UnityEditor.EditorApplication.ExitPlaymode();
         #endif
     }
-
-    protected void Удалить(Object объект) => Destroy(объект);
-    protected void Удалить(Object объект, float время) => Destroy(объект, время);
 }
 
 public static class ExtentionsPlus
@@ -367,7 +360,7 @@ public static class ExtentionsPlus
         public static bool GetBool(this InputValue inputValue) => inputValue.Get<bool>();
         public static int GetInt(this InputValue inputValue) => inputValue.Get<int>();
         public static float GetFloat(this InputValue inputValue) => (float)inputValue.Get<double>();
-        public static Vector2 ИзвлечьV2(this InputValue inputValue) => inputValue.Get<Vector2>();
+        public static Vector2 GetVector2(this InputValue inputValue) => inputValue.Get<Vector2>();
         public static Vector3 GetVector3(this InputValue inputValue) => inputValue.Get<Vector3>();
     #endregion
 
@@ -638,13 +631,9 @@ public static class ExtentionsPlus
     public static ТипКомпонента НайтиКомпонент<ТипКомпонента>(this GameObject gameObject) => gameObject.GetComponent<ТипКомпонента>();
     public static Component НайтиКомпонент(this GameObject gameObject, string имяКомпонента) => gameObject.GetComponent(имяКомпонента);
 
-    /*public static Диапазон УстановитьРежим(this Диапазон диапазон, bool режимДиапазона)
+    public static Диапазон УстановитьРежим(this Диапазон диапазон, bool режимДиапазона)
     {
         диапазон.диапазон = режимДиапазона;
         return диапазон;
-    }*/
-
-    public static void Вызвать(this UnityEvent unityEvent) => unityEvent.Invoke();
-
-    public static GameObject ВзятьВесьОбъект(this Component component) => component.gameObject;
+    }
 }
