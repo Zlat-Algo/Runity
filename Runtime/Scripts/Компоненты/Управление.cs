@@ -255,6 +255,12 @@ public class Управление : RunityComponent
 
     [SerializeField] UnityEvent _приДвижении;
     public UnityEvent приДвижении => _приДвижении;
+
+    public void УстановитьСтандартныеНастройки()
+    {
+        наборНастроек = НайтиАссет<InputActionAsset>("198cc02dd732403458fa293529a9203c");
+        оригинал.defaultActionMap = "Стандартная";
+    }
 }
 
 #if UNITY_EDITOR
@@ -273,8 +279,7 @@ internal class УправлениеEditor : RunityEditor<Управление>
 
         Кнопка("Стандартные настройки", () =>
         {
-            компонент.наборНастроек = НайтиАссет<InputActionAsset>("198cc02dd732403458fa293529a9203c");
-            компонент.оригинал.defaultActionMap = "Стандартная";
+            компонент.УстановитьСтандартныеНастройки();
         });
 
         Пробел();
