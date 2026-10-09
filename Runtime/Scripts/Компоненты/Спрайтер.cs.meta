@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 0ce6f8fb8cb64dc4c86d450f2349c91f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - "\u0431\u0430\u0437\u043E\u0432\u044B\u0439\u0421\u043F\u0440\u0430\u0439\u0442": {fileID: -853066053953029997, guid: 1c08e50202374ce42bca6cb30aa4bbbf, type: 3}
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 45c4c5abf31b7aa4d8757b311bf44e2a, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
