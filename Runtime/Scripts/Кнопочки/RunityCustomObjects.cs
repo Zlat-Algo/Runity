@@ -58,7 +58,7 @@ public class RunityCustomObjects
     {
         GameObject newObj = CreateObject(menuCommand, "Управление");
 
-        newObj.AddComponent<Управление>();
+        newObj.AddComponent<Управление>().УстановитьСтандартныеНастройки();
     }
 
     [MenuItem("GameObject/Runity/Передвижение/Навигационная карта", false, 0)]
