@@ -1,12 +1,11 @@
-using System;
-using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-public class Player : Компонент
+internal class Player : Компонент
 {
     //public float скорость;
     public Объект префабПули;
+    public Список<Объект> объекты;
+    public Список<Число> числа;
 
     public int age = 5;
     public Флажок возраст1;
@@ -25,7 +24,7 @@ public class Player : Компонент
         Консоль.Напечатать(возраст1);
     }
 
-    void OnMove(InputValue value)
+    /*void OnMove(InputValue value)
     {
         //физическоеТело2D.движение = value.ИзвлечьV2() * скорость;
     }
@@ -47,7 +46,7 @@ public class Player : Компонент
 
     void OnMegaShoot()
     {
-        Заспавнить(префабПули, transform.position, mouseWorldPosition, да).НайтиКомпонент<ФизическоеТело2D>().движение = new Направление2D(1, 0);
+        Заспавнить(префабПули, transform.position, mouseWorldPosition, да);//.НайтиКомпонент<ФизическоеТело2D>().движение = new Направление2D(1, 0);
         НайтиКомпонент<Спрайтер>().цвет = Цвет.белый;
     }
 
@@ -62,5 +61,5 @@ public class Player : Компонент
         {
             Консоль.Напечатать("Да ну нафиг");
         }
-    }
+    }*/
 }

@@ -38,7 +38,7 @@ public static class Мышка
         }
     }
 
-    public static Vector2 позицияНаЭкране
+    public static Направление2D позицияНаЭкране
     {
         get
         {
@@ -52,8 +52,19 @@ public static class Мышка
                 return Vector2.zero;
             }
         }
+        set
+        {
+            if (Mouse.current != null)
+            {
+                Mouse.current.WarpCursorPosition(value);
+            }
+            else
+            {
+                Debug.LogError("Мышь не найдена");
+            }
+        }
     }
-    public static Vector2 позицияВМире2D
+    public static Направление2D позицияВМире2D
     {
         get
         {
@@ -68,7 +79,7 @@ public static class Мышка
             }
         }
     }
-    public static Vector3 позицияВМире3D
+    public static Направление3D позицияВМире3D
     {
         get
         {

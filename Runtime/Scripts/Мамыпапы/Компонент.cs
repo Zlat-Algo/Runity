@@ -11,12 +11,12 @@ public class Компонент : MonoBehaviour
     protected static Флажок да => true;
     protected static Флажок нет => false;
 
-    public Объект объект => gameObject;
-    public string имя => name;
-    public Transform трансформация => transform;
+    public Объект весьОбъект => gameObject;
+    //public string имя => name;
+    //public Transform трансформация => transform;
 
 
-    Rigidbody _rigidbody = null;
+    /*Rigidbody _rigidbody = null;
     public Rigidbody rigidbody
     {
         get
@@ -182,12 +182,16 @@ public class Компонент : MonoBehaviour
         {
             _rawImage = value;
         }
-    }
+    }*/
 
-    public ТипКомпонента НайтиКомпонент<ТипКомпонента>() => GetComponent<ТипКомпонента>();
-    public Component НайтиКомпонент(string имяКомпонента) => GetComponent(имяКомпонента);
+    //public ТипКомпонента НайтиКомпонент<ТипКомпонента>() => GetComponent<ТипКомпонента>();
+    //public Component НайтиКомпонент(string имяКомпонента) => GetComponent(имяКомпонента);
 
-    public void ВызватьСЗадержкой(Action метод, float время) => Invoke(nameof(метод), время);
+    public void ВызватьСЗадержкой(Action метод, Дробное время) => Invoke(nameof(метод), время);
+    public void ПостоянноВызыватьСЗадержкой(Action метод, Дробное времяДоПервогоВызова, Дробное времяМеждуВызовами)
+        => InvokeRepeating(nameof(метод), времяДоПервогоВызова, времяМеждуВызовами);
+    public void УдалитьВызовСЗадержкой(Action метод) => CancelInvoke(nameof(метод));
+    public void УдалитьВсеВызовыСЗадержкой() => CancelInvoke();
 
     #region Получить позицию курсора
     protected Vector2 mouseScreenPosition
@@ -298,7 +302,7 @@ public class Компонент : MonoBehaviour
     #region Instantiate
 
     #region Instantiate без кватерниона
-    protected T Instantiate<T>(T original, Vector3 position) where T : Object => Instantiate(original, position, Quaternion.identity);
+            protected T Instantiate<T>(T original, Vector3 position) where T : Object => Instantiate(original, position, Quaternion.identity);
             protected T Instantiate<T>(T original, Vector3 position, Vector3 eulerAngles) where T : Object => Instantiate(original, position, Quaternion.Euler(eulerAngles));
             protected T Instantiate<T>(T original, Vector3 position, Transform parent) where T : Object => Instantiate(original, position, Quaternion.identity, parent);
             protected T Instantiate<T>(T original, Vector3 position, Vector3 eulerAngles, Transform parent) where T : Object => Instantiate(original, position, Quaternion.Euler(eulerAngles), parent);
@@ -326,17 +330,24 @@ public class Компонент : MonoBehaviour
                 
             }
             protected T Instantiate<T>(T original, Vector3 position, GameObject target, bool in2D, Transform parent = null) where T : Object => Instantiate(original, position, target.transform.position, in2D, parent);
-            
-        #endregion
 
-        #region Instantiate переименован в Spawn
-            protected T Заспавнить<T>(T original) where T : Object => Instantiate(original, transform.position);
-            protected T Заспавнить<T>(T original, Vector3 position) where T : Object => Instantiate(original, position);
-            protected T Заспавнить<T>(T original, Vector3 position, Vector3 eulerAngles) where T : Object => Instantiate(original, position, eulerAngles);
-            protected T Заспавнить<T>(T original, Vector3 position, Transform parent) where T : Object => Instantiate(original, position, parent);
-            protected T Заспавнить<T>(T original, Vector3 position, Vector3 eulerAngles, Transform parent) where T : Object => Instantiate(original, position, eulerAngles, parent);
-            protected T Заспавнить<T>(T original, Vector3 position, Vector3 target, bool in2D, Transform parent = null) where T : Object => Instantiate(original, position, target, in2D, parent);
-            protected T Заспавнить<T>(T original, Vector3 position, GameObject target, bool in2D, Transform parent = null) where T : Object => Instantiate(original, position, target, in2D, parent);
+    #endregion
+
+    #region Instantiate переименован в Spawn
+            protected Объект Заспавнить(Объект чтоКопируем) => Instantiate((GameObject)чтоКопируем, весьОбъект.трансформация.позиция);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём) => Instantiate((GameObject)чтоКопируем, гдеСоздаём);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём, Направление3D сКакимПоворотом) => Instantiate((GameObject)чтоКопируем, гдеСоздаём, сКакимПоворотом);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём, Трансформация внутриЧегоСоздаём) => Instantiate((GameObject)чтоКопируем, гдеСоздаём, внутриЧегоСоздаём);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём, Направление3D сКакимПоворотом, Трансформация внутриЧегоСоздаём) => Instantiate((GameObject)чтоКопируем, гдеСоздаём, сКакимПоворотом, внутриЧегоСоздаём);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём, Направление3D наЧтоНаправлен, Флажок поворотВ2D, Трансформация внутриЧегоСоздаём = null) => Instantiate((GameObject)чтоКопируем, гдеСоздаём, наЧтоНаправлен, поворотВ2D, внутриЧегоСоздаём);
+            protected Объект Заспавнить(Объект чтоКопируем, Направление3D гдеСоздаём, Объект наЧтоНаправлен, Флажок поворотВ2D, Трансформация внутриЧегоСоздаём = null) => Instantiate((GameObject)чтоКопируем, гдеСоздаём, наЧтоНаправлен, поворотВ2D, внутриЧегоСоздаём);
+            /*protected T Заспавнить<T>(T original)  => Instantiate(original, transform.position);
+            protected T Заспавнить<T>(T original, Vector3 position)  => Instantiate(original, position);
+            protected T Заспавнить<T>(T original, Vector3 position, Vector3 eulerAngles)  => Instantiate(original, position, eulerAngles);
+            protected T Заспавнить<T>(T original, Vector3 position, Transform parent)  => Instantiate(original, position, parent);
+            protected T Заспавнить<T>(T original, Vector3 position, Vector3 eulerAngles, Transform parent)  => Instantiate(original, position, eulerAngles, parent);
+            protected T Заспавнить<T>(T original, Vector3 position, Vector3 target, bool in2D, Transform parent = null)  => Instantiate(original, position, target, in2D, parent);
+            protected T Заспавнить<T>(T original, Vector3 position, GameObject target, bool in2D, Transform parent = null)  => Instantiate(original, position, target, in2D, parent);*/
         #endregion
 
     #endregion
