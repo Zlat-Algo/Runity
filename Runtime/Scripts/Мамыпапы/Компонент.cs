@@ -8,8 +8,8 @@ using Object = UnityEngine.Object;
 
 public class Компонент : MonoBehaviour
 {
-    protected static bool да => true;
-    protected static bool нет => false;
+    protected static Флажок да => true;
+    protected static Флажок нет => false;
 
     public Объект объект => gameObject;
     public string имя => name;
