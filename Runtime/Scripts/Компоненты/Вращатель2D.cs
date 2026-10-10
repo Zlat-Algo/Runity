@@ -10,7 +10,7 @@ public class Вращатель2D : RunityComponent
 
     void FixedUpdate()
     {
-        объект.трансформация.поворотZ += скорость * Время.времяМеждуFixedUpdate;
+        весьОбъект.трансформация.поворотZ += скорость * Время.времяМеждуFixedUpdate;
     }
 }
 

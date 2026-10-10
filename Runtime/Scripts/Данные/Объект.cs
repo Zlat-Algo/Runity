@@ -2,7 +2,8 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-public class Объект : UnityEngine.Object, IEquatable<Объект>
+[Serializable]
+public class Объект : IEquatable<Объект>
 {
     [SerializeField] GameObject значение;
 
@@ -16,6 +17,9 @@ public class Объект : UnityEngine.Object, IEquatable<Объект>
 
     public static implicit operator Объект(GameObject объект)
         => new Объект(объект);
+
+    public static implicit operator UnityEngine.Object(Объект объект)
+        => объект.значение;
 
     public static Флажок operator ==(Объект первое, Объект второе)
         => первое.значение == второе.значение;
@@ -58,6 +62,7 @@ public class Объект : UnityEngine.Object, IEquatable<Объект>
     }
 
     public ТипКомпонента НайтиКомпонент<ТипКомпонента>() => значение.GetComponent<ТипКомпонента>();
+    public Флажок ПопробоватьНайтиКомпонент<ТипКомпонента>(out ТипКомпонента компонент) => значение.TryGetComponent(out компонент);
 
 }
 

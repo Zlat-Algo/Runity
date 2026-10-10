@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public enum ДействиеПриПотереЗдоровья { УдалениеСебя, ПерезапускСцены, УказанноеДействие}
 
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/Здоровье")]
+[AddComponentMenu("  Runity/ Механики/Здоровье")]
 public class Здоровье : RunityComponent
 {
     [SerializeField] int _текущее = 10;
@@ -21,7 +21,7 @@ public class Здоровье : RunityComponent
                 switch (действиеПриПотереЗдоровья)
                 {
                     case ДействиеПриПотереЗдоровья.УдалениеСебя:
-                        Удалить(объект);
+                        Удалить(весьОбъект);
                         break;
                     case ДействиеПриПотереЗдоровья.ПерезапускСцены:
                         Сцены.Перезапустить();

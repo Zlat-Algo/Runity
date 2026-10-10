@@ -93,6 +93,10 @@ public class RunityCustomObjects
         прыжок.наВперёд = true;
         прыжок.наПробел = false;
         прыжок.наЛКМ = false;
+        if (newObj.TryGetComponent(out ФизическоеТело2D физическоеТело2D))
+        {
+            физическоеТело2D.позволитьВращаться = false;
+        }
     }
 
     [MenuItem("GameObject/Runity/Передвижение/Игрок (для вида сверху)", false, -51)]

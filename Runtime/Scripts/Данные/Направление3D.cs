@@ -108,10 +108,16 @@ public struct Направление3D : IEquatable<Направление3D>
         => new Направление3D(вектор);
 
     public static implicit operator Направление2D(Направление3D вектор)
-        => (Vector2)(Vector3)вектор;
+        => (Vector3)вектор;
 
     public static implicit operator Направление3D(Направление2D вектор)
-        => (Vector3)(Vector2)вектор;
+        => (Vector2)вектор;
+
+    public static implicit operator Vector2(Направление3D направление)
+        => направление.значение;
+
+    public static implicit operator Направление3D(Vector2 вектор)
+        => new Направление3D(вектор);
 
     public static Направление3D operator +(Направление3D первое, Направление3D второе)
         => (Vector3)первое + (Vector3)второе;
