@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public enum ДействиеПриПотереЗдоровья { УдалениеСебя, ПерезапускСцены, УказанноеДействие}
 
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Здоровье")]
+[AddComponentMenu("  Runity/Здоровье")]
 public class Здоровье : RunityComponent
 {
     [SerializeField] int _текущее = 10;

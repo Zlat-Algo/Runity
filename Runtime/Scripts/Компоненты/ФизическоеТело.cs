@@ -6,7 +6,7 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Rigidbody))]
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/ Физика 3D/Физическое тело")]
-public class ФизическоеТело : RunityComponent
+public class ФизическоеТело : ФизическоеТелоЛюбое
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Rigidbody>();
     void OnValidate() => Awake();
@@ -59,31 +59,49 @@ public class ФизическоеТело : RunityComponent
         set => оригинал.gravityScale = value;
     }*/
 
-    public Vector2 движение
+    public Направление2D движение
     {
         get => оригинал.linearVelocity;
         set => оригинал.linearVelocity = value;
     }
 
-    public float замедлениеПриДвижении
+    public Дробное движениеX
+    {
+        get => оригинал.linearVelocity.x;
+        set => оригинал.linearVelocity = new Vector3(value, оригинал.linearVelocity.y, оригинал.linearVelocity.z);
+    }
+
+    public Дробное движениеY
+    {
+        get => оригинал.linearVelocity.y;
+        set => оригинал.linearVelocity = new Vector3(оригинал.linearVelocity.x, value, оригинал.linearVelocity.z);
+    }
+
+    public Дробное движениеZ
+    {
+        get => оригинал.linearVelocity.z;
+        set => оригинал.linearVelocity = new Vector3(оригинал.linearVelocity.x, оригинал.linearVelocity.y, value);
+    }
+
+    public Дробное замедлениеПриДвижении
     {
         get => оригинал.linearDamping;
         set => оригинал.linearDamping = value;
     }
 
-    public Vector3 вращение
+    public Направление3D вращение
     {
         get => оригинал.angularVelocity;
         set => оригинал.angularVelocity = value;
     }
 
-    public float замедлениеПриВращении
+    public Дробное замедлениеПриВращении
     {
         get => оригинал.angularDamping;
         set => оригинал.angularDamping = value;
     }
 
-    public string тегНаКоторыйРеагируютСобытия { get; set; }
+    public Строка тегНаКоторыйРеагируютСобытия { get; set; }
 
     [SerializeField] UnityEvent _приНачалеСтолкновения;
     public UnityEvent приНачалеСтолкновения => _приНачалеСтолкновения;

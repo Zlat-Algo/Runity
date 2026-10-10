@@ -8,7 +8,7 @@ public enum РежимФизическогоТела { Динамичное, П�
 [RequireComponent(typeof(Rigidbody2D))]
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/ Физика 2D/Физическое тело 2D")]
-public class ФизическоеТело2D : RunityComponent
+public class ФизическоеТело2D : ФизическоеТелоЛюбое
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Rigidbody2D>();
     void OnValidate() => Awake();

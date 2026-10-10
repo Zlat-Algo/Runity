@@ -26,6 +26,12 @@ public struct Дробное : IEquatable<Дробное>, IComparable<Дроб�
     public static implicit operator Дробное(double число)
         => new Дробное((float)число);
 
+    public static explicit operator int(Дробное число)
+        => (int)число.значение;
+
+    public static implicit operator Дробное(int число)
+        => new Дробное((float)число);
+
     public static implicit operator string(Дробное число)
         => число.ToString();
 

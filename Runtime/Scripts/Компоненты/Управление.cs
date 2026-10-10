@@ -1,34 +1,17 @@
-using System;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.UI;
 
-/*public enum РежимНажатияКлавиши { Нажата, Отпущена, Удерживается }
-
-public struct ДанныеОНажатии
-{
-    public KeyCode клавиша;
-    public РежимНажатияКлавиши режимНажатия;
-}*/
-
-[RequireComponent(typeof(PlayerInput)/*, typeof(EventSystem), typeof(InputSystemUIInputModule)*/)]
+[RequireComponent(typeof(PlayerInput))]
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/Управление")]
 public class Управление : RunityComponent
 {
-    void Awake()
-    {
-        оригинальныйКомпонент = GetComponent<PlayerInput>();
-        //главное = this;
-    }
+    void Awake() => оригинальныйКомпонент = GetComponent<PlayerInput>();
     void OnValidate() => Awake();
     public PlayerInput оригинал => (PlayerInput)оригинальныйКомпонент;
 
-    //public static Управление главное;
 
     public InputActionAsset наборНастроек
     {
@@ -36,231 +19,106 @@ public class Управление : RunityComponent
         set => оригинал.actions = value;
     }
 
-    public static bool вперёдНажато { get; private set; }
-    public static bool вперёдУдерживается { get; private set; }
-    public static bool вперёдОтжато { get; private set; }
-    static bool вперёдИзменено;
-    void OnВперёд(InputValue данные)
-    {
-        вперёдНажато = данные.isPressed;
-        вперёдУдерживается = данные.isPressed;
-        вперёдОтжато = !данные.isPressed;
-        //вперёдИзменено = да;
-    }
-
-
-    public static bool влевоНажато { get; private set; }
-    public static bool влевоУдерживается { get; private set; }
-    public static bool влевоОтжато { get; private set; }
-    static bool влевоИзменено;
-    void OnВлево(InputValue данные)
-    {
-        влевоНажато = данные.isPressed;
-        влевоУдерживается = данные.isPressed;
-        влевоОтжато = !данные.isPressed;
-        //влевоИзменено = да;
-    }
-
-    public static bool назадНажато { get; private set; }
-    public static bool назадУдерживается { get; private set; }
-    public static bool назадОтжато { get; private set; }
-    static bool назадИзменено;
-    void OnНазад(InputValue данные)
-    {
-        назадНажато = данные.isPressed;
-        назадУдерживается = данные.isPressed;
-        назадОтжато = !данные.isPressed;
-        //назадИзменено = да;
-    }
-
-    public static bool вправоНажато { get; private set; }
-    public static bool вправоУдерживается { get; private set; }
-    public static bool вправоОтжато { get; private set; }
-    static bool вправоИзменено;
-    void OnВправо(InputValue данные)
-    {
-        вправоНажато = данные.isPressed;
-        вправоУдерживается = данные.isPressed;
-        вправоОтжато = !данные.isPressed;
-        //вправоИзменено = да;
-    }
-
-    public static bool движениеНачато { get; private set; }
-    public static bool движениеУдерживается { get; private set; }
-    public static bool движениеЗакончено { get; private set; }
-    static bool движениеИзменено;
-    /*void OnДвижение(InputValue данные)
-    {
-        движениеНажато = данные.isPressed;
-        движениеУдерживается = данные.isPressed;
-        движениеОтжато = !данные.isPressed;
-        движениеИзменено = да;
-    }*/
-
-    public static bool пробелНажат { get; private set; }
-    public static bool пробелУдерживается { get; private set; }
-    public static bool пробелОтжат { get; private set; }
-    static bool пробелИзменено;
-    void OnПробел(InputValue данные)
-    {
-        пробелНажат = данные.isPressed;
-        пробелУдерживается = данные.isPressed;
-        пробелОтжат = !данные.isPressed;
-        //пробелИзменено = да;
-    }
-
-    public static bool выходНажат { get; private set; }
-    public static bool выходУдерживается { get; private set; }
-    public static bool выходОтжат { get; private set; }
-    static bool выходИзменено;
-    void OnВыход(InputValue данные)
-    {
-        выходНажат = данные.isPressed;
-        выходУдерживается = данные.isPressed;
-        выходОтжат = !данные.isPressed;
-        //выходИзменено = да;
-    }
-
-    public static bool ЛКМНажата { get; private set; }
-    public static bool ЛКМУдерживается { get; private set; }
-    public static bool ЛКМОтжата { get; private set; }
-    static bool ЛКМИзменено;
-    void OnЛКМ(InputValue данные)
-    {
-        ЛКМНажата = данные.isPressed;
-        ЛКМУдерживается = данные.isPressed;
-        ЛКМОтжата = !данные.isPressed;
-        //ЛКМИзменено = да;
-    }
-
-    public static bool ПКМНажата { get; private set; }
-    public static bool ПКМУдерживается { get; private set; }
-    public static bool ПКМОтжата { get; private set; }
-    static bool ПКМИзменено;
-    void OnПКМ(InputValue данные)
-    {
-        ПКМНажата = данные.isPressed;
-        ПКМУдерживается = данные.isPressed;
-        ПКМОтжата = !данные.isPressed;
-        //ПКМИзменено = да;
-    }
-
-    public static bool ИспользоватьНажато { get; private set; }
-    public static bool ИспользоватьУдерживается { get; private set; }
-    public static bool ИспользоватьОтжато { get; private set; }
-    static bool ИспользоватьИзменено;
-    void OnИспользовать(InputValue данные)
-    {
-        ИспользоватьНажато = данные.isPressed;
-        ИспользоватьУдерживается = данные.isPressed;
-        ИспользоватьОтжато = !данные.isPressed;
-        //ИспользоватьИзменено = да;
-    }
-
-    public static bool УскорениеНажато { get; private set; }
-    public static bool УскорениеУдерживается { get; private set; }
-    public static bool УскорениеОтжато { get; private set; }
-    static bool УскорениеИзменено;
-    void OnУскорение(InputValue данные)
-    {
-        УскорениеНажато = данные.isPressed;
-        УскорениеУдерживается = данные.isPressed;
-        УскорениеОтжато = !данные.isPressed;
-        //УскорениеИзменено = да;
-    }
-
-    void Update()
-    {
-        if (вперёдИзменено) вперёдИзменено = false; else
-        {
-            вперёдНажато = false;
-            вперёдОтжато = false;
-        }
-        if (влевоИзменено) влевоИзменено = false;
-        else
-        {
-            влевоНажато = false;
-            влевоОтжато = false;
-        }
-        if (назадИзменено) назадИзменено = false;
-        else
-        {
-            назадНажато = false;
-            назадОтжато = false;
-        }
-        if (вправоИзменено) вправоИзменено = false;
-        else
-        {
-            вправоНажато = false;
-            вправоОтжато = false;
-        }
-        if (!движениеУдерживается && (вперёдУдерживается || влевоУдерживается || назадУдерживается || вправоУдерживается))
-        {
-            движениеНачато = true;
-            движениеУдерживается = true;
-            движениеЗакончено = false;
-            движениеИзменено = true;
-        }
-        if (движениеУдерживается && !(вперёдУдерживается || влевоУдерживается || назадУдерживается || вправоУдерживается))
-        {
-            движениеНачато = false;
-            движениеУдерживается = false;
-            движениеЗакончено = true;
-            движениеИзменено = true;
-        }
-        if (движениеИзменено) движениеИзменено = false;
-        else
-        {
-            движениеНачато = false;
-            движениеЗакончено = false;
-        }
-        
-        if (пробелИзменено) пробелИзменено = false;
-        else
-        {
-            пробелНажат = false;
-            пробелОтжат = false;
-        }
-        if (выходИзменено) выходИзменено = false;
-        else
-        {
-            выходНажат = false;
-            выходОтжат = false;
-        }
-        if (ЛКМИзменено) ЛКМИзменено = false;
-        else
-        {
-            ЛКМНажата = false;
-            ЛКМОтжата = false;
-        }
-        if (ПКМИзменено) ПКМИзменено = false;
-        else
-        {
-            ПКМНажата = false;
-            ПКМОтжата = false;
-        }
-        if (ИспользоватьИзменено) ИспользоватьИзменено = false;
-        else
-        {
-            ИспользоватьНажато = false;
-            ИспользоватьОтжато = false;
-        }
-        if (УскорениеИзменено) УскорениеИзменено = false;
-        else
-        {
-            УскорениеНажато = false;
-            УскорениеОтжато = false;
-        }
-    }
-
-    [SerializeField] UnityEvent _приДвижении;
-    public UnityEvent приДвижении => _приДвижении;
-
     public void УстановитьСтандартныеНастройки()
     {
         наборНастроек = НайтиАссет<InputActionAsset>("198cc02dd732403458fa293529a9203c");
         оригинал.defaultActionMap = "Стандартная";
     }
+
+
+    static Флажок _вперёд; void OnВперёд(InputValue данные) => _вперёд = данные.isPressed;
+    static Флажок _вперёдНажато; public static Флажок вперёдНажато => _вперёдНажато;
+    static Флажок _вперёдУдерживается; public static Флажок вперёдУдерживается => _вперёдУдерживается;
+    static Флажок _вперёдОтжато; public static Флажок вперёдОтжато => _вперёдОтжато;
+
+    static Флажок _влево; void OnВлево(InputValue данные) => _влево = данные.isPressed;
+    static Флажок _влевоНажато; public static Флажок влевоНажато => _влевоНажато;
+    static Флажок _влевоУдерживается; public static Флажок влевоУдерживается => _влевоУдерживается;
+    static Флажок _влевоОтжато; public static Флажок влевоОтжато => _влевоОтжато;
+
+    static Флажок _назад; void OnНазад(InputValue данные) => _назад = данные.isPressed;
+    static Флажок _назадНажато; public static Флажок назадНажато => _назадНажато;
+    static Флажок _назадУдерживается; public static Флажок назадУдерживается => _назадУдерживается;
+    static Флажок _назадОтжато; public static Флажок назадОтжато => _назадОтжато;
+
+    static Флажок _вправо; void OnВправо(InputValue данные) => _вправо = данные.isPressed;
+    static Флажок _вправоНажато; public static Флажок вправоНажато => _вправоНажато;
+    static Флажок _вправоУдерживается; public static Флажок вправоУдерживается => _вправоУдерживается;
+    static Флажок _вправоОтжато; public static Флажок вправоОтжато => _вправоОтжато;
+
+    static Флажок _пробел; void OnПробел(InputValue данные) => _пробел = данные.isPressed;
+    static Флажок _пробелНажат; public static Флажок пробелНажат => _пробелНажат;
+    static Флажок _пробелУдерживается; public static Флажок пробелУдерживается => _пробелУдерживается;
+    static Флажок _пробелОтжат; public static Флажок пробелОтжат => _пробелОтжат;
+
+    static Флажок _выход; void OnВыход(InputValue данные) => _выход = данные.isPressed;
+    static Флажок _выходНажат; public static Флажок выходНажат => _выходНажат;
+    static Флажок _выходУдерживается; public static Флажок выходУдерживается => _выходУдерживается;
+    static Флажок _выходОтжат; public static Флажок выходОтжат => _выходОтжат;
+
+    static Флажок _ЛКМ; void OnЛКМ(InputValue данные) => _ЛКМ = данные.isPressed;
+    static Флажок _ЛКМНажата; public static Флажок ЛКМНажата => _ЛКМНажата;
+    static Флажок _ЛКМУдерживается; public static Флажок ЛКМУдерживается => _ЛКМУдерживается;
+    static Флажок _ЛКМОтжата; public static Флажок ЛКМОтжата => _ЛКМОтжата;
+
+    static Флажок _ПКМ; void OnПКМ(InputValue данные) => _ПКМ = данные.isPressed;
+    static Флажок _ПКМНажата; public static Флажок ПКМНажата => _ПКМНажата;
+    static Флажок _ПКМУдерживается; public static Флажок ПКМУдерживается => _ПКМУдерживается;
+    static Флажок _ПКМОтжата; public static Флажок ПКМОтжата => _ПКМОтжата;
+
+    static Флажок _использовать; void OnИспользовать(InputValue данные) => _использовать = данные.isPressed;
+    static Флажок _использоватьНажато; public static Флажок использоватьНажато => _использоватьНажато;
+    static Флажок _использоватьУдерживается; public static Флажок использоватьУдерживается => _использоватьУдерживается;
+    static Флажок _использоватьОтжато; public static Флажок использоватьОтжато => _использоватьОтжато;
+
+    static Флажок _ускорение; void OnУскорение(InputValue данные) => _ускорение = данные.isPressed;
+    static Флажок _ускорениеНажато; public static Флажок ускорениеНажато => _ускорениеНажато;
+    static Флажок _ускорениеУдерживается; public static Флажок ускорениеУдерживается => _ускорениеУдерживается;
+    static Флажок _ускорениеОтжато; public static Флажок ускорениеОтжато => _ускорениеОтжато;
+
+
+    static Флажок _движениеНажато; public static Флажок движениеНажато => _движениеНажато;
+    static Флажок _движениеУдерживается; public static Флажок движениеУдерживается => _движениеУдерживается;
+    static Флажок _движениеОтжато; public static Флажок движениеОтжато => _движениеОтжато;
+
+
+    void Update()
+    {
+        void ОбновитьПеременные(ref Флажок основа, ref Флажок удерживается, ref Флажок нажато, ref Флажок отжато)
+        {
+            if (удерживается != основа)
+            {
+                удерживается = основа;
+                нажато = основа;
+                отжато = !основа;
+            }
+            else
+            {
+                нажато = false;
+                отжато = false;
+            }
+        }
+
+        ОбновитьПеременные(ref _вперёд, ref _вперёдУдерживается, ref _вперёдНажато, ref _вперёдОтжато);
+        ОбновитьПеременные(ref _влево, ref _влевоУдерживается, ref _влевоНажато, ref _влевоОтжато);
+        ОбновитьПеременные(ref _назад, ref _назадУдерживается, ref _назадНажато, ref _назадОтжато);
+        ОбновитьПеременные(ref _вправо, ref _вправоУдерживается, ref _вправоНажато, ref _вправоОтжато);
+
+        _движениеНажато = _вперёдНажато || _влевоНажато || _назадНажато || _вправоНажато;
+        _движениеУдерживается = _вперёдУдерживается || _влевоУдерживается || _назадУдерживается || _вправоУдерживается;
+        _движениеОтжато = _вперёдОтжато || _влевоОтжато || _назадОтжато || _вправоОтжато;
+
+        ОбновитьПеременные(ref _пробел, ref _пробелУдерживается, ref _пробелНажат, ref _пробелОтжат);
+        ОбновитьПеременные(ref _выход, ref _выходУдерживается, ref _выходНажат, ref _выходОтжат);
+        ОбновитьПеременные(ref _ЛКМ, ref _ЛКМУдерживается, ref _ЛКМНажата, ref _ЛКМОтжата);
+        ОбновитьПеременные(ref _ПКМ, ref _ПКМУдерживается, ref _ПКМНажата, ref _ПКМОтжата);
+        ОбновитьПеременные(ref _использовать, ref _использоватьУдерживается, ref _использоватьНажато, ref _использоватьОтжато);
+        ОбновитьПеременные(ref _ускорение, ref _ускорениеУдерживается, ref _ускорениеНажато, ref _ускорениеОтжато);
+
+    }
+
+    /*[SerializeField] UnityEvent _приДвижении;
+    public UnityEvent приДвижении => _приДвижении;*/
 }
 
 #if UNITY_EDITOR
@@ -282,11 +140,11 @@ internal class УправлениеEditor : RunityEditor<Управление>
             компонент.УстановитьСтандартныеНастройки();
         });
 
-        Пробел();
+        /*Пробел();
 
         НачатьСобытия();
         //Событие("При движении", "_приДвижении");
-        ЗакончитьСобытия();
+        ЗакончитьСобытия();*/
     }
 }
 #endif
