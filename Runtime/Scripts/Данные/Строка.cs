@@ -56,6 +56,9 @@ public struct Строка : IEquatable<Строка>
 
     public override int GetHashCode()
         => значение.GetHashCode();
+
+    public override string ToString()
+        => значение;
 }
 
 #if UNITY_EDITOR
