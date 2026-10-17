@@ -135,6 +135,8 @@ internal class ПрыжокEditor : RunityEditor<Прыжок>
 
         Пробел();
 
+        ПредупреждениеПроУправление();
+
         Поле("Сила прыжка", x => x.силаПрыжка,
             (title, value) => EditorGUILayout.FloatField(title, value));
 

@@ -52,6 +52,8 @@ internal class Передвижение2DСверхуEditor : RunityEditor<Пе�
 
         Пробел();
 
+        ПредупреждениеПроУправление();
+
         Поле("Скорость", x => x.скорость,
             (title, value) => EditorGUILayout.FloatField(title, value));
 

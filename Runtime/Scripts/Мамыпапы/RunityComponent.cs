@@ -23,9 +23,18 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
     }
 
-    protected void Текст(string message)
+    protected void Текст(string message, MessageType type = MessageType.None)
     {
-        EditorGUILayout.HelpBox(message, MessageType.None);
+        EditorGUILayout.HelpBox(message, type);
+    }
+
+    protected void ПредупреждениеПроУправление()
+    {
+        if (Управление.main == null)
+        {
+            Текст("Добавьте объект Управление", MessageType.Error);
+            Пробел();
+        }
     }
 
     protected void Кнопка(string message, Action callback)
@@ -67,7 +76,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUILayout.Space(ширина);
     }
 
-    protected TObj Объект<TObj>(GUIContent title, UnityEngine.Object obj, bool fromScene = false) where TObj : UnityEngine.Object
+    protected TObj ПолеОбъекта<TObj>(GUIContent title, UnityEngine.Object obj, bool fromScene = false) where TObj : UnityEngine.Object
     {
         return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), fromScene);
     }
@@ -77,7 +86,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         serializedObject.Update();
     }
 
-    protected void Событие(string отображаемоеНазвание, string названиеСобытия)
+    protected void ОтобразитьСобытие(string отображаемоеНазвание, string названиеСобытия)
     {
         EditorGUILayout.PropertyField(serializedObject.FindProperty(названиеСобытия), new GUIContent(отображаемоеНазвание));
     }

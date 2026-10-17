@@ -37,10 +37,10 @@ internal class МоделлерEditor : RunityEditor<Моделлер>
         Пробел();
 
         Синхрополе("Модель", x => x.модель,
-            (title, value) => Объект<Mesh>(title, value));
+            (title, value) => ПолеОбъекта<Mesh>(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => Объект<Material>(title, value));
+            (title, value) => ПолеОбъекта<Material>(title, value));
 
         Синхрополе("Отбрасывает тени", x => x.отбрасываетТени,
             (title, value) => EditorGUILayout.Toggle(title, value));

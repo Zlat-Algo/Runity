@@ -42,7 +42,7 @@ internal class КоллайдерКруг2DEditor : RunityEditor<Коллайд�
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => Объект<PhysicsMaterial2D>(title, value));
+            (title, value) => ПолеОбъекта<PhysicsMaterial2D>(title, value));
     }
 
 }

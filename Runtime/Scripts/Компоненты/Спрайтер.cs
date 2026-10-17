@@ -88,7 +88,7 @@ internal class СпрайтерEditor : RunityEditor<Спрайтер>
         Пробел();
 
         Синхрополе("Спрайт", x => x.спрайт,
-            (title, value) => Объект<Sprite>(title, value));
+            (title, value) => ПолеОбъекта<Sprite>(title, value));
 
         Пробел();
 

@@ -37,6 +37,8 @@ internal class БегEditor : RunityEditor<Бег>
 
         Пробел();
 
+        ПредупреждениеПроУправление();
+
         Поле("Увеличение скорости", x => x.увеличениеСкорости,
             (title, value) => EditorGUILayout.FloatField(title, value));
     }

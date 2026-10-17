@@ -57,7 +57,7 @@ internal class ПреследовательEditor : RunityEditor<Преслед�
         Пробел();
 
         Поле("Цель", x => x.цель,
-            (title, value) => Объект<Transform>(title, value));
+            (title, value) => ПолеОбъекта<Transform>(title, value));
 
         Пробел();
 

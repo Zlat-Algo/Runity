@@ -8,7 +8,13 @@ using UnityEngine.InputSystem;
 [AddComponentMenu("  Runity/Управление")]
 public class Управление : RunityComponent
 {
-    void Awake() => оригинальныйКомпонент = GetComponent<PlayerInput>();
+    public static Управление main;
+
+    void Awake()
+    {
+        оригинальныйКомпонент = GetComponent<PlayerInput>();
+        main = this;
+    }
     void OnValidate() => Awake();
     public PlayerInput оригинал => (PlayerInput)оригинальныйКомпонент;
 
@@ -133,7 +139,7 @@ internal class УправлениеEditor : RunityEditor<Управление>
         Пробел();
 
         Синхрополе("Набор настроек", x => x.наборНастроек,
-            (title, value) => Объект<InputActionAsset>(title, value));
+            (title, value) => ПолеОбъекта<InputActionAsset>(title, value));
 
         Кнопка("Стандартные настройки", () =>
         {

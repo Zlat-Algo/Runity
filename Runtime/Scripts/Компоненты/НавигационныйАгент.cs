@@ -90,7 +90,7 @@ internal class НавигационныйАгентEditor : RunityEditor<Нав�
         Пробел();
 
         Поле("Цель", x => x.цель,
-            (title, value) => Объект<Transform>(title, value, true));
+            (title, value) => ПолеОбъекта<Transform>(title, value, true));
 
         Синхрополе("Зона достижения цели", x => x.зонаДостиженияЦели,
             (title, value) => EditorGUILayout.FloatField(title, value));
