@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,12 +8,50 @@ using UnityEngine;
 
 public class RunityComponent : Компонент
 {
+    //protected Флажок вРедакторе => !Application.isPlaying;
+
     public Component оригинальныйКомпонент { get; protected set; }
 
     protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
     {
         return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
     }
+
+    // Компонент, который тоже зависит от оригинала
+    //protected Component twinComponent;
+
+    protected virtual void OnEnable()
+    {
+        if (оригинальныйКомпонент == null) return;
+        if (оригинальныйКомпонент is Behaviour behaviour)
+            behaviour.enabled = true;
+        else if (оригинальныйКомпонент is Renderer renderer)
+            renderer.enabled = true;
+        else
+            Консоль.НапечататьПредупреждение("Пустое OnEnable", this);
+    }
+    protected virtual void OnDisable()
+    {
+        if (оригинальныйКомпонент == null) return;
+        if (оригинальныйКомпонент is Behaviour behaviour)
+            behaviour.enabled = false;
+        else if (оригинальныйКомпонент is Renderer renderer)
+            renderer.enabled = false;
+        else
+            Консоль.НапечататьПредупреждение("Пустое OnDisable", this);
+    }
+    /*protected virtual void OnDestroy()
+    {
+        if (оригинальныйКомпонент == null) return;
+        if (gameObject == null) return;
+#if !UNITY_EDITOR
+        Destroy(оригинальныйКомпонент, .1f);
+#endif
+#if UNITY_EDITOR
+        print(gameObject);
+        gameObject.AddComponent<ComponentKiller>().SetTargets((twinComponent, оригинальныйКомпонент));
+#endif
+    }*/
 }
 
 #if UNITY_EDITOR

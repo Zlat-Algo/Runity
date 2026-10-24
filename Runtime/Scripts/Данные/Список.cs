@@ -50,6 +50,22 @@ public class Список<T> : ICollection<T>, IEnumerable<T>, IEnumerable, ILis
     public void добавить(T элемент)
         => значение.Add(элемент);
 
+    public void добавить(T[] массив)
+    {
+        foreach (T элемент in массив)
+        {
+            добавить(элемент);
+        }
+    }
+
+    public void добавить(Список<T> список)
+    {
+        foreach (T элемент in список)
+        {
+            добавить(элемент);
+        }
+    }
+
     // Вставка по индексу
     public void Insert(int индекс, T элемент)
         => значение.Insert(индекс, элемент);
@@ -161,6 +177,29 @@ public class Список<T> : ICollection<T>, IEnumerable<T>, IEnumerable, ILis
                 Консоль.НапечататьОшибку($"Невозможно получить случайный элемент из списка {this}, так как он пуст");
                 return default;
             }
+        }
+    }
+
+    /*public void СделатьДляКаждого(Action<T> action)
+    {
+        foreach (T элемент in значение)
+        {
+            action.Invoke(элемент);
+        }
+    }*/
+
+    public void Вызвать()
+    {
+        if (значение is List<Событие> события)
+        {
+            foreach (Событие событие in события)
+            {
+                событие.Вызвать();
+            }
+        }
+        else
+        {
+            Консоль.НапечататьОшибку("Список не является списком событий, поэтому его невозможно вызвать!");
         }
     }
 }

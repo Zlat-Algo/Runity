@@ -1,5 +1,6 @@
 using Codice.Client.BaseCommands;
 using System;
+using System.Text.RegularExpressions;
 using UnityEditor;
 
 /// <summary>
@@ -59,6 +60,10 @@ public struct Строка : IEquatable<Строка>
 
     public override string ToString()
         => значение;
+
+    public Флажок кириллица => Regex.IsMatch(значение, @"\p{IsCyrillic}");
+
+    public Флажок чтоТоЕсть => значение != "";
 }
 
 #if UNITY_EDITOR

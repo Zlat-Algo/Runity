@@ -3,15 +3,67 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class Компонент : MonoBehaviour
 {
     protected static Флажок да => true;
     protected static Флажок нет => false;
-
+    protected Компонент этотКомпонент => this;
     public Объект весьОбъект => gameObject;
+
+/*#if UNITY_EDITOR
+    [ContextMenu("Открыть скрипт", false, 1000000)]
+    void ОткрытьСкрипт()
+    {
+        MonoScript script = MonoScript.FromMonoBehaviour(this);
+
+        if (script != null)
+            AssetDatabase.OpenAsset(script);
+    }
+
+    [ContextMenu("Сбросить значения", false, 1000100)]
+    void СброситьЗначения()
+    {
+        // Используем стандартный Reset компонента.
+        SendMessage("Reset", SendMessageOptions.DontRequireReceiver);
+    }
+
+    [ContextMenu("Скопировать значения", false, 1000101)]
+    void СкопироватьЗначения()
+    {
+        ComponentUtility.CopyComponent(this);
+    }
+
+    [ContextMenu("Вставить значения", false, 1000102)]
+    void ВставитьЗначения()
+    {
+        Undo.RecordObject(this, "Paste Component Values");
+
+        if (ComponentUtility.PasteComponentValues(this))
+        {
+            EditorUtility.SetDirty(this);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+        }
+    }
+
+    [ContextMenu("Вставить компонент", false, 1000103)]
+    void ВставитьКомпонент()
+    {
+        if (ComponentUtility.PasteComponentAsNew(gameObject))
+        {
+            // Unity выполняет вставку через собственную систему редактора.
+        }
+    }
+
+    [ContextMenu("Удалить компонент", false, 1000200)]
+    void УдалитьКомпонент()
+    {
+        Undo.DestroyObjectImmediate(this);
+    }
+
+#endif*/
+
     //public string имя => name;
     //public Transform трансформация => transform;
 
