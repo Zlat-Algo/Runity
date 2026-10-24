@@ -7,6 +7,9 @@ using UnityEngine;
 [AddComponentMenu("  Runity/ Передвижение/Прыжок")]
 public class Прыжок : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     void Awake() => оригинальныйКомпонент = GetComponent<ФизическоеТелоЛюбое>();
     void OnValidate() => Awake();
     public ФизическоеТелоЛюбое оригинал => (ФизическоеТелоЛюбое)оригинальныйКомпонент;

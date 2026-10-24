@@ -5,6 +5,9 @@ using UnityEngine;
 [AddComponentMenu("  Runity/Курсор")]
 public class Курсор : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     [SerializeField] Флажок _следуетПоОсиX = да;
     public Флажок следуетПоОсиX { get => _следуетПоОсиX; set => _следуетПоОсиX = value; }
 

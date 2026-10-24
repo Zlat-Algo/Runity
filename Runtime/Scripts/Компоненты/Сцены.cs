@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 [AddComponentMenu("  Runity/Сцены")]
 public class Сцены : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     public static void Запустить(Число номерСцены)
     {
         if (номерСцены < количествоСцен)

@@ -5,6 +5,9 @@ using UnityEngine;
 [AddComponentMenu("  Runity/ Работа с объектами/Спавнер")]
 public class Спавнер : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     public bool пауза { get => _пауза; set => _пауза = value; }
     [SerializeField] bool _пауза;
     public GameObject когоКопирует { get => _когоКопирует; set => _когоКопирует = value; }

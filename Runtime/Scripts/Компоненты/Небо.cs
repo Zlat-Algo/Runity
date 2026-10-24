@@ -4,8 +4,13 @@ using UnityEngine.Rendering;
 
 public enum РежимОкружающегоСвета { Небесный, Градиентный, Одноцветный }
 
+[DisallowMultipleComponent]
+[AddComponentMenu("  Runity/ Окружение/Небо")]
 public class Небо : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     public static Material материал
     {
         get => RenderSettings.skybox;

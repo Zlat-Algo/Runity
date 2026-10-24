@@ -6,6 +6,8 @@ using UnityEngine;
 [AddComponentMenu("  Runity/ Передвижение/Передвижение 2D")]
 public class Передвижение2D : Передвижение
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
     void Awake() => оригинальныйКомпонент = GetComponent<ФизическоеТело2D>();
     void OnValidate() => Awake();
     public ФизическоеТело2D оригинал => (ФизическоеТело2D)оригинальныйКомпонент;

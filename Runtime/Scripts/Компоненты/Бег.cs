@@ -15,6 +15,8 @@ public class Бег : RunityComponent
 
     void Update()
     {
+        //if (вРедакторе) return;
+
         if (Управление.ускорениеНажато)
         {
             оригинал.скорость += увеличениеСкорости;

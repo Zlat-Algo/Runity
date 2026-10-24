@@ -4,6 +4,9 @@ using UnityEngine;
 [AddComponentMenu("  Runity/ Работа с объектами/Разрушитель")]
 public class Разрушитель : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+    //protected override void OnDestroy() { }
     public GameObject цель { get => _цель; set => _цель = value; }
     [SerializeField] GameObject _цель;
     public float таймер { get => _таймер; set => _таймер = value; }
@@ -11,6 +14,8 @@ public class Разрушитель : RunityComponent
 
     void Start()
     {
+        //if (вРедакторе) return;
+
         if (цель == null)
         {
             Destroy(gameObject, таймер);

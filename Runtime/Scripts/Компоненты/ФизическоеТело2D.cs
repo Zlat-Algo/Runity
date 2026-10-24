@@ -14,10 +14,13 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
     void OnValidate() => Awake();
     public Rigidbody2D оригинал => (Rigidbody2D)оригинальныйКомпонент;
 
-    public Флажок работает
+    protected override void OnEnable()
     {
-        get => оригинал.simulated;
-        set => оригинал.simulated = value;
+        оригинал.simulated = да;
+    }
+    protected override void OnDisable()
+    {
+        оригинал.simulated = нет;
     }
 
     public PhysicsMaterial2D материал
@@ -100,23 +103,29 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
 
     //public string тегНаКоторыйРеагируютСобытия;
 
-    [SerializeField] UnityEvent _приНачалеСтолкновения;
-    public UnityEvent приНачалеСтолкновения => _приНачалеСтолкновения;
+    [SerializeField] События _приНачалеСтолкновения;
+    public События приНачалеСтолкновения => _приНачалеСтолкновения;
+    void OnCollisionEnter2D() => _приНачалеСтолкновения.Вызвать();
 
-    [SerializeField] UnityEvent _приПродолженииСтолкновения;
-    public UnityEvent приПродолженииСтолкновения => _приПродолженииСтолкновения;
+    [SerializeField] События _приПродолженииСтолкновения;
+    public События приПродолженииСтолкновения => _приПродолженииСтолкновения;
+    void OnCollisionStay2D() => _приПродолженииСтолкновения.Вызвать();
 
-    [SerializeField] UnityEvent _приКонцеСтолкновения;
-    public UnityEvent приКонцеСтолкновения => _приКонцеСтолкновения;
+    [SerializeField] События _приКонцеСтолкновения;
+    public События приКонцеСтолкновения => _приКонцеСтолкновения;
+    void OnCollisionExit2D() => _приКонцеСтолкновения.Вызвать();
 
-    [SerializeField] UnityEvent _приНачалеПересечения;
-    public UnityEvent приНачалеПересечения => _приНачалеПересечения;
+    [SerializeField] События _приНачалеПересечения;
+    public События приНачалеПересечения => _приНачалеПересечения;
+    void OnTriggerEnter2D() => _приНачалеПересечения.Вызвать();
 
-    [SerializeField] UnityEvent _приПродолженииПересечения;
-    public UnityEvent приПродолженииПересечения => _приПродолженииПересечения;
+    [SerializeField] События _приПродолженииПересечения;
+    public События приПродолженииПересечения => _приПродолженииПересечения;
+    void OnTriggerStay2D() => _приПродолженииПересечения.Вызвать();
 
-    [SerializeField] UnityEvent _приКонцеПересечения;
-    public UnityEvent приКонцеПересечения => _приКонцеПересечения;
+    [SerializeField] События _приКонцеПересечения;
+    public События приКонцеПересечения => _приКонцеПересечения;
+    void OnTriggerExit2D() => _приКонцеПересечения.Вызвать();
 }
 
 #if UNITY_EDITOR
@@ -129,11 +138,6 @@ internal class ФизическоеТело2DEditor : RunityEditor<Физиче�
     public override void OnInspectorGUI()
     {
         Текст("Этот объект подчиняется физике и что-то делает при пересечении и столкновении с другими объектами");
-
-        Пробел();
-
-        Синхрополе("Работает", x => x.работает,
-            (title, value) => EditorGUILayout.Toggle(title, value));
 
         Пробел();
 

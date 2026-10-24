@@ -8,6 +8,9 @@ public enum ДействиеПриПотереЗдоровья { Удалени�
 [AddComponentMenu("  Runity/ Механики/Здоровье")]
 public class Здоровье : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     [SerializeField] int _текущее = 10;
     public int текущее
     {
@@ -40,8 +43,17 @@ public class Здоровье : RunityComponent
     [SerializeField] ДействиеПриПотереЗдоровья _действиеПриПотереЗдоровья;
     public ДействиеПриПотереЗдоровья действиеПриПотереЗдоровья { get => _действиеПриПотереЗдоровья; set => _действиеПриПотереЗдоровья = value; }
 
-    [SerializeField] UnityEvent _когдаЗакончилосьЗдоровье;
-    public UnityEvent когдаЗакончилосьЗдоровье => _когдаЗакончилосьЗдоровье;
+    [SerializeField] События _когдаЗакончилосьЗдоровье;
+    public События когдаЗакончилосьЗдоровье => _когдаЗакончилосьЗдоровье;
+
+    public void ПолучитьУрон(Число урон)
+    {
+        текущее -= урон;
+    }
+    public void ПолучитьУрон(Число уронМинимальный, Число уронМаксимальный)
+    {
+        текущее -= Случайности.СлучайноеИзДиапазона(уронМинимальный, уронМаксимальный);
+    }
 }
 
 #if UNITY_EDITOR

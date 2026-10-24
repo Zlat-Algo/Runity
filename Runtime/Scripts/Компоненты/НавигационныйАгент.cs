@@ -37,6 +37,8 @@ public class НавигационныйАгент : Передвижение
 
     private void FixedUpdate()
     {
+        //if (вРедакторе) return;
+
         if (цель != null && цель.position != предыдущаяПозиция)
         {
             предыдущаяПозиция = цель.position;

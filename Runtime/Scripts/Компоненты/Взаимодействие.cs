@@ -7,6 +7,9 @@ using UnityEngine.Events;
 [AddComponentMenu("  Runity/ Механики/Взаимодействие")]
 public class Взаимодействие : RunityComponent
 {
+    protected override void OnEnable() { }
+    protected override void OnDisable() { }
+
     [SerializeField] float _дальностьВзаимодействия = 5;
     public float дальностьВзаимодействия{ get => _дальностьВзаимодействия; set => _дальностьВзаимодействия = value;}
 
@@ -22,19 +25,20 @@ public class Взаимодействие : RunityComponent
     bool камераБлизко => (transform.position - Camera.main.transform.position).magnitude <= дальностьВзаимодействия;
     bool взаимодействиеДоступно;
 
-    [SerializeField] UnityEvent _когдаМожноВзаимодействовать;
-    public UnityEvent когдаМожноВзаимодействовать => _когдаМожноВзаимодействовать;
-    [SerializeField] UnityEvent _когдаНельзяВзаимодействовать;
-    public UnityEvent когдаНельзяВзаимодействовать => _когдаНельзяВзаимодействовать;
-    [SerializeField] UnityEvent _когдаВзаимодействует;
-    public UnityEvent когдаВзаимодействует => _когдаВзаимодействует;
+    [SerializeField] События _когдаМожноВзаимодействовать;
+    public События когдаМожноВзаимодействовать => _когдаМожноВзаимодействовать;
+    [SerializeField] События _когдаНельзяВзаимодействовать;
+    public События когдаНельзяВзаимодействовать => _когдаНельзяВзаимодействовать;
+    [SerializeField] События _когдаВзаимодействует;
+    public События когдаВзаимодействует => _когдаВзаимодействует;
 
     void OnMouseOver()
     {
+        //if (вРедакторе) return;
         if (включен && камераБлизко && !взаимодействиеДоступно)
         {
             взаимодействиеДоступно = да;
-            //_когдаМожноВзаимодействовать.Вызвать();
+            _когдаМожноВзаимодействовать.Вызвать();
         }
         else if (взаимодействиеДоступно && !(включен && камераБлизко))
         {
@@ -45,6 +49,7 @@ public class Взаимодействие : RunityComponent
 
     void OnMouseExit()
     {
+        //if (вРедакторе) return;
         if (взаимодействиеДоступно)
         {
             взаимодействиеДоступно = нет;
@@ -54,7 +59,8 @@ public class Взаимодействие : RunityComponent
 
     void Update()
     {
-        if (включен && взаимодействиеДоступно && (!ЛКМВместоЕ && Управление.использоватьНажато) || (ЛКМВместоЕ && Управление.ЛКМНажата))
+        //if (вРедакторе) return;
+        if (включен && взаимодействиеДоступно && ((!ЛКМВместоЕ && Управление.использоватьНажато) || (ЛКМВместоЕ && Управление.ЛКМНажата)))
         {
             _когдаВзаимодействует.Вызвать();
             if (!многоразовый) включен = false; 
@@ -67,7 +73,7 @@ public class Взаимодействие : RunityComponent
 [CustomEditor(typeof(Взаимодействие))]
 internal class ВзаимодействиеEditor : RunityEditor<Взаимодействие>
 {
-    bool eventFoldout = true;
+    //bool eventFoldout = true;
 
     public override void OnInspectorGUI()
     {
@@ -92,8 +98,8 @@ internal class ВзаимодействиеEditor : RunityEditor<Взаимод�
 
         Пробел();
 
-        eventFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(eventFoldout, "События");
-        if (eventFoldout)
+        //eventFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(eventFoldout, "События");
+        //if (eventFoldout)
         {
             НачатьСобытия();
 
@@ -104,7 +110,7 @@ internal class ВзаимодействиеEditor : RunityEditor<Взаимод�
 
             ЗакончитьСобытия();
         }
-        EditorGUILayout.EndFoldoutHeaderGroup();
+        //EditorGUILayout.EndFoldoutHeaderGroup();
 
         Пробел();
     }
