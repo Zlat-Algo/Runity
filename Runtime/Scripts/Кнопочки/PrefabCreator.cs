@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
@@ -98,3 +99,4 @@ public static class PrefabCreator
             : directory.Replace("\\", "/");
     }
 }
+#endif

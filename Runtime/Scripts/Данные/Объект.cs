@@ -1,5 +1,7 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 [Serializable]
@@ -63,6 +65,15 @@ public class Объект : IEquatable<Объект>
 
     public ТипКомпонента НайтиКомпонент<ТипКомпонента>() => значение.GetComponent<ТипКомпонента>();
     public Флажок ПопробоватьНайтиКомпонент<ТипКомпонента>(out ТипКомпонента компонент) => значение.TryGetComponent(out компонент);
+    public Флажок ПроверитьТег(params Строка[] теги)
+    {
+        foreach(Строка тег in теги)
+        {
+            if (тег == null || тег == "") continue;
+            if (значение.CompareTag(тег)) return true;
+        }
+        return false;
+    }
 
 }
 

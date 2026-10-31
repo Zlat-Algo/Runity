@@ -10,6 +10,12 @@ internal class Player : Компонент
     public int age = 5;
     public Флажок возраст1;
 
+    public Строка имя;
+    public Число а;
+    public Дробное ч;
+    public Направление3D ваава;
+    public Спрайт ваыва;
+
     float speed = 5.4f;
     Дробное скорость = 5.4;
 

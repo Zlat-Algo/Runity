@@ -1,13 +1,16 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 /// <summary>
 /// Двухмерное направление. Состоит из двух дробных чисел - x и y. Альтернатива Vector2
 /// </summary>
+[Serializable]
 public struct Направление2D : IEquatable<Направление2D>
 {
-    Vector2 значение;
+    [SerializeField] Vector2 значение;
 
     public Дробное x
     {

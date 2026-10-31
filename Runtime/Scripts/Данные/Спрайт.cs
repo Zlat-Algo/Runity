@@ -1,8 +1,11 @@
 using System;
 using System.ComponentModel;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
+[Serializable]
 public class Спрайт : IEquatable<Спрайт>
 {
     [SerializeField] Sprite значение;

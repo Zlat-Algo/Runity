@@ -1,13 +1,16 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 /// <summary>
 /// Трёхмерное направление. Состоит из трёх дробных чисел - x, y и z. Альтернатива Vector3
 /// </summary>
+[Serializable]
 public struct Направление3D : IEquatable<Направление3D>
 {
-    Vector3 значение;
+    [SerializeField] Vector3 значение;
 
     public Дробное x
     {

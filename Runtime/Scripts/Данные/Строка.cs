@@ -1,7 +1,10 @@
 using Codice.Client.BaseCommands;
 using System;
 using System.Text.RegularExpressions;
+#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
+#endif
 
 /// <summary>
 /// Текстовые данные. Альтернатива string
@@ -9,7 +12,7 @@ using UnityEditor;
 [Serializable]
 public struct Строка : IEquatable<Строка>
 {
-    string значение;
+    [SerializeField] string значение;
 
     /// <summary>
     /// Количество символов в строке
@@ -64,6 +67,15 @@ public struct Строка : IEquatable<Строка>
     public Флажок кириллица => Regex.IsMatch(значение, @"\p{IsCyrillic}");
 
     public Флажок чтоТоЕсть => значение != "";
+
+    public Флажок Совпадает(params Строка[] строки)
+    {
+        foreach(Строка строка in строки)
+        {
+            if (значение == строка) return true;
+        }
+        return false;
+    }
 }
 
 #if UNITY_EDITOR

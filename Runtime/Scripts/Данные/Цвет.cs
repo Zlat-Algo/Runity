@@ -1,7 +1,10 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
+[Serializable]
 public struct Цвет : IEquatable<Цвет>
 {
     [SerializeField] Color значение;

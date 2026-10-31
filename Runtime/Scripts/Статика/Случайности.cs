@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[System.Serializable]
+/*[System.Serializable]
 internal struct Диапазон
 {
     public float минимальное;
@@ -23,15 +23,15 @@ internal struct Диапазон
             return минимальное;
         }
     }
-}
+}*/
 
 public static class Случайности
 {
-    public static float СлучайноеИзДиапазона(float минимальное, float максимальное)
+    public static Дробное СлучайноеИзДиапазона(Дробное минимальное, Дробное максимальное)
     {
         return Random.Range(минимальное, максимальное);
     }
-    public static int СлучайноеИзДиапазона(int минимальное, int максимальное)
+    public static Число СлучайноеИзДиапазона(Число минимальное, Число максимальное)
     {
         return Random.Range(минимальное, максимальное + 1);
     }

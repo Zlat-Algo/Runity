@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
@@ -119,3 +120,4 @@ public class #SCRIPTNAME# : Компонент
         }
     }
 }
+#endif

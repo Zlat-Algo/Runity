@@ -1,5 +1,8 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
+#endif
 
 /// <summary>
 /// Дробное число. Дробная часть отделяется точкой. Альтернатива float
@@ -7,7 +10,7 @@ using UnityEditor;
 [Serializable]
 public struct Дробное : IEquatable<Дробное>, IComparable<Дробное>
 {
-    float значение;
+    [SerializeField] float значение;
 
     public Дробное(float число)
     {
@@ -28,6 +31,9 @@ public struct Дробное : IEquatable<Дробное>, IComparable<Дроб�
 
     public static explicit operator int(Дробное число)
         => (int)число.значение;
+
+    public static implicit operator Дробное(Число число)
+        => new Дробное((int)число);
 
     public static implicit operator Дробное(int число)
         => new Дробное((float)число);
