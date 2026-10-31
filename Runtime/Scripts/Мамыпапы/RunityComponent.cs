@@ -1,9 +1,10 @@
-using NUnit.Framework;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Mathematics;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 public class RunityComponent : Компонент
@@ -14,7 +15,11 @@ public class RunityComponent : Компонент
 
     protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
     {
+        #if UNITY_EDITOR
         return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
+#else
+        return null;
+#endif
     }
 
     // Компонент, который тоже зависит от оригинала
@@ -59,7 +64,11 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 {
     protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
     {
+        #if UNITY_EDITOR
         return AssetDatabase.LoadAssetAtPath<TAsset>(AssetDatabase.GUIDToAssetPath(guid));
+#else
+        return null;
+#endif
     }
 
     protected void Текст(string message, MessageType type = MessageType.None)
@@ -304,26 +313,24 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         return value;
     }*/
 
-    protected Диапазон ПолеСДиапазоном(string title, Expression<Func<T, float>> propertyMin, Expression<Func<T, float>> propertyMax, Expression<Func<T, bool>> propertyMode)
+    protected (Дробное, Дробное) ПолеСДиапазоном(string title, Expression<Func<T, float>> propertyMin, Expression<Func<T, float>> propertyMax, Expression<Func<T, bool>> propertyMode)
     {
         PropertyInfo propertyMinInfo = GetPropertyInfo(propertyMin);
         PropertyInfo propertyMaxInfo = GetPropertyInfo(propertyMax);
         PropertyInfo propertyModeInfo = GetPropertyInfo(propertyMode);
 
-        Диапазон Get(T component)
+        (Дробное, Дробное) Get(T component)
         {
-            Диапазон диапазон = new Диапазон();
-            диапазон.минимальное = (float)propertyMinInfo.GetValue(component);
-            диапазон.максимальное = (float)propertyMaxInfo.GetValue(component);
-            диапазон.диапазон = (bool)propertyModeInfo.GetValue(component);
+            (Дробное, Дробное) диапазон = ((float)propertyMinInfo.GetValue(component), (float)propertyMaxInfo.GetValue(component));
+            //диапазон.диапазон = (bool)propertyModeInfo.GetValue(component);
             return диапазон;
         }
 
-        void Set(T component, Диапазон value)
+        void Set(T component, (Дробное, Дробное) value)
         {
-            propertyMinInfo.SetValue(component, value.минимальное);
-            propertyMaxInfo.SetValue(component, value.максимальное);
-            propertyModeInfo.SetValue(component, value.диапазон);
+            propertyMinInfo.SetValue(component, value.Item1);
+            propertyMaxInfo.SetValue(component, value.Item2);
+            //propertyModeInfo.SetValue(component, value.диапазон);
         }
 
         EditorGUI.showMixedValue = IsChanged(Get);
@@ -332,27 +339,27 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         НачатьГоризонтальнуюГруппу();
 
-        Диапазон value = Get(компонент);
+        (Дробное, Дробное) value = Get(компонент);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
             Get(component)
         );*/
 
-        if (value.диапазон)
-        {
+        //if (value.диапазон)
+        //{
             GUILayout.Label(title);
             GUILayout.Label(" от ", GUILayout.Width(25));
-            value.минимальное = EditorGUILayout.FloatField(value.минимальное, GUILayout.Width(75));
+            value.Item1 = EditorGUILayout.FloatField(value.Item1, GUILayout.Width(75));
             GUILayout.Label(" до ", GUILayout.Width(25));
-            value.максимальное = EditorGUILayout.FloatField(value.максимальное, GUILayout.Width(75));
-            if (МиниКнопка("↕", "Случайное"))
+            value.Item2 = EditorGUILayout.FloatField(value.Item2, GUILayout.Width(75));
+            /*if (МиниКнопка("↕", "Случайное"))
             {
                 value.диапазон = false;
                 //Set(component, value);
-            }
-        }
-        else
+            }*/
+        //}
+        /*else
         {
             value.минимальное = EditorGUILayout.FloatField(new GUIContent(title), value.минимальное);
             if (МиниКнопка("=", "Постоянное"))
@@ -360,7 +367,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
                 value.диапазон = true;
                 //Set(component, value);
             }
-        }
+        }*/
         ЗакончитьГоризонтальнуюГруппу();
 
         if (EditorGUI.EndChangeCheck())

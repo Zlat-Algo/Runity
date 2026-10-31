@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using Unity.AI.Navigation;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.AI;
 

@@ -1,4 +1,6 @@
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,6 +12,7 @@ public enum РежимФизическогоТела { Динамичное, П�
 [AddComponentMenu("  Runity/ Физика 2D/Физическое тело 2D")]
 public class ФизическоеТело2D : ФизическоеТелоЛюбое
 {
+    internal bool eventFoldout = false;
     void Awake() => оригинальныйКомпонент = GetComponent<Rigidbody2D>();
     void OnValidate() => Awake();
     public Rigidbody2D оригинал => (Rigidbody2D)оригинальныйКомпонент;
@@ -101,31 +104,62 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
         set => оригинал.freezeRotation = !value;
     }
 
-    //public string тегНаКоторыйРеагируютСобытия;
+    Флажок ТегПодходит(Объект сКемСтолкнулись) => Или(тегНаКоторыйРеагируютСобытия.Совпадает(null, "", "Untagged"), сКемСтолкнулись.ПроверитьТег(тегНаКоторыйРеагируютСобытия));
+
+    [SerializeField] Строка _тегНаКоторыйРеагируютСобытия;
+    public Строка тегНаКоторыйРеагируютСобытия
+    {
+        get => _тегНаКоторыйРеагируютСобытия;
+        set => _тегНаКоторыйРеагируютСобытия = value;
+    }
 
     [SerializeField] События _приНачалеСтолкновения;
     public События приНачалеСтолкновения => _приНачалеСтолкновения;
-    void OnCollisionEnter2D() => _приНачалеСтолкновения.Вызвать();
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (ТегПодходит(collision.gameObject))
+            _приНачалеСтолкновения.Вызвать();
+    }
 
     [SerializeField] События _приПродолженииСтолкновения;
     public События приПродолженииСтолкновения => _приПродолженииСтолкновения;
-    void OnCollisionStay2D() => _приПродолженииСтолкновения.Вызвать();
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (ТегПодходит(collision.gameObject))
+            _приПродолженииСтолкновения.Вызвать();
+    }
 
     [SerializeField] События _приКонцеСтолкновения;
     public События приКонцеСтолкновения => _приКонцеСтолкновения;
-    void OnCollisionExit2D() => _приКонцеСтолкновения.Вызвать();
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        if (ТегПодходит(collision.gameObject))
+            _приКонцеСтолкновения.Вызвать();
+    }
 
     [SerializeField] События _приНачалеПересечения;
     public События приНачалеПересечения => _приНачалеПересечения;
-    void OnTriggerEnter2D() => _приНачалеПересечения.Вызвать();
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (ТегПодходит(collider.gameObject))
+            _приНачалеПересечения.Вызвать();
+    }
 
     [SerializeField] События _приПродолженииПересечения;
     public События приПродолженииПересечения => _приПродолженииПересечения;
-    void OnTriggerStay2D() => _приПродолженииПересечения.Вызвать();
+    void OnTriggerStay2D(Collider2D collider)
+    {
+        if (ТегПодходит(collider.gameObject))
+            _приПродолженииПересечения.Вызвать();
+    }
 
     [SerializeField] События _приКонцеПересечения;
     public События приКонцеПересечения => _приКонцеПересечения;
-    void OnTriggerExit2D() => _приКонцеПересечения.Вызвать();
+    void OnTriggerExit2D(Collider2D collider)
+    {
+        if (ТегПодходит(collider.gameObject))
+            _приКонцеПересечения.Вызвать();
+    }
 }
 
 #if UNITY_EDITOR
@@ -133,8 +167,6 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
 [CustomEditor(typeof(ФизическоеТело2D))]
 internal class ФизическоеТело2DEditor : RunityEditor<ФизическоеТело2D>
 {
-    bool eventFoldout = false;
-
     public override void OnInspectorGUI()
     {
         Текст("Этот объект подчиняется физике и что-то делает при пересечении и столкновении с другими объектами");
@@ -178,10 +210,10 @@ internal class ФизическоеТело2DEditor : RunityEditor<Физиче�
 
         Пробел();
 
-        eventFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(eventFoldout, "События");
-        if (eventFoldout)
+        компонент.eventFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(компонент.eventFoldout, "События");
+        if (компонент.eventFoldout)
         {
-            //component.тегНаКоторыйРеагируютСобытия = EditorGUILayout.TagField("Тег, на который реагируют события", component.тегНаКоторыйРеагируютСобытия);
+            компонент.тегНаКоторыйРеагируютСобытия = EditorGUILayout.TagField("Тег, на который реагируют события", компонент.тегНаКоторыйРеагируютСобытия);
 
             НачатьСобытия();
 

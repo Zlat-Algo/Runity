@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 [CreateAssetMenu(
@@ -119,6 +121,7 @@ public class GIFAnimationClip : ScriptableObject
 
 
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(GIFAnimationClip))]
 public class GIFAnimationClipEditor : Editor
 {
@@ -283,3 +286,4 @@ public class GIFAnimationClipEditor : Editor
         }
     }
 }
+#endif

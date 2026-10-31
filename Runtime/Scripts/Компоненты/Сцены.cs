@@ -1,4 +1,6 @@
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,7 +22,6 @@ public class Сцены : RunityComponent
             Консоль.НапечататьОшибку($"Сцены под номером {номерСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через File - Build Profiles - Scene List");
         }
     }
-    public void _Запустить(int номерСцены) => Запустить(номерСцены);
     public static void Запустить(Строка имяСцены) //=> SceneManager.LoadScene((string)имяСцены);
     {
         if (ПроверитьНаличиеСцены(имяСцены))
@@ -32,9 +33,7 @@ public class Сцены : RunityComponent
             Консоль.НапечататьОшибку($"Сцены {имяСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через File - Build Profiles - Scene List");
         }
     }
-    public void _Запустить(string имяСцены) => Запустить(имяСцены);
     public static void Перезапустить() => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    public void _Перезапустить() => Перезапустить();
     public static Флажок ЗапуститьСледующую()
     {
         if (номерАктивнойСцены + 1 < количествоСцен)
@@ -48,7 +47,6 @@ public class Сцены : RunityComponent
             return false;
         }
     }
-    public void _ЗапуститьСледующую() => ЗапуститьСледующую();
     public static Флажок ЗапуститьПредыдущую()
     {
         if (номерАктивнойСцены > 0)
@@ -62,7 +60,6 @@ public class Сцены : RunityComponent
             return false;
         }
     }
-    public void _ЗапуститьПредыдущую() => ЗапуститьПредыдущую();
     public int кря { get; set; }
     public Число крякря { get; set; }
     public static Число номерАктивнойСцены
@@ -94,17 +91,17 @@ internal class СценыEditor : RunityEditor<Сцены>
 
         Кнопка("Запустить предыдущую", () =>
         {
-            компонент._ЗапуститьПредыдущую();
+            Сцены.ЗапуститьПредыдущую();
         });
 
         Кнопка("Перезапустить текущую", () =>
         {
-            компонент._Перезапустить();
+            Сцены.Перезапустить();
         });
 
         Кнопка("Запустить следующую", () =>
         {
-            компонент._ЗапуститьСледующую();
+            Сцены.ЗапуститьСледующую();
         });
     }
 }

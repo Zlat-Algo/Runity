@@ -1,6 +1,8 @@
 using System;
 using Unity.VisualScripting.YamlDotNet.Core.Tokens;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 

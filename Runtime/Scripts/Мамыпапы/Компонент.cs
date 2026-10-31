@@ -12,57 +12,97 @@ public class Компонент : MonoBehaviour
     protected Компонент этотКомпонент => this;
     public Объект весьОбъект => gameObject;
 
-/*#if UNITY_EDITOR
-    [ContextMenu("Открыть скрипт", false, 1000000)]
-    void ОткрытьСкрипт()
+    /// <summary>
+    /// Даёт "да", если хотя бы одно из условий верно
+    /// </summary>
+    /// <param name="условия"></param>
+    /// <returns></returns>
+    public Флажок Или(params Флажок[] условия)
     {
-        MonoScript script = MonoScript.FromMonoBehaviour(this);
-
-        if (script != null)
-            AssetDatabase.OpenAsset(script);
-    }
-
-    [ContextMenu("Сбросить значения", false, 1000100)]
-    void СброситьЗначения()
-    {
-        // Используем стандартный Reset компонента.
-        SendMessage("Reset", SendMessageOptions.DontRequireReceiver);
-    }
-
-    [ContextMenu("Скопировать значения", false, 1000101)]
-    void СкопироватьЗначения()
-    {
-        ComponentUtility.CopyComponent(this);
-    }
-
-    [ContextMenu("Вставить значения", false, 1000102)]
-    void ВставитьЗначения()
-    {
-        Undo.RecordObject(this, "Paste Component Values");
-
-        if (ComponentUtility.PasteComponentValues(this))
+        if (условия.Length == 0) return нет;
+        foreach (Флажок условие in условия)
         {
-            EditorUtility.SetDirty(this);
-            PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            if (условие) return да;
         }
+        return нет;
     }
-
-    [ContextMenu("Вставить компонент", false, 1000103)]
-    void ВставитьКомпонент()
+    /// <summary>
+    /// Даёт "да", если все условия верны
+    /// </summary>
+    /// <param name="условия"></param>
+    /// <returns></returns>
+    public Флажок И(params Флажок[] условия)
     {
-        if (ComponentUtility.PasteComponentAsNew(gameObject))
+        if (условия.Length == 0) return нет;
+        foreach (Флажок условие in условия)
         {
-            // Unity выполняет вставку через собственную систему редактора.
+            if (!условие) return нет;
         }
+        return да;
     }
-
-    [ContextMenu("Удалить компонент", false, 1000200)]
-    void УдалитьКомпонент()
+    /// <summary>
+    /// Даёт "да", если все условия неверны. Если передать одно условие, то вернёт обратное - "нет" превратит в "да", а "да" превратит в "нет"
+    /// </summary>
+    /// <param name="условия"></param>
+    /// <returns></returns>
+    public Флажок Не(params Флажок[] условия)
     {
-        Undo.DestroyObjectImmediate(this);
+        if (условия.Length == 0) return нет;
+        if (условия.Length == 1) return !условия[0];
+        return !Или(условия);
     }
 
-#endif*/
+    /*#if UNITY_EDITOR
+        [ContextMenu("Открыть скрипт", false, 1000000)]
+        void ОткрытьСкрипт()
+        {
+            MonoScript script = MonoScript.FromMonoBehaviour(this);
+
+            if (script != null)
+                AssetDatabase.OpenAsset(script);
+        }
+
+        [ContextMenu("Сбросить значения", false, 1000100)]
+        void СброситьЗначения()
+        {
+            // Используем стандартный Reset компонента.
+            SendMessage("Reset", SendMessageOptions.DontRequireReceiver);
+        }
+
+        [ContextMenu("Скопировать значения", false, 1000101)]
+        void СкопироватьЗначения()
+        {
+            ComponentUtility.CopyComponent(this);
+        }
+
+        [ContextMenu("Вставить значения", false, 1000102)]
+        void ВставитьЗначения()
+        {
+            Undo.RecordObject(this, "Paste Component Values");
+
+            if (ComponentUtility.PasteComponentValues(this))
+            {
+                EditorUtility.SetDirty(this);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+            }
+        }
+
+        [ContextMenu("Вставить компонент", false, 1000103)]
+        void ВставитьКомпонент()
+        {
+            if (ComponentUtility.PasteComponentAsNew(gameObject))
+            {
+                // Unity выполняет вставку через собственную систему редактора.
+            }
+        }
+
+        [ContextMenu("Удалить компонент", false, 1000200)]
+        void УдалитьКомпонент()
+        {
+            Undo.DestroyObjectImmediate(this);
+        }
+
+    #endif*/
 
     //public string имя => name;
     //public Transform трансформация => transform;
