@@ -3,9 +3,12 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Физический объём в форме круга
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CircleCollider2D))]
-[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Круг 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/ Коллайдеры/Коллайдер Круг 2D")]
 public class КоллайдерКруг2D : Коллайдер2D
 {
     /*void Awake()
@@ -34,7 +37,7 @@ public class КоллайдерКруг2D : Коллайдер2D
 [CustomEditor(typeof(КоллайдерКруг2D))]
 internal class КоллайдерКруг2DEditor : RunityEditor<КоллайдерКруг2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет круглый физический объём");
 

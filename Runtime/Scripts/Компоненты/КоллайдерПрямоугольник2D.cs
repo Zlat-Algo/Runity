@@ -3,9 +3,12 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Физический объём в форме прямоугольника
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(BoxCollider2D))]
-[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Прямоугольник 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/ Коллайдеры/Коллайдер Прямоугольник 2D")]
 public class КоллайдерПрямоугольник2D : Коллайдер2D
 {
     protected override void Awake()
@@ -35,7 +38,7 @@ public class КоллайдерПрямоугольник2D : Коллайдер
 [CustomEditor(typeof(КоллайдерПрямоугольник2D))]
 internal class КоллайдерПрямоугольник2DEditor : RunityEditor<КоллайдерПрямоугольник2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет прямоугольный физический объём");
 

@@ -1,11 +1,13 @@
 using System;
-using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
+/// <summary>
+/// Камера, через которую игрок видит игру
+/// </summary>
 [ExecuteAlways]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Camera))]
@@ -20,20 +22,32 @@ public class Камера : RunityComponent
     }
     void OnValidate() => Awake();
 
+    /// <summary>
+    /// Оригинальный компонент Unity
+    /// </summary>
     public Camera оригинал => (Camera)оригинальныйКомпонент;
 
+    /// <summary>
+    /// "Да" для 3D-игр: дальние объекты кажутся меньше. "Нет" для 2D-игр
+    /// </summary>
     public Флажок перспектива
     {
         get => !оригинал.orthographic;
         set => оригинал.orthographic = !value;
     }
 
+    /// <summary>
+    /// Сколько мира видно в 2D: чем больше число, тем дальше камера
+    /// </summary>
     public Дробное размер
     {
         get => оригинал.orthographicSize;
         set => оригинал.orthographicSize = Математика.ОграничитьСнизу(value, 0.0001);
     }
 
+    /// <summary>
+    /// Объекты ближе этого расстояния не видны
+    /// </summary>
     public Дробное близостьОтрисовки
     {
         get => оригинал.nearClipPlane;
@@ -47,6 +61,9 @@ public class Камера : RunityComponent
         }
     }
 
+    /// <summary>
+    /// Объекты дальше этого расстояния не видны
+    /// </summary>
     public Дробное дальностьОтрисовки
     {
         get => оригинал.farClipPlane;
@@ -60,18 +77,27 @@ public class Камера : RunityComponent
         }
     }
 
+    /// <summary>
+    /// Если "да", то фон будет одним цветом, а если "нет", то небом
+    /// </summary>
     public Флажок залитьФонЦветом
     {
         get => оригинал.clearFlags == CameraClearFlags.SolidColor;
         set => оригинал.clearFlags = value ? CameraClearFlags.SolidColor : CameraClearFlags.Skybox;
     }
 
+    /// <summary>
+    /// Цвет фона
+    /// </summary>
     public Цвет фоновыйЦвет
     {
         get => оригинал.backgroundColor;
         set => оригинал.backgroundColor = value;
     }
 
+    /// <summary>
+    /// Камера, созданная последней
+    /// </summary>
     public static Камера главная;
 }
 
@@ -80,7 +106,7 @@ public class Камера : RunityComponent
 [CustomEditor(typeof(Камера))]
 internal class КамераEditor : RunityEditor<Камера>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Через этот объект смотрит игрок");
 

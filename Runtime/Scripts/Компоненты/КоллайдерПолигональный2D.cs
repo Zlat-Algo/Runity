@@ -3,9 +3,12 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Физический объём, повторяющий форму спрайта
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PolygonCollider2D))]
-[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Полигональный 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/ Коллайдеры/Коллайдер Полигональный 2D")]
 public class КоллайдерПолигональный2D : Коллайдер2D
 {
     protected override void Awake()
@@ -35,7 +38,7 @@ public class КоллайдерПолигональный2D : Коллайдер
 [CustomEditor(typeof(КоллайдерПолигональный2D))]
 internal class КоллайдерПолигональный2DEditor : RunityEditor<КоллайдерПолигональный2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет физический объём, состоящий из настраиваемых полигонов");
 

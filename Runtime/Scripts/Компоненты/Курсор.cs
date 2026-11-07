@@ -3,16 +3,25 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Объект следует за курсором мыши
+/// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/Курсор")]
+[AddComponentMenu("  Runity/ Ввод/Курсор")]
 public class Курсор : RunityComponent
 {
     protected override void OnEnable() { }
     protected override void OnDisable() { }
 
+    /// <summary>
+    /// Двигается ли объект за курсором влево и вправо
+    /// </summary>
     [SerializeField] Флажок _следуетПоОсиX = да;
     public Флажок следуетПоОсиX { get => _следуетПоОсиX; set => _следуетПоОсиX = value; }
 
+    /// <summary>
+    /// Двигается ли объект за курсором вверх и вниз
+    /// </summary>
     [SerializeField] Флажок _следуетПоОсиY = да;
     public Флажок следуетПоОсиY { get => _следуетПоОсиY; set => _следуетПоОсиY = value; }
 
@@ -37,7 +46,7 @@ public class Курсор : RunityComponent
 [CustomEditor(typeof(Курсор))]
 internal class КурсорEditor : RunityEditor<Курсор>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект следует за курсором");
 

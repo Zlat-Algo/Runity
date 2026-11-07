@@ -3,9 +3,12 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Физический объём в форме капсулы
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CapsuleCollider2D))]
-[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Капсула 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/ Коллайдеры/Коллайдер Капсула 2D")]
 public class КоллайдерКапсула2D : Коллайдер2D
 {
     /*void Awake()
@@ -34,7 +37,7 @@ public class КоллайдерКапсула2D : Коллайдер2D
 [CustomEditor(typeof(КоллайдерКапсула2D))]
 internal class КоллайдерКапсула2DEditor : RunityEditor<КоллайдерКапсула2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет капсульный физический объём");
 

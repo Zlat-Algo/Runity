@@ -3,17 +3,38 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Объект ускоряется, пока игрок держит клавишу ускорения
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Передвижение))]
-[AddComponentMenu("  Runity/ Передвижение/Бег")]
+[AddComponentMenu("  Runity/ Передвижение/ Управление игроком/Бег")]
 public class Бег : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Передвижение>();
     void OnValidate() => Awake();
+    /// <summary>
+    /// Передвижение, которое ускоряет этот компонент
+    /// </summary>
     public Передвижение оригинал => (Передвижение)оригинальныйКомпонент;
 
+    /// <summary>
+    /// На сколько увеличивается скорость при беге
+    /// </summary>
     [SerializeField] Дробное _увеличениеСкорости = 2;
     public Дробное увеличениеСкорости { get => _увеличениеСкорости; set => _увеличениеСкорости = value; }
+
+    [SerializeField] События _приНачалеБега;
+    /// <summary>
+    /// Срабатывает, когда игрок зажал клавишу ускорения
+    /// </summary>
+    public События приНачалеБега => _приНачалеБега;
+
+    [SerializeField] События _приКонцеБега;
+    /// <summary>
+    /// Срабатывает, когда игрок отпустил клавишу ускорения
+    /// </summary>
+    public События приКонцеБега => _приКонцеБега;
 
     void Update()
     {
@@ -22,10 +43,12 @@ public class Бег : RunityComponent
         if (Управление.ускорениеНажато)
         {
             оригинал.скорость += увеличениеСкорости;
+            _приНачалеБега.Вызвать();
         }
         if (Управление.ускорениеОтжато)
         {
             оригинал.скорость -= увеличениеСкорости;
+            _приКонцеБега.Вызвать();
         }
     }
 }
@@ -35,7 +58,7 @@ public class Бег : RunityComponent
 [CustomEditor(typeof(Бег))]
 internal class БегEditor : RunityEditor<Бег>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект может ускоряться при удержании клавиши Shift");
 
@@ -45,6 +68,13 @@ internal class БегEditor : RunityEditor<Бег>
 
         Поле("Увеличение скорости", x => x.увеличениеСкорости,
             (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Пробел();
+
+        НачатьСобытия();
+        ОтобразитьСобытие("При начале бега", "_приНачалеБега");
+        ОтобразитьСобытие("При конце бега", "_приКонцеБега");
+        ЗакончитьСобытия();
     }
 }
 #endif

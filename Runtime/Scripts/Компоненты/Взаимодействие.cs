@@ -5,6 +5,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Игрок может навестись на этот объект и нажать кнопку, чтобы что-то произошло
+/// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/ Механики/Взаимодействие")]
 public class Взаимодействие : RunityComponent
@@ -12,25 +15,46 @@ public class Взаимодействие : RunityComponent
     protected override void OnEnable() { }
     protected override void OnDisable() { }
 
+    /// <summary>
+    /// С какого расстояния от камеры можно взаимодействовать
+    /// </summary>
     [SerializeField] float _дальностьВзаимодействия = 5;
     public float дальностьВзаимодействия{ get => _дальностьВзаимодействия; set => _дальностьВзаимодействия = value;}
 
+    /// <summary>
+    /// Если "нет", то с объектом нельзя взаимодействовать
+    /// </summary>
     [SerializeField] bool _включен = да;
     public bool включен { get => _включен; set => _включен = value;}
 
+    /// <summary>
+    /// Если "нет", то взаимодействовать можно только один раз
+    /// </summary>
     [SerializeField] bool _многоразовый;
     public bool многоразовый { get => _многоразовый; set => _многоразовый = value; }
 
+    /// <summary>
+    /// Если "да", то взаимодействие идёт по левой кнопке мыши, а не по клавише E
+    /// </summary>
     [SerializeField] bool _ЛКМВместоЕ;
     public bool ЛКМВместоЕ { get => _ЛКМВместоЕ; set => _ЛКМВместоЕ = value; }
 
     bool камераБлизко => (transform.position - Camera.main.transform.position).magnitude <= дальностьВзаимодействия;
     bool взаимодействиеДоступно;
 
+    /// <summary>
+    /// Срабатывает, когда игрок навёлся на объект и находится достаточно близко
+    /// </summary>
     [SerializeField] События _когдаМожноВзаимодействовать;
     public События когдаМожноВзаимодействовать => _когдаМожноВзаимодействовать;
+    /// <summary>
+    /// Срабатывает, когда взаимодействие снова стало недоступно
+    /// </summary>
     [SerializeField] События _когдаНельзяВзаимодействовать;
     public События когдаНельзяВзаимодействовать => _когдаНельзяВзаимодействовать;
+    /// <summary>
+    /// Срабатывает, когда игрок нажал кнопку взаимодействия
+    /// </summary>
     [SerializeField] События _когдаВзаимодействует;
     public События когдаВзаимодействует => _когдаВзаимодействует;
 
@@ -77,7 +101,7 @@ internal class ВзаимодействиеEditor : RunityEditor<Взаимод�
 {
     //bool eventFoldout = true;
 
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("С этим объектом можно взаимодействовать, чтобы он делал какое-то действие");
 
@@ -96,7 +120,8 @@ internal class ВзаимодействиеEditor : RunityEditor<Взаимод�
 
         Пробел();
 
-        компонент.ЛКМВместоЕ = GUILayout.Toolbar(компонент.ЛКМВместоЕ ? 1 : 0, new string[] { "E", "ЛКМ" }) == 1;
+        Поле("Кнопка", x => x.ЛКМВместоЕ,
+            (title, value) => GUILayout.Toolbar(value ? 1 : 0, new[] { new GUIContent("E", title.tooltip), new GUIContent("ЛКМ", title.tooltip) }) == 1);
 
         Пробел();
 

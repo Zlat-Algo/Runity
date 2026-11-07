@@ -19,11 +19,10 @@ public class ComponentKiller : Компонент
     void Update()
     {
 #if !UNITY_EDITOR
-        foreach (Component component in targetComponents)
-        {
-            Destroy(component);
-        }
-        Destroy(gameObject);
+        if (pretargetComponent != null)
+            Destroy(pretargetComponent);
+        Destroy(targetComponent);
+        Destroy(this);
 #endif
 #if UNITY_EDITOR
         if (pretargetComponent != null)

@@ -3,9 +3,12 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Физический объём в форме линии
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(EdgeCollider2D))]
-[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Линия 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/ Коллайдеры/Коллайдер Линия 2D")]
 public class КоллайдерЛиния2D : Коллайдер2D
 {
     /*void Awake()
@@ -34,7 +37,7 @@ public class КоллайдерЛиния2D : Коллайдер2D
 [CustomEditor(typeof(КоллайдерЛиния2D))]
 internal class КоллайдерЛиния2DEditor : RunityEditor<КоллайдерЛиния2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет физический объём в виде линии");
 

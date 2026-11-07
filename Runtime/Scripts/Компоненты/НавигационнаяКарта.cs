@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using Unity.AI.Navigation;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -7,17 +6,25 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// Запекает карту, по которой ходят Навигационные агенты
+/// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshSurface))]
-[AddComponentMenu("  Runity/ Передвижение/Навигационная карта")]
-
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационная карта")]
 public class НавигационнаяКарта : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<NavMeshSurface>();
     void OnValidate() => Awake();
+    /// <summary>
+    /// Оригинальный компонент Unity
+    /// </summary>
     public NavMeshSurface оригинал => (NavMeshSurface)оригинальныйКомпонент;
 
     [SerializeField] int _типАгентов;
+    /// <summary>
+    /// Номер типа агентов, для которых просчитывается карта
+    /// </summary>
     public int типАгентов
     {
         get
@@ -36,6 +43,9 @@ public class НавигационнаяКарта : RunityComponent
         set => оригинал.agentTypeID = NavMesh.GetSettingsByIndex(value).agentTypeID;
     }
 
+    /// <summary>
+    /// Заново просчитывает пути. Нужно делать после изменения уровня
+    /// </summary>
     public void Просчитать()
     {
         оригинал.BuildNavMesh();
@@ -47,7 +57,7 @@ public class НавигационнаяКарта : RunityComponent
 [CustomEditor(typeof(НавигационнаяКарта))]
 internal class НавигационнаяКартаEditor : RunityEditor<НавигационнаяКарта>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект просчитывает пути, по которым Навигационные агенты идут к своей цели");
 
@@ -65,13 +75,13 @@ internal class НавигационнаяКартаEditor : RunityEditor<Нав�
             agentNames[i] = (NavMesh.GetSettingsNameFromID(agentData.agentTypeID));
         }
 
-        int newIndex = EditorGUILayout.Popup("Тип агентов", oldIndex, agentNames);
+        int newIndex = EditorGUILayout.Popup(Подпись("Тип агентов", nameof(НавигационнаяКарта.типАгентов)), oldIndex, System.Array.ConvertAll(agentNames, имя => new GUIContent(имя)));
         компонент.оригинал.agentTypeID = NavMesh.GetSettingsByIndex(newIndex).agentTypeID;
 
         Пробел();
 
         Кнопка("Открыть настройки агентов", () => EditorApplication.ExecuteMenuItem("Window/AI/Navigation"));
-        Кнопка("Просчитать", () => компонент.оригинал.BuildNavMesh());
+        Кнопка("Просчитать", x => x.Просчитать());
     }
 }
 #endif
