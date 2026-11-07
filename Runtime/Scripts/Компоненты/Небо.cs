@@ -6,19 +6,28 @@ using UnityEngine.Rendering;
 
 public enum РежимОкружающегоСвета { Небесный, Градиентный, Одноцветный }
 
+/// <summary>
+/// Настраивает небо и солнце на сцене
+/// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Окружение/Небо")]
+[AddComponentMenu("  Runity/ Визуал/ Окружение/Небо")]
 public class Небо : RunityComponent
 {
     protected override void OnEnable() { }
     protected override void OnDisable() { }
 
+    /// <summary>
+    /// Материал неба на всей сцене
+    /// </summary>
     public static Material материал
     {
         get => RenderSettings.skybox;
         set => RenderSettings.skybox = value;
     }
 
+    /// <summary>
+    /// Откуда берётся мягкий свет, который освещает тени: от неба или одним цветом
+    /// </summary>
     public static РежимОкружающегоСвета режимОкружающегоСвета
     {
         get => RenderSettings.ambientMode switch
@@ -37,6 +46,9 @@ public class Небо : RunityComponent
         };
     }
 
+    /// <summary>
+    /// Насколько ярок окружающий свет
+    /// </summary>
     public static Дробное силаОкружающегоСвета
     {
         get => RenderSettings.ambientIntensity;
@@ -49,7 +61,7 @@ public class Небо : RunityComponent
 [CustomEditor(typeof(Небо))]
 internal class НебоEditor : RunityEditor<Небо>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект настраивает небо на сцене");
 

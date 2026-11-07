@@ -4,9 +4,15 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Выполняет действия через указанное время
+/// </summary>
 [AddComponentMenu("  Runity/ Работа с объектами/Таймер")]
 public class Таймер : RunityComponent
 {
+    /// <summary>
+    /// Пока "да", таймер стоит на месте
+    /// </summary>
     [SerializeField] bool _пауза;
     public bool пауза
     {
@@ -14,6 +20,9 @@ public class Таймер : RunityComponent
         set => _пауза = value;
     }
 
+    /// <summary>
+    /// Сколько секунд осталось до срабатывания
+    /// </summary>
     [SerializeField] float _таймер = 1;
     public float таймер
     {
@@ -21,6 +30,9 @@ public class Таймер : RunityComponent
         set => _таймер = value;
     }
 
+    /// <summary>
+    /// Если "да", то таймер запустится снова после срабатывания
+    /// </summary>
     [SerializeField] bool _повторять;
     public bool повторять
     {
@@ -28,6 +40,9 @@ public class Таймер : RunityComponent
         set => _повторять = value;
     }
 
+    /// <summary>
+    /// Сколько секунд проходит между срабатываниями при повторе
+    /// </summary>
     [SerializeField] Дробное _междуКаждымСрабатыванием;
     public Дробное междуКаждымСрабатыванием
     {
@@ -35,6 +50,9 @@ public class Таймер : RunityComponent
         set => _междуКаждымСрабатыванием = value;
     }
 
+    /// <summary>
+    /// Что произойдёт при срабатывании
+    /// </summary>
     [SerializeField] UnityEvent _действия;
     public UnityEvent действия
     {
@@ -69,6 +87,9 @@ public class Таймер : RunityComponent
         }
     }
 
+    /// <summary>
+    /// Запускает действия прямо сейчас
+    /// </summary>
     public void СрочноеСрабатывание()
     {
         Срабатывание();
@@ -80,7 +101,7 @@ public class Таймер : RunityComponent
 [CustomEditor(typeof(Таймер))]
 internal class ТаймерEditor : RunityEditor<Таймер>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект сделает какие-то действия через указанное в таймере время, а потом будет повторять эти действия, если включен повтор");
 

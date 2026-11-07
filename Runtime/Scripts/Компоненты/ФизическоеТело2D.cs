@@ -7,6 +7,9 @@ using UnityEngine.Events;
 public enum РежимФизическогоТела { Динамичное, ПодчиняетсяТолькоКоду, Неподвижное}
 
 
+/// <summary>
+/// Объект подчиняется физике в 2D и что-то делает при столкновениях и пересечениях
+/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/ Физика 2D/Физическое тело 2D")]
@@ -15,6 +18,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
     internal bool eventFoldout = false;
     void Awake() => оригинальныйКомпонент = GetComponent<Rigidbody2D>();
     void OnValidate() => Awake();
+    /// <summary>
+    /// Оригинальный компонент Unity
+    /// </summary>
     public Rigidbody2D оригинал => (Rigidbody2D)оригинальныйКомпонент;
 
     protected override void OnEnable()
@@ -26,12 +32,18 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
         оригинал.simulated = нет;
     }
 
+    /// <summary>
+    /// Физический материал: определяет трение и упругость
+    /// </summary>
     public PhysicsMaterial2D материал
     {
         get => оригинал.sharedMaterial;
         set => оригинал.sharedMaterial = value;
     }
 
+    /// <summary>
+    /// Динамичное падает и сталкивается, Подчиняется только коду двигается только из кода, Неподвижное стоит на месте
+    /// </summary>
     public РежимФизическогоТела режим
     {
         get => оригинал.bodyType switch
@@ -50,69 +62,107 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
         };
     }
 
+    /// <summary>
+    /// Масса объекта: тяжёлые объекты сложнее сдвинуть
+    /// </summary>
     public Дробное масса
     {
         get => оригинал.mass;
         set => оригинал.mass = value;
     }
 
+    /// <summary>
+    /// Насколько сильно объект падает вниз. 0 означает, что не падает совсем
+    /// </summary>
     public Дробное гравитация
     {
         get => оригинал.gravityScale;
         set => оригинал.gravityScale = value;
     }
 
+    /// <summary>
+    /// Текущая скорость объекта по обеим осям
+    /// </summary>
     public Направление2D движение
     {
         get => оригинал.linearVelocity;
         set => оригинал.linearVelocity = value;
     }
 
+    /// <summary>
+    /// Текущая скорость объекта по оси X
+    /// </summary>
     public Дробное движениеX
     {
         get => оригинал.linearVelocityX;
         set => оригинал.linearVelocityX = value;
     }
 
+    /// <summary>
+    /// Текущая скорость объекта по оси Y
+    /// </summary>
     public Дробное движениеY
     {
         get => оригинал.linearVelocityY;
         set => оригинал.linearVelocityY = value;
     }
 
+    /// <summary>
+    /// Насколько быстро объект сам замедляется при движении
+    /// </summary>
     public Дробное замедлениеПриДвижении
     {
         get => оригинал.linearDamping;
         set => оригинал.linearDamping = value;
     }
 
+    /// <summary>
+    /// Текущая скорость вращения объекта
+    /// </summary>
     public Дробное вращение
     {
         get => оригинал.angularVelocity;
         set => оригинал.angularVelocity = value;
     }
 
+    /// <summary>
+    /// Насколько быстро объект сам замедляется при вращении
+    /// </summary>
     public Дробное замедлениеПриВращении
     {
         get => оригинал.angularDamping;
         set => оригинал.angularDamping = value;
     }
 
+    /// <summary>
+    /// Может ли физика поворачивать объект. Для персонажей обычно выключают
+    /// </summary>
     public Флажок позволитьВращаться
     {
         get => !оригинал.freezeRotation;
         set => оригинал.freezeRotation = !value;
     }
 
-    Флажок ТегПодходит(Объект сКемСтолкнулись) => Или(тегНаКоторыйРеагируютСобытия.Совпадает(null, "", "Untagged"), сКемСтолкнулись.ПроверитьТег(тегНаКоторыйРеагируютСобытия));
-
-    [SerializeField] Строка _тегНаКоторыйРеагируютСобытия;
-    public Строка тегНаКоторыйРеагируютСобытия
+    Флажок ТегПодходит(GameObject сКемСтолкнулись)
     {
-        get => _тегНаКоторыйРеагируютСобытия;
-        set => _тегНаКоторыйРеагируютСобытия = value;
+        ПоискОбъектов.ПеренестиТег(ref _тегНаКоторыйРеагируютСобытия, _теги);
+        return _теги.Подходит(сКемСтолкнулись);
     }
 
+    /// <summary>
+    /// События сработают только с объектами этого тега. Untagged означает любые объекты
+    /// </summary>
+    [SerializeField, HideInInspector] Строка _тегНаКоторыйРеагируютСобытия;
+
+    [SerializeField] Теги _теги = new Теги();
+    /// <summary>
+    /// События сработают только с объектами этих тегов. Если теги не выбраны, то с любыми объектами
+    /// </summary>
+    public Теги теги => _теги;
+
+    /// <summary>
+    /// Срабатывает в момент столкновения с твёрдым объектом
+    /// </summary>
     [SerializeField] События _приНачалеСтолкновения;
     public События приНачалеСтолкновения => _приНачалеСтолкновения;
     void OnCollisionEnter2D(Collision2D collision)
@@ -121,6 +171,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
             _приНачалеСтолкновения.Вызвать();
     }
 
+    /// <summary>
+    /// Срабатывает каждый физический кадр, пока объекты касаются друг друга
+    /// </summary>
     [SerializeField] События _приПродолженииСтолкновения;
     public События приПродолженииСтолкновения => _приПродолженииСтолкновения;
     void OnCollisionStay2D(Collision2D collision)
@@ -129,6 +182,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
             _приПродолженииСтолкновения.Вызвать();
     }
 
+    /// <summary>
+    /// Срабатывает, когда объекты перестали касаться
+    /// </summary>
     [SerializeField] События _приКонцеСтолкновения;
     public События приКонцеСтолкновения => _приКонцеСтолкновения;
     void OnCollisionExit2D(Collision2D collision)
@@ -137,6 +193,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
             _приКонцеСтолкновения.Вызвать();
     }
 
+    /// <summary>
+    /// Срабатывает, когда объект вошёл в нетвёрдый коллайдер
+    /// </summary>
     [SerializeField] События _приНачалеПересечения;
     public События приНачалеПересечения => _приНачалеПересечения;
     void OnTriggerEnter2D(Collider2D collider)
@@ -145,6 +204,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
             _приНачалеПересечения.Вызвать();
     }
 
+    /// <summary>
+    /// Срабатывает каждый физический кадр, пока объект находится внутри нетвёрдого коллайдера
+    /// </summary>
     [SerializeField] События _приПродолженииПересечения;
     public События приПродолженииПересечения => _приПродолженииПересечения;
     void OnTriggerStay2D(Collider2D collider)
@@ -153,6 +215,9 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
             _приПродолженииПересечения.Вызвать();
     }
 
+    /// <summary>
+    /// Срабатывает, когда объект вышел из нетвёрдого коллайдера
+    /// </summary>
     [SerializeField] События _приКонцеПересечения;
     public События приКонцеПересечения => _приКонцеПересечения;
     void OnTriggerExit2D(Collider2D collider)
@@ -167,7 +232,7 @@ public class ФизическоеТело2D : ФизическоеТелоЛюб
 [CustomEditor(typeof(ФизическоеТело2D))]
 internal class ФизическоеТело2DEditor : RunityEditor<ФизическоеТело2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект подчиняется физике и что-то делает при пересечении и столкновении с другими объектами");
 
@@ -213,7 +278,7 @@ internal class ФизическоеТело2DEditor : RunityEditor<Физиче�
         компонент.eventFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(компонент.eventFoldout, "События");
         if (компонент.eventFoldout)
         {
-            компонент.тегНаКоторыйРеагируютСобытия = EditorGUILayout.TagField("Тег, на который реагируют события", компонент.тегНаКоторыйРеагируютСобытия);
+            ОтобразитьТеги("Теги, на которые реагируют события", "_теги");
 
             НачатьСобытия();
 

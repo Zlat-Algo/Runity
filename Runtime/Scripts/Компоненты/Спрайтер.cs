@@ -6,39 +6,60 @@ using UnityEngine.InputSystem;
 
 public enum РежимСпрайтера { Обычный, Плитка, Рамка}
 
+/// <summary>
+/// Показывает 2D-картинку
+/// </summary>
 [RequireComponent(typeof(SpriteRenderer))]
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Визуал 2D/Спрайтер")]
+[AddComponentMenu("  Runity/ Визуал/ 2D/Спрайтер")]
 public class Спрайтер : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<SpriteRenderer>();
     void OnValidate() => Awake();
+    /// <summary>
+    /// Оригинальный компонент Unity
+    /// </summary>
     public SpriteRenderer оригинал => (SpriteRenderer)оригинальныйКомпонент;
 
+    /// <summary>
+    /// Какая картинка показывается
+    /// </summary>
     public Спрайт спрайт
     {
         get => оригинал.sprite;
         set => оригинал.sprite = value;
     }
     
+    /// <summary>
+    /// Цвет, на который умножается картинка
+    /// </summary>
     public Цвет цвет
     {
         get => оригинал.color;
         set => оригинал.color = value;
     }
 
+    /// <summary>
+    /// Показывает картинку зеркально слева направо
+    /// </summary>
     public Флажок отзеркалитьГоризонтально
     {
         get => оригинал.flipX;
         set => оригинал.flipX = value;
     }
 
+    /// <summary>
+    /// Показывает картинку зеркально сверху вниз
+    /// </summary>
     public Флажок отзеркалитьВертикально
     {
         get => оригинал.flipY;
         set => оригинал.flipY = value;
     }
 
+    /// <summary>
+    /// Как картинка заполняет размер объекта
+    /// </summary>
     public РежимСпрайтера режим
     {
         get => оригинал.drawMode switch
@@ -57,18 +78,27 @@ public class Спрайтер : RunityComponent
         };
     }
 
+    /// <summary>
+    /// Размер картинки в режимах Плитка и Рамка
+    /// </summary>
     public Направление2D размер
     {
         get => оригинал.size;
         set => оригинал.size = value;
     }
 
+    /// <summary>
+    /// В режиме Плитка показывает только целые повторения картинки
+    /// </summary>
     public Флажок целыеКусочкиПлитки
     {
         get => оригинал.tileMode == SpriteTileMode.Adaptive;
         set => оригинал.tileMode = value ? SpriteTileMode.Adaptive : SpriteTileMode.Continuous;
     }
 
+    /// <summary>
+    /// Ставит белый квадрат вместо картинки
+    /// </summary>
     public void СпрайтБелогоКвадрата()
     {
         спрайт = НайтиАссет<Sprite>("1c08e50202374ce42bca6cb30aa4bbbf");
@@ -83,7 +113,7 @@ internal class СпрайтерEditor : RunityEditor<Спрайтер>
     //bool eventFoldout = false;
 
 
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект отрисовывает указанный спрайт");
 
@@ -130,7 +160,7 @@ internal class СпрайтерEditor : RunityEditor<Спрайтер>
 
         Пробел();
 
-        Кнопка("Заполнить спрайт", () => { компонент.СпрайтБелогоКвадрата(); });
+        Кнопка("Заполнить спрайт", x => x.СпрайтБелогоКвадрата());
     }
 }
 #endif

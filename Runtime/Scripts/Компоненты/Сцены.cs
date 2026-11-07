@@ -4,6 +4,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Запускает сцены и рассказывает про них. Список сцен настраивается в меню Runity - Список сцен
+/// </summary>
 [DisallowMultipleComponent]
 [AddComponentMenu("  Runity/Сцены")]
 public class Сцены : RunityComponent
@@ -11,6 +14,9 @@ public class Сцены : RunityComponent
     protected override void OnEnable() { }
     protected override void OnDisable() { }
 
+    /// <summary>
+    /// Запускает указанную сцену
+    /// </summary>
     public static void Запустить(Число номерСцены)
     {
         if (номерСцены < количествоСцен)
@@ -19,9 +25,12 @@ public class Сцены : RunityComponent
         }
         else
         {
-            Консоль.НапечататьОшибку($"Сцены под номером {номерСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через File - Build Profiles - Scene List");
+            Консоль.НапечататьОшибку($"Сцены под номером {номерСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через меню Runity - Список сцен");
         }
     }
+    /// <summary>
+    /// Запускает указанную сцену
+    /// </summary>
     public static void Запустить(Строка имяСцены) //=> SceneManager.LoadScene((string)имяСцены);
     {
         if (ПроверитьНаличиеСцены(имяСцены))
@@ -30,10 +39,16 @@ public class Сцены : RunityComponent
         }
         else
         {
-            Консоль.НапечататьОшибку($"Сцены {имяСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через File - Build Profiles - Scene List");
+            Консоль.НапечататьОшибку($"Сцены {имяСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через меню Runity - Список сцен");
         }
     }
+    /// <summary>
+    /// Запускает текущую сцену заново
+    /// </summary>
     public static void Перезапустить() => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    /// <summary>
+    /// Запускает сцену со следующим номером
+    /// </summary>
     public static Флажок ЗапуститьСледующую()
     {
         if (номерАктивнойСцены + 1 < количествоСцен)
@@ -43,10 +58,13 @@ public class Сцены : RunityComponent
         }
         else
         {
-            Консоль.НапечататьОшибку($"Следующая сцена не существует!. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через File - Build Profiles - Scene List");
+            Консоль.НапечататьОшибку($"Следующая сцена не существует!. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через меню Runity - Список сцен");
             return false;
         }
     }
+    /// <summary>
+    /// Запускает сцену с предыдущим номером
+    /// </summary>
     public static Флажок ЗапуститьПредыдущую()
     {
         if (номерАктивнойСцены > 0)
@@ -60,18 +78,35 @@ public class Сцены : RunityComponent
             return false;
         }
     }
-    public int кря { get; set; }
-    public Число крякря { get; set; }
+    /// <summary>
+    /// Номер текущей сцены. Если записать сюда другой номер, запустится другая сцена
+    /// </summary>
     public static Число номерАктивнойСцены
     {
         get => SceneManager.GetActiveScene().buildIndex;
         set => Запустить(value);
     }
+    /// <summary>
+    /// Имя текущей сцены
+    /// </summary>
     public static Строка имяАктивнойСцены => SceneManager.GetActiveScene().name;
+    /// <summary>
+    /// Сколько сцен зарегистрировано в игре
+    /// </summary>
     public static Число количествоСцен => SceneManager.sceneCountInBuildSettings;
+    /// <summary>
+    /// Даёт "да", если сцена с таким именем зарегистрирована
+    /// </summary>
     public static Флажок ПроверитьНаличиеСцены(Строка имяСцены)
     {
-        return SceneManager.GetSceneByName(имяСцены).IsValid();
+        return Application.CanStreamedLevelBeLoaded(имяСцены);
+    }
+    /// <summary>
+    /// Даёт имя зарегистрированной сцены по её номеру
+    /// </summary>
+    public static Строка ИмяСцены(Число номерСцены)
+    {
+        return System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(номерСцены));
     }
 }
 
@@ -80,26 +115,33 @@ public class Сцены : RunityComponent
 [CustomEditor(typeof(Сцены))]
 internal class СценыEditor : RunityEditor<Сцены>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст($"Этот объект может управлять сценами\n\nАктивная сцена: {Сцены.имяАктивнойСцены} ({Сцены.номерАктивнойСцены} из {Сцены.количествоСцен})");
 
         Пробел();
 
-        Поле("Запустить сцену", x => Сцены.номерАктивнойСцены,
-            (title, value) => EditorGUILayout.IntField(title, value));
+        Кнопка("Настроить список сцен", СписокСцен.ОткрытьВРедакторе);
 
-        Кнопка("Запустить предыдущую", () =>
+        Пробел();
+
+        if (!Application.isPlaying)
+        {
+            Текст("Переключать сцены можно во время игры");
+            return;
+        }
+
+        КнопкаМетода("Запустить предыдущую", nameof(Сцены.ЗапуститьПредыдущую), () =>
         {
             Сцены.ЗапуститьПредыдущую();
         });
 
-        Кнопка("Перезапустить текущую", () =>
+        КнопкаМетода("Перезапустить текущую", nameof(Сцены.Перезапустить), () =>
         {
             Сцены.Перезапустить();
         });
 
-        Кнопка("Запустить следующую", () =>
+        КнопкаМетода("Запустить следующую", nameof(Сцены.ЗапуститьСледующую), () =>
         {
             Сцены.ЗапуститьСледующую();
         });

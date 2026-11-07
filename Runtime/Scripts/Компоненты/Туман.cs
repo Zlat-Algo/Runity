@@ -3,19 +3,28 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+/// <summary>
+/// Настраивает туман на сцене
+/// </summary>
 [ExecuteAlways]
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Окружение/Туман")]
+[AddComponentMenu("  Runity/ Визуал/ Окружение/Туман")]
 public class Туман : RunityComponent
 {
     protected override void OnEnable() => RenderSettings.fog = true;
     protected override void OnDisable() => RenderSettings.fog = false;
 
+    /// <summary>
+    /// Цвет тумана
+    /// </summary>
     public static Цвет цвет
     {
         get => RenderSettings.fogColor;
         set => RenderSettings.fogColor = value;
     }
+    /// <summary>
+    /// Насколько густой туман
+    /// </summary>
     public static float сила
     {
         get => RenderSettings.fogDensity;
@@ -28,7 +37,7 @@ public class Туман : RunityComponent
 [CustomEditor(typeof(Туман))]
 internal class ТуманEditor : RunityEditor<Туман>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект добавляет туман на карту");
 
