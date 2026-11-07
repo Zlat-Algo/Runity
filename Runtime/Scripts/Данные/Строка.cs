@@ -1,10 +1,9 @@
-using Codice.Client.BaseCommands;
 using System;
 using System.Text.RegularExpressions;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
 #endif
+using UnityEngine;
 
 /// <summary>
 /// Текстовые данные. Альтернатива string
@@ -31,10 +30,10 @@ public struct Строка : IEquatable<Строка>
         => new Строка(стринг);
 
     public static Строка operator +(Строка первое, Дробное второе)
-        => первое + второе;
+        => первое.значение + второе.ToString();
 
     public static Строка operator +(Строка первое, Число второе)
-        => первое + второе;
+        => первое.значение + второе.ToString();
 
     public static Строка operator *(Строка первое, Число второе)
     {
@@ -66,7 +65,7 @@ public struct Строка : IEquatable<Строка>
 
     public Флажок кириллица => Regex.IsMatch(значение, @"\p{IsCyrillic}");
 
-    public Флажок чтоТоЕсть => значение != "";
+    public Флажок чтоТоЕсть => !string.IsNullOrEmpty(значение);
 
     public Флажок Совпадает(params Строка[] строки)
     {

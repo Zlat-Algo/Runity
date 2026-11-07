@@ -3,6 +3,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider2D))]
 //[AddComponentMenu("  Runity/ Физика 2D/Коллайдер Круг 2D")]
+/// <summary>
+/// Заготовка для всех 2D-коллайдеров
+/// </summary>
 public class Коллайдер2D : RunityComponent
 {
     protected virtual void Awake()
@@ -10,14 +13,23 @@ public class Коллайдер2D : RunityComponent
         оригинальныйКомпонент = GetComponent<Collider2D>();
     }
     void OnValidate() => Awake();
+    /// <summary>
+    /// Оригинальный компонент Unity
+    /// </summary>
     public Collider2D оригинал => (Collider2D)оригинальныйКомпонент;
 
+    /// <summary>
+    /// "Да" - другие объекты сталкиваются с этим. "Нет" - проходят сквозь него, и срабатывает пересечение
+    /// </summary>
     public bool твёрдый
     {
         get => !оригинал.isTrigger;
         set => оригинал.isTrigger = !value;
     }
 
+    /// <summary>
+    /// Физический материал: определяет трение и упругость
+    /// </summary>
     public PhysicsMaterial2D материал
     {
         get => оригинал.sharedMaterial;
@@ -29,7 +41,7 @@ public class Коллайдер2D : RunityComponent
 [CustomEditor(typeof(Коллайдер2D))]
 public class Коллайдер2DEditor : RunityEditor<Коллайдер2D>
 {
-    public override void OnInspectorGUI()
+    protected override void Отрисовать()
     {
         Текст("Этот объект имеет физический объём");
 

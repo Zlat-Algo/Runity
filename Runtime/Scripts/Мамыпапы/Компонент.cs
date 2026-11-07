@@ -279,11 +279,58 @@ public class Компонент : MonoBehaviour
     //public ТипКомпонента НайтиКомпонент<ТипКомпонента>() => GetComponent<ТипКомпонента>();
     //public Component НайтиКомпонент(string имяКомпонента) => GetComponent(имяКомпонента);
 
-    public void ВызватьСЗадержкой(Action метод, Дробное время) => Invoke(nameof(метод), время);
+    readonly System.Collections.Generic.Dictionary<Action, Coroutine> вызовыСЗадержкой = new System.Collections.Generic.Dictionary<Action, Coroutine>();
+
+    /// <summary>
+    /// Вызовет метод один раз через указанное количество секунд
+    /// </summary>
+    public void ВызватьСЗадержкой(Action метод, Дробное время)
+    {
+        УдалитьВызовСЗадержкой(метод);
+        вызовыСЗадержкой[метод] = StartCoroutine(ВызовСЗадержкой(метод, время, -1));
+    }
+    /// <summary>
+    /// Будет вызывать метод снова и снова, пока вызов не удалят
+    /// </summary>
     public void ПостоянноВызыватьСЗадержкой(Action метод, Дробное времяДоПервогоВызова, Дробное времяМеждуВызовами)
-        => InvokeRepeating(nameof(метод), времяДоПервогоВызова, времяМеждуВызовами);
-    public void УдалитьВызовСЗадержкой(Action метод) => CancelInvoke(nameof(метод));
-    public void УдалитьВсеВызовыСЗадержкой() => CancelInvoke();
+    {
+        УдалитьВызовСЗадержкой(метод);
+        вызовыСЗадержкой[метод] = StartCoroutine(ВызовСЗадержкой(метод, времяДоПервогоВызова, времяМеждуВызовами));
+    }
+    /// <summary>
+    /// Отменяет вызов этого метода с задержкой
+    /// </summary>
+    public void УдалитьВызовСЗадержкой(Action метод)
+    {
+        if (вызовыСЗадержкой.TryGetValue(метод, out Coroutine вызов))
+        {
+            StopCoroutine(вызов);
+            вызовыСЗадержкой.Remove(метод);
+        }
+    }
+    /// <summary>
+    /// Отменяет все вызовы с задержкой на этом компоненте
+    /// </summary>
+    public void УдалитьВсеВызовыСЗадержкой()
+    {
+        foreach (Coroutine вызов in вызовыСЗадержкой.Values)
+        {
+            StopCoroutine(вызов);
+        }
+        вызовыСЗадержкой.Clear();
+    }
+
+    System.Collections.IEnumerator ВызовСЗадержкой(Action метод, float время, float повтор)
+    {
+        yield return new WaitForSeconds(время);
+        while (повтор >= 0)
+        {
+            метод();
+            yield return new WaitForSeconds(повтор);
+        }
+        вызовыСЗадержкой.Remove(метод);
+        метод();
+    }
 
     #region Получить позицию курсора
     protected Vector2 mouseScreenPosition

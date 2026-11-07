@@ -17,6 +17,7 @@ public struct События
     public void Вызвать()
     {
         //Консоль.Напечатать(события.Count);
+        if (события == null) return;
         foreach(Событие событие in события)
         {
             событие.Вызвать();
@@ -93,17 +94,37 @@ public struct Событие
     public GameObject _GameObject4;
     public Transform _Transform4;
 
+    internal const BindingFlags ФлагиЧленов =
+        BindingFlags.Instance |
+        BindingFlags.Static |
+        BindingFlags.Public |
+        BindingFlags.NonPublic |
+        BindingFlags.DeclaredOnly;
+
+    // Типы от самого компонента до его родителей-заготовок (Передвижение, ДвижениеКТочке и т.п.)
+    static IEnumerable<Type> ТипыКомпонента(Type type)
+    {
+        yield return type;
+
+        for (Type родитель = type.BaseType;
+             родитель != null && родитель != typeof(RunityComponent) && родитель != typeof(Компонент) && родитель != typeof(MonoBehaviour) && родитель != typeof(Behaviour) && родитель != typeof(Component);
+             родитель = родитель.BaseType)
+        {
+            if (typeof(Компонент).IsAssignableFrom(родитель))
+                yield return родитель;
+        }
+    }
+
+    internal static IEnumerable<MethodInfo> МетодыТипа(Type type)
+        => ТипыКомпонента(type).SelectMany(t => t.GetMethods(ФлагиЧленов)).Where(m => !m.IsSpecialName && !m.IsGenericMethod);
+
+    internal static IEnumerable<PropertyInfo> СвойстваТипа(Type type)
+        => ТипыКомпонента(type).SelectMany(t => t.GetProperties(ФлагиЧленов));
+
     public void Вызвать()
     {
         if (объект == null || string.IsNullOrEmpty(компонент))
             return;
-
-        const BindingFlags flags =
-            BindingFlags.Instance |
-            BindingFlags.Static |
-            BindingFlags.Public |
-            BindingFlags.NonPublic |
-            BindingFlags.DeclaredOnly;
 
         string selected = компонент;
 
@@ -117,8 +138,7 @@ public struct Событие
 
             // В твоём Inspector для имён латиницей добавляется "_/"
             // Для кириллицы префикса нет.
-            foreach (MethodInfo method in type.GetMethods(flags)
-                         .Where(m => !m.IsSpecialName))
+            foreach (MethodInfo method in МетодыТипа(type))
             {
                 ParameterInfo[] parameters = method.GetParameters();
 
@@ -184,6 +204,10 @@ public struct Событие
                         values[i] = GetFieldValue<Transform>(
                             "_Transform" + suffix);
 
+                    else if (parameterType == typeof(Трансформация))
+                        values[i] = (Трансформация)GetFieldValue<Transform>(
+                            "_Transform" + suffix);
+
                     else if (typeof(UnityEngine.Object)
                                  .IsAssignableFrom(parameterType))
                         values[i] = GetFieldValue<UnityEngine.Object>(
@@ -192,6 +216,8 @@ public struct Событие
                     else
                         throw new NotSupportedException(
                             $"Тип аргумента не поддерживается: {parameterType.Name}");
+
+                    values[i] = ПреобразоватьВТипRunity(values[i], parameterType);
                 }
 
                 try
@@ -206,7 +232,7 @@ public struct Событие
                 return;
             }
 
-            foreach (PropertyInfo property in type.GetProperties(flags))
+            foreach (PropertyInfo property in СвойстваТипа(type))
             {
                 if (property.GetSetMethod(false) == null)
                     continue;
@@ -227,6 +253,21 @@ public struct Событие
         }
 
         Debug.LogWarning($"Не удалось найти выбранный метод или свойство: {selected}", объект);
+    }
+
+    // Отражение не применяет неявные преобразования, поэтому int в параметр Число нужно превратить самим
+    private static object ПреобразоватьВТипRunity(object value, Type type)
+    {
+        if (type == typeof(Строка)) return (Строка)(string)value;
+        if (type == typeof(Число)) return (Число)(int)value;
+        if (type == typeof(Флажок)) return (Флажок)(bool)value;
+        if (type == typeof(Дробное)) return (Дробное)(float)value;
+        if (type == typeof(Цвет)) return (Цвет)(Color)value;
+        if (type == typeof(Направление2D)) return (Направление2D)(Vector2)value;
+        if (type == typeof(Направление3D)) return (Направление3D)(Vector3)value;
+        if (type == typeof(Спрайт)) return (Спрайт)(Sprite)value;
+        if (type == typeof(Объект)) return (Объект)(GameObject)value;
+        return value;
     }
 
     private T GetFieldValue<T>(string fieldName)
@@ -281,6 +322,8 @@ public struct Событие
             return (Объект)_GameObject;
         if (type == typeof(Transform))
             return _Transform;
+        if (type == typeof(Трансформация))
+            return (Трансформация)_Transform;
         if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             return _Object;
 
@@ -292,22 +335,25 @@ public struct Событие
 [CustomPropertyDrawer(typeof(События))]
 internal class СобытияDrawer : PropertyDrawer
 {
-    private ReorderableList list;
+    // Один drawer рисует все События из списка (например, в Читере), поэтому у каждого свой ReorderableList
+    private readonly Dictionary<string, ReorderableList> lists = new Dictionary<string, ReorderableList>();
 
-    private void Init(SerializedProperty property)
+    private ReorderableList Init(SerializedProperty property, GUIContent label)
     {
-        if (list != null)
-            return;
+        if (lists.TryGetValue(property.propertyPath, out ReorderableList существующий) &&
+            существующий.serializedProperty.serializedObject == property.serializedObject)
+            return существующий;
 
         var items = property.FindPropertyRelative("события");
 
-        list = new ReorderableList(
+        ReorderableList list = new ReorderableList(
             property.serializedObject,
             items,
             true, true, true, true
         );
 
-        list.drawHeaderCallback = rect => EditorGUI.LabelField(rect, property.displayName);
+        GUIContent заголовок = new GUIContent(label.text, label.tooltip);
+        list.drawHeaderCallback = rect => EditorGUI.LabelField(rect, заголовок);
 
         list.elementHeightCallback = index =>
         {
@@ -332,19 +378,19 @@ internal class СобытияDrawer : PropertyDrawer
                 true
             );
         };
+
+        lists[property.propertyPath] = list;
+        return list;
     }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        Init(property);
-
-        list.DoList(position);
+        Init(property, label).DoList(position);
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        Init(property);
-        return list.GetHeight();
+        return Init(property, label).GetHeight();
     }
 }
 
@@ -364,13 +410,22 @@ internal class СобытиеDrawer : PropertyDrawer
         if (type == typeof(bool) || type == typeof(Флажок)) return FieldType._bool;
         if (type == typeof(float) || type == typeof(Дробное)) return FieldType._float;
         if (type == typeof(Color) || type == typeof(Цвет)) return FieldType._Color;
-        if (type == typeof(UnityEngine.Object)) return FieldType._Object;
         if (type == typeof(Vector2) || type == typeof(Направление2D)) return FieldType._Vector2;
         if (type == typeof(Vector3) || type == typeof(Направление3D)) return FieldType._Vector3;
         if (type == typeof(Sprite) || type == typeof(Спрайт)) return FieldType._Sprite;
         if (type == typeof(GameObject) || type == typeof(Объект)) return FieldType._GameObject;
-        if (type == typeof(Transform)) return FieldType._Transform;
+        if (type == typeof(Transform) || type == typeof(Трансформация)) return FieldType._Transform;
+        if (typeof(UnityEngine.Object).IsAssignableFrom(type)) return FieldType._Object;
         return FieldType.unknow;
+    }
+
+    // Звук, плитка, материал и т.п. хранятся в общем поле _Object, но выбирать можно только подходящий тип
+    void НарисоватьЗначение(Rect rect, SerializedProperty infoProp, FieldType fieldType, Type type, string title)
+    {
+        if (fieldType == FieldType._Object)
+            EditorGUI.ObjectField(rect, infoProp, type, new GUIContent(title));
+        else
+            EditorGUI.PropertyField(rect, infoProp, new GUIContent(title));
     }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -415,10 +470,9 @@ internal class СобытиеDrawer : PropertyDrawer
                 {
                     //options.Add($"{i}: {components[i].GetType().Name}");
                     Список<MemberInfo> members = new Список<MemberInfo>();
-                    var properties = components[i].GetType().GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                    var properties = Событие.СвойстваТипа(components[i].GetType()).ToArray();
                     members.добавить(properties);
-                    MethodInfo[] methods = components[i].GetType().GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
-                        .Where(m => !m.IsSpecialName).ToArray();
+                    MethodInfo[] methods = Событие.МетодыТипа(components[i].GetType()).ToArray();
                     members.добавить(methods);
                     foreach (MemberInfo member in members)
                     {
@@ -443,7 +497,7 @@ internal class СобытиеDrawer : PropertyDrawer
                                 else
                                 {
                                     infoProp = property.FindPropertyRelative(fieldType.ToString());
-                                    EditorGUI.PropertyField(GetRect(2), infoProp, new GUIContent("  Значение"));
+                                    НарисоватьЗначение(GetRect(2), infoProp, fieldType, типПоля, "  Значение");
                                     //height = 3;
                                 }
                             }
@@ -482,7 +536,7 @@ internal class СобытиеDrawer : PropertyDrawer
                                     else
                                     {
                                         infoProp = property.FindPropertyRelative(fieldType.ToString() + (parameterIndex > 0 ? parameterIndex.ToString() : ""));
-                                        EditorGUI.PropertyField(GetRect(2 + parameterIndex), infoProp, new GUIContent("  " + parameter.Name));
+                                        НарисоватьЗначение(GetRect(2 + parameterIndex), infoProp, fieldType, типПараметра, "  " + parameter.Name);
                                         //height = 3;
                                     }
                                     parameterIndex++;
@@ -550,13 +604,6 @@ internal class СобытиеDrawer : PropertyDrawer
         if (go == null || string.IsNullOrEmpty(compProp.stringValue))
             return 0;
 
-        const BindingFlags flags =
-            BindingFlags.Instance |
-            BindingFlags.Static |
-            BindingFlags.Public |
-            BindingFlags.NonPublic |
-            BindingFlags.DeclaredOnly;
-
         foreach (Component component in go.GetComponents<Component>())
         {
             if (component == null)
@@ -565,7 +612,7 @@ internal class СобытиеDrawer : PropertyDrawer
             Type componentType = component.GetType();
             string componentName = componentType.Name;
 
-            foreach (PropertyInfo p in componentType.GetProperties(flags))
+            foreach (PropertyInfo p in Событие.СвойстваТипа(componentType))
             {
                 if (p.GetSetMethod(false) == null)
                     continue;
@@ -577,8 +624,7 @@ internal class СобытиеDrawer : PropertyDrawer
                     return 1;
             }
 
-            foreach (MethodInfo m in componentType.GetMethods(flags)
-                         .Where(m => !m.IsSpecialName))
+            foreach (MethodInfo m in Событие.МетодыТипа(componentType))
             {
                 ParameterInfo[] parameters = m.GetParameters();
 

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RunityCustomObjects
 {
@@ -61,7 +62,7 @@ public class RunityCustomObjects
         newObj.AddComponent<Управление>().УстановитьСтандартныеНастройки();
     }
 
-    [MenuItem("GameObject/Runity/Передвижение/Навигационная карта", false, -51)]
+    [MenuItem("GameObject/Runity/Передвижение/Навигация/Навигационная карта", false, -51)]
     private static void НавигационнаяКарта(MenuCommand menuCommand)
     {
         GameObject newObj = CreateObject(menuCommand, "Навигационная карта");
@@ -69,7 +70,7 @@ public class RunityCustomObjects
         newObj.AddComponent<НавигационнаяКарта>();
     }
 
-    [MenuItem("GameObject/Runity/Передвижение/Навигационный агент", false, -51)]
+    [MenuItem("GameObject/Runity/Передвижение/Навигация/Навигационный агент", false, -51)]
     private static void НавигационныйАгент(MenuCommand menuCommand)
     {
         GameObject newObj = CreateObject(menuCommand, "Навигационный агент");
@@ -77,7 +78,7 @@ public class RunityCustomObjects
         newObj.AddComponent<НавигационныйАгент>();
     }
 
-    [MenuItem("GameObject/Runity/Передвижение/Игрок (для платформера)", false, -51)]
+    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (для платформера)", false, -51)]
     private static void ИгрокДляПлатформера(MenuCommand menuCommand)
     {
         GameObject newObj = CreateObject(menuCommand, "Игрок");
@@ -99,7 +100,7 @@ public class RunityCustomObjects
         }
     }
 
-    [MenuItem("GameObject/Runity/Передвижение/Игрок (для вида сверху)", false, -51)]
+    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (для вида сверху)", false, -51)]
     private static void ИгрокДляВидаСверху(MenuCommand menuCommand)
     {
         GameObject newObj = CreateObject(menuCommand, "Игрок");
@@ -120,6 +121,7 @@ public class RunityCustomObjects
 
         Камера камера = newObj.AddComponent<Камера>();
         камера.перспектива = false;
+        ДобавитьСлушателя(newObj);
     }
 
     [MenuItem("GameObject/Runity/Камера 3D", false, 0)]
@@ -129,6 +131,13 @@ public class RunityCustomObjects
 
         Камера камера = newObj.AddComponent<Камера>();
         камера.перспектива = true;
+        ДобавитьСлушателя(newObj);
+    }
+
+    // На сцене должен быть ровно один слушатель звука
+    static void ДобавитьСлушателя(GameObject камера)
+    {
+        if (Object.FindAnyObjectByType<AudioListener>() == null) камера.AddComponent<СлушательЗвука>();
     }
 
     [MenuItem("GameObject/Runity/3D/Моделлер", false, -101)]
@@ -138,5 +147,434 @@ public class RunityCustomObjects
 
         newObj.AddComponent<Моделлер>();
     }
+
+    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (от первого лица)", false, -51)]
+    private static void ИгрокОтПервогоЛица(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Игрок");
+
+        newObj.AddComponent<Персонаж>();
+
+        GameObject камера = new GameObject("Камера");
+        камера.transform.SetParent(newObj.transform, false);
+        камера.transform.localPosition = new Vector3(0, 0.6f, 0);
+        камера.tag = "MainCamera";
+        камера.AddComponent<Камера>().перспектива = true;
+        ДобавитьСлушателя(камера);
+
+        newObj.AddComponent<ОбзорМышкой>().камера = камера.transform;
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Самостоятельное/Брождение", false, -51)]
+    private static void СоздатьБрождение(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Бродяга");
+
+        newObj.AddComponent<Спрайтер>().СпрайтБелогоКвадрата();
+        newObj.AddComponent<Брождение>();
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Самостоятельное/Патрулирование", false, -51)]
+    private static void СоздатьПатрулирование(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Патрульный");
+
+        newObj.AddComponent<Спрайтер>().СпрайтБелогоКвадрата();
+        Патрулирование патрулирование = newObj.AddComponent<Патрулирование>();
+
+        for (int i = 0; i < 2; i++)
+        {
+            GameObject точка = new GameObject($"Точка {i + 1}");
+            Undo.RegisterCreatedObjectUndo(точка, "Create " + точка.name);
+            точка.transform.position = newObj.transform.position + new Vector3(i == 0 ? -3 : 3, 0, 0);
+            патрулирование.точки.Add(точка.transform);
+        }
+    }
+
+    [MenuItem("GameObject/Runity/2D/Тайлер", false, -101)]
+    private static void СоздатьТайлер(MenuCommand menuCommand)
+    {
+        GameObject сетка = CreateObject(menuCommand, "Сетка");
+        сетка.AddComponent<Grid>();
+
+        GameObject newObj = new GameObject("Тайлер");
+        newObj.transform.SetParent(сетка.transform, false);
+        newObj.AddComponent<Тайлер>();
+
+        Selection.activeObject = newObj;
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (от третьего лица)", false, -51)]
+    private static void ИгрокОтТретьегоЛица(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Игрок");
+
+        Персонаж персонаж = newObj.AddComponent<Персонаж>();
+        персонаж.относительноЧего = ОтносительноЧегоДвижение.ОтносительноКамеры;
+        персонаж.поворачиватьПоДвижению = true;
+
+        GameObject модель = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        модель.name = "Модель";
+        Object.DestroyImmediate(модель.GetComponent<Collider>());
+        модель.transform.SetParent(newObj.transform, false);
+        модель.AddComponent<Моделлер>();
+
+        GameObject камера = new GameObject("Камера");
+        Undo.RegisterCreatedObjectUndo(камера, "Create " + камера.name);
+        камера.transform.position = newObj.transform.position + new Vector3(0, 4, -7);
+        камера.transform.LookAt(newObj.transform);
+        камера.tag = "MainCamera";
+        камера.AddComponent<Камера>().перспектива = true;
+        камера.AddComponent<Следование>().цель = newObj.transform;
+        ДобавитьСлушателя(камера);
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Навигация/Препятствие навигации", false, -51)]
+    private static void СоздатьПрепятствие(MenuCommand menuCommand)
+    {
+        GameObject newObj = СоздатьФорму<КоллайдерКуб>(menuCommand, "Препятствие", PrimitiveType.Cube);
+        newObj.AddComponent<ПрепятствиеНавигации>().вырезатьВКарте = true;
+    }
+
+    [MenuItem("GameObject/Runity/3D/Формы/Куб", false, -100)]
+    private static void ФормаКуб(MenuCommand menuCommand) => СоздатьФорму<КоллайдерКуб>(menuCommand, "Куб", PrimitiveType.Cube);
+
+    [MenuItem("GameObject/Runity/3D/Формы/Сфера", false, -100)]
+    private static void ФормаСфера(MenuCommand menuCommand) => СоздатьФорму<КоллайдерСфера>(menuCommand, "Сфера", PrimitiveType.Sphere);
+
+    [MenuItem("GameObject/Runity/3D/Формы/Капсула", false, -100)]
+    private static void ФормаКапсула(MenuCommand menuCommand) => СоздатьФорму<КоллайдерКапсула>(menuCommand, "Капсула", PrimitiveType.Capsule);
+
+    [MenuItem("GameObject/Runity/3D/Формы/Цилиндр", false, -100)]
+    private static void ФормаЦилиндр(MenuCommand menuCommand) => СоздатьФорму<КоллайдерКапсула>(menuCommand, "Цилиндр", PrimitiveType.Cylinder);
+
+    [MenuItem("GameObject/Runity/3D/Формы/Плоскость", false, -100)]
+    private static void ФормаПлоскость(MenuCommand menuCommand) => СоздатьФорму<КоллайдерМеш>(menuCommand, "Плоскость", PrimitiveType.Plane);
+
+    static GameObject СоздатьФорму<TКоллайдер>(MenuCommand menuCommand, string имя, PrimitiveType тип) where TКоллайдер : Коллайдер3D
+    {
+        GameObject newObj = GameObject.CreatePrimitive(тип);
+        newObj.name = имя;
+        GameObjectUtility.SetParentAndAlign(newObj, menuCommand.context as GameObject);
+        Undo.RegisterCreatedObjectUndo(newObj, "Create " + имя);
+        Selection.activeObject = newObj;
+
+        newObj.AddComponent<Моделлер>();
+        newObj.AddComponent<TКоллайдер>();
+        return newObj;
+    }
+
+    [MenuItem("GameObject/Runity/3D/Свет/Точечный", false, -90)]
+    private static void СветТочечный(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Лампочка", ТипСвета.Точечный);
+
+    [MenuItem("GameObject/Runity/3D/Свет/Направленный (солнце)", false, -90)]
+    private static void СветНаправленный(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Солнце", ТипСвета.Направленный).transform.rotation = Quaternion.Euler(50, -30, 0);
+
+    [MenuItem("GameObject/Runity/3D/Свет/Прожектор", false, -90)]
+    private static void СветПрожектор(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Прожектор", ТипСвета.Прожектор).transform.rotation = Quaternion.Euler(90, 0, 0);
+
+    static GameObject СоздатьСвет(MenuCommand menuCommand, string имя, ТипСвета тип)
+    {
+        GameObject newObj = CreateObject(menuCommand, имя);
+        Свет свет = newObj.AddComponent<Свет>();
+        свет.тип = тип;
+        свет.тени = тип == ТипСвета.Направленный;
+        return newObj;
+    }
+
+    [MenuItem("GameObject/Runity/2D/Свет/Точечный", false, -100)]
+    private static void СоздатьСвет2D(MenuCommand menuCommand)
+    {
+        CreateObject(menuCommand, "Свет 2D").AddComponent<Свет2D>().тип = ТипСвета2D.Точечный;
+    }
+
+    [MenuItem("GameObject/Runity/2D/Свет/Глобальный", false, -100)]
+    private static void СоздатьГлобальныйСвет2D(MenuCommand menuCommand)
+    {
+        CreateObject(menuCommand, "Глобальный свет 2D").AddComponent<Свет2D>().тип = ТипСвета2D.Глобальный;
+    }
+
+    [MenuItem("GameObject/Runity/2D/Односторонняя платформа", false, -100)]
+    private static void СоздатьОдностороннююПлатформу(MenuCommand menuCommand)
+    {
+        GameObject newObj = CreateObject(menuCommand, "Платформа");
+        Спрайтер спрайтер = newObj.AddComponent<Спрайтер>();
+        спрайтер.СпрайтБелогоКвадрата();
+        newObj.transform.localScale = new Vector3(3, 0.3f, 1);
+        newObj.AddComponent<КоллайдерПрямоугольник2D>();
+        newObj.AddComponent<ОдносторонняяПлатформа>();
+    }
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Огонь", false, 0)]
+    private static void ЧастицыОгонь(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Огонь);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Дым", false, 0)]
+    private static void ЧастицыДым(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Дым);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Искры", false, 0)]
+    private static void ЧастицыИскры(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Искры);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Взрыв", false, 0)]
+    private static void ЧастицыВзрыв(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Взрыв);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Снег", false, 0)]
+    private static void ЧастицыСнег(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Снег);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Дождь", false, 0)]
+    private static void ЧастицыДождь(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Дождь);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Пыль", false, 0)]
+    private static void ЧастицыПыль(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Пыль);
+
+    [MenuItem("GameObject/Runity/Эффекты/Частицы/Волшебство", false, 0)]
+    private static void ЧастицыВолшебство(MenuCommand menuCommand) => СоздатьЧастицы(menuCommand, ПресетЧастиц.Волшебство);
+
+    static void СоздатьЧастицы(MenuCommand menuCommand, ПресетЧастиц пресет)
+    {
+        GameObject newObj = CreateObject(menuCommand, пресет.ToString());
+        newObj.AddComponent<Частицы>().ПрименитьПресет(пресет);
+    }
+
+    [MenuItem("GameObject/Runity/Эффекты/Линия", false, 0)]
+    private static void СоздатьЛинию(MenuCommand menuCommand)
+    {
+        Линия линия = CreateObject(menuCommand, "Линия").AddComponent<Линия>();
+        линия.толщина = 0.1;
+        линия.Провести(new Vector3(-1, 0, 0), new Vector3(1, 0, 0));
+    }
+
+    [MenuItem("GameObject/Runity/Эффекты/Видео", false, 0)]
+    private static void СоздатьВидео(MenuCommand menuCommand)
+    {
+        CreateObject(menuCommand, "Видео").AddComponent<Видео>();
+    }
+
+    [MenuItem("GameObject/Runity/Звук/Источник звука", false, 0)]
+    private static void СоздатьИсточникЗвука(MenuCommand menuCommand)
+    {
+        CreateObject(menuCommand, "Источник звука").AddComponent<ИсточникЗвука>();
+    }
+
+    [MenuItem("GameObject/Runity/Механики/Читер", false, 0)]
+    private static void СоздатьЧитера(MenuCommand menuCommand)
+    {
+        CreateObject(menuCommand, "Читер").AddComponent<Читер>();
+    }
+
+    #region Интерфейс
+
+    const string guidБелогоКвадрата = "1c08e50202374ce42bca6cb30aa4bbbf";
+
+    static DefaultControls.Resources РесурсыИнтерфейса() => new DefaultControls.Resources
+    {
+        standard = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd"),
+        background = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd"),
+        inputField = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd"),
+        knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd"),
+        checkmark = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Checkmark.psd"),
+        dropdown = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/DropdownArrow.psd"),
+        mask = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd")
+    };
+
+    static Интерфейс СоздатьОсновуИнтерфейса()
+    {
+        GameObject newObj = new GameObject("Интерфейс");
+        Undo.RegisterCreatedObjectUndo(newObj, "Create " + newObj.name);
+        Интерфейс интерфейс = newObj.AddComponent<Интерфейс>();
+        интерфейс.СтандартныеНастройки();
+        return интерфейс;
+    }
+
+    // Элемент должен лежать внутри Интерфейса, иначе он не будет виден
+    static void ПоместитьВИнтерфейс(MenuCommand menuCommand, GameObject элемент)
+    {
+        GameObject выбранный = menuCommand.context as GameObject;
+        Transform родитель = выбранный != null && выбранный.GetComponentInParent<Canvas>() != null ? выбранный.transform : null;
+
+        if (родитель == null)
+        {
+            Canvas основа = Object.FindAnyObjectByType<Canvas>();
+            родитель = основа != null ? основа.transform : СоздатьОсновуИнтерфейса().transform;
+        }
+
+        GameObjectUtility.SetParentAndAlign(элемент, родитель.gameObject);
+        Undo.RegisterCreatedObjectUndo(элемент, "Create " + элемент.name);
+        Selection.activeObject = элемент;
+
+        foreach (Text текст in элемент.GetComponentsInChildren<Text>(true))
+        {
+            if (текст.font == null) текст.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Основа/Интерфейс", false, 10)]
+    private static void СоздатьИнтерфейс(MenuCommand menuCommand)
+    {
+        Selection.activeObject = СоздатьОсновуИнтерфейса().gameObject;
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Текст", false, 11)]
+    private static void СоздатьТекст(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateText(РесурсыИнтерфейса());
+        newObj.name = "Текст";
+        Текст текст = newObj.AddComponent<Текст>();
+        текст.содержимое = "Новый текст";
+        текст.размер = 36;
+        текст.цвет = Цвет.белый;
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 60);
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Кнопка", false, 12)]
+    private static void СоздатьКнопку(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateButton(РесурсыИнтерфейса());
+        newObj.name = "Кнопка";
+        newObj.AddComponent<КнопкаИнтерфейса>();
+        newObj.GetComponentInChildren<Text>().text = "Кнопка";
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(240, 60);
+        newObj.GetComponentInChildren<Text>().fontSize = 28;
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Ввод текста", false, 13)]
+    private static void СоздатьВводТекста(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateInputField(РесурсыИнтерфейса());
+        newObj.name = "Ввод текста";
+        newObj.AddComponent<ВводТекста>().подсказка = "Введите текст...";
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 60);
+        foreach (Text текст in newObj.GetComponentsInChildren<Text>(true)) текст.fontSize = 28;
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Слайдер", false, 14)]
+    private static void СоздатьСлайдер(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateSlider(РесурсыИнтерфейса());
+        newObj.name = "Слайдер";
+        newObj.AddComponent<Слайдер>();
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 30);
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Прогрессбар", false, 15)]
+    private static void СоздатьПрогрессбар(MenuCommand menuCommand)
+    {
+        Sprite белыйКвадрат = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guidБелогоКвадрата));
+
+        GameObject newObj = new GameObject("Прогрессбар", typeof(RectTransform));
+        Image фон = newObj.AddComponent<Image>();
+        фон.sprite = белыйКвадрат;
+        фон.color = new Color(0.15f, 0.15f, 0.15f);
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 40);
+
+        GameObject заполнение = new GameObject("Полоска", typeof(RectTransform));
+        заполнение.transform.SetParent(newObj.transform, false);
+        Image картинка = заполнение.AddComponent<Image>();
+        картинка.sprite = белыйКвадрат;
+        картинка.color = new Color(0.3f, 0.8f, 0.3f);
+
+        RectTransform область = заполнение.GetComponent<RectTransform>();
+        область.anchorMin = Vector2.zero;
+        область.anchorMax = Vector2.one;
+        область.offsetMin = new Vector2(4, 4);
+        область.offsetMax = new Vector2(-4, -4);
+
+        Прогрессбар прогрессбар = newObj.AddComponent<Прогрессбар>();
+        прогрессбар.полоска = картинка;
+        прогрессбар.НастроитьПолоску();
+
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Картинка", false, 11)]
+    private static void СоздатьКартинку(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateImage(РесурсыИнтерфейса());
+        newObj.name = "Картинка";
+        newObj.AddComponent<Картинка>();
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Галочка", false, 13)]
+    private static void СоздатьГалочку(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateToggle(РесурсыИнтерфейса());
+        newObj.name = "Галочка";
+        newObj.AddComponent<Галочка>().надпись = "Галочка";
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Выпадающий список", false, 13)]
+    private static void СоздатьВыпадающийСписок(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateDropdown(РесурсыИнтерфейса());
+        newObj.name = "Выпадающий список";
+        newObj.AddComponent<ВыпадающийСписок>().варианты = new System.Collections.Generic.List<string> { "Первый", "Второй", "Третий" };
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 40);
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Основа/Прокрутка", false, 16)]
+    private static void СоздатьПрокрутку(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateScrollView(РесурсыИнтерфейса());
+        newObj.name = "Прокрутка";
+        newObj.AddComponent<Прокрутка>().горизонтальная = false;
+
+        // Чтобы элементы внутри сразу вставали друг под другом, а содержимое росло вместе с ними
+        GameObject содержимое = newObj.GetComponent<ScrollRect>().content.gameObject;
+        ГруппаЭлементов раскладка = содержимое.AddComponent<ГруппаЭлементов>();
+        раскладка.режим = РежимГруппы.Вертикально;
+        раскладка.отступМежду = 10;
+        ContentSizeFitter подгонка = содержимое.AddComponent<ContentSizeFitter>();
+        подгонка.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Основа/Панель", false, 16)]
+    private static void СоздатьПанель(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreatePanel(РесурсыИнтерфейса());
+        newObj.name = "Панель";
+        newObj.AddComponent<ГруппаИнтерфейса>();
+        ГруппаЭлементов раскладка = newObj.AddComponent<ГруппаЭлементов>();
+        раскладка.режим = РежимГруппы.Вертикально;
+        раскладка.поля = 40;
+        раскладка.отступМежду = 20;
+        раскладка.выравнивание = Выравнивание.ПоЦентру;
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Инвентарь/Ячейка инвентаря", false, 20)]
+    private static void СоздатьЯчейкуИнвентаря(MenuCommand menuCommand)
+    {
+        ЯчейкаИнвентаря ячейка = ЯчейкаИнвентаря.СоздатьСтандартную(null, AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd"));
+        ПоместитьВИнтерфейс(menuCommand, ячейка.gameObject);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Инвентарь/Блок инвентаря", false, 21)]
+    private static void СоздатьБлокИнвентаря(MenuCommand menuCommand)
+    {
+        GameObject newObj = new GameObject("Блок инвентаря", typeof(RectTransform));
+        БлокИнвентаря блок = newObj.AddComponent<БлокИнвентаря>();
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+        блок.инвентарь = Object.FindAnyObjectByType<Инвентарь>();
+        блок.Перестроить();
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Видео с камеры", false, 16)]
+    private static void СоздатьВидеоСКамеры(MenuCommand menuCommand)
+    {
+        GameObject newObj = new GameObject("Видео с камеры", typeof(RectTransform));
+        newObj.AddComponent<ВидеоСКамеры>();
+        newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(320, 320);
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    #endregion
 }
 #endif

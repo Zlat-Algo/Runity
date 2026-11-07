@@ -3,8 +3,14 @@ using UnityEngine.InputSystem;
 
 public enum РежимМышки { Отключенная, Ограниченная, ОграниченнаяНевидимая, Свободная}
 
+/// <summary>
+/// Всё, что связано с мышкой
+/// </summary>
 public static class Мышка
 {
+    /// <summary>
+    /// Видно ли курсор и может ли он выходить за окно игры
+    /// </summary>
     public static РежимМышки режим
     {
         get => Cursor.lockState switch
@@ -38,6 +44,19 @@ public static class Мышка
         }
     }
 
+    /// <summary>
+    /// Прокрутка колёсика за этот кадр: больше нуля - вверх, меньше нуля - вниз
+    /// </summary>
+    public static Дробное прокрутка => Mouse.current != null ? Mouse.current.scroll.ReadValue().y : 0f;
+
+    /// <summary>
+    /// Смещение мышки за этот кадр в пикселях
+    /// </summary>
+    public static Направление2D смещение => Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero;
+
+    /// <summary>
+    /// Где находится курсор на экране, в пикселях
+    /// </summary>
     public static Направление2D позицияНаЭкране
     {
         get
@@ -64,6 +83,9 @@ public static class Мышка
             }
         }
     }
+    /// <summary>
+    /// На какую точку мира указывает курсор в 2D
+    /// </summary>
     public static Направление2D позицияВМире2D
     {
         get
@@ -79,6 +101,9 @@ public static class Мышка
             }
         }
     }
+    /// <summary>
+    /// На какую точку мира указывает курсор, если смотреть главной камерой
+    /// </summary>
     public static Направление3D позицияВМире3D
     {
         get

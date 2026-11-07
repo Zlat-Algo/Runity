@@ -1,8 +1,8 @@
 using System;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
 #endif
+using UnityEngine;
 
 /// <summary>
 /// Дробное число. Дробная часть отделяется точкой. Альтернатива float

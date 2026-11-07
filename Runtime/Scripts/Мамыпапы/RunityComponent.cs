@@ -32,6 +32,8 @@ public class RunityComponent : Компонент
             behaviour.enabled = true;
         else if (оригинальныйКомпонент is Renderer renderer)
             renderer.enabled = true;
+        else if (оригинальныйКомпонент is Collider collider)
+            collider.enabled = true;
         else
             Консоль.НапечататьПредупреждение("Пустое OnEnable", this);
     }
@@ -42,6 +44,8 @@ public class RunityComponent : Компонент
             behaviour.enabled = false;
         else if (оригинальныйКомпонент is Renderer renderer)
             renderer.enabled = false;
+        else if (оригинальныйКомпонент is Collider collider)
+            collider.enabled = false;
         else
             Консоль.НапечататьПредупреждение("Пустое OnDisable", this);
     }
@@ -62,6 +66,57 @@ public class RunityComponent : Компонент
 #if UNITY_EDITOR
 internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 {
+    /// <summary>
+    /// Здесь каждый компонент рисует свои поля. Справка добавляется под ними автоматически
+    /// </summary>
+    protected abstract void Отрисовать();
+
+    // Поля, события и кнопки, которые уже нарисованы в инспекторе. Их не нужно повторять в "Скрытом"
+    readonly System.Collections.Generic.HashSet<string> видимые = new System.Collections.Generic.HashSet<string>();
+
+    public sealed override void OnInspectorGUI()
+    {
+        видимые.Clear();
+        Отрисовать();
+        Пробел();
+        Справка.ОтобразитьВИнспекторе(target.GetType(), видимые);
+    }
+
+    /// <summary>
+    /// Подпись поля со всплывающей подсказкой из комментария к члену класса
+    /// </summary>
+    protected GUIContent Подпись(string title, string имяЧлена)
+    {
+        видимые.Add(имяЧлена);
+        return new GUIContent(title, Справка.Описание(target.GetType(), имяЧлена));
+    }
+
+    /// <summary>
+    /// Отмечает члены класса, нарисованные вручную, чтобы они не попали в "Скрытое"
+    /// </summary>
+    protected void Отметить(params string[] имена)
+    {
+        foreach (string имя in имена) видимые.Add(имя);
+    }
+
+    /// <summary>
+    /// Кнопка, которая вызывает метод у всех выделенных компонентов. Подсказка берётся из описания метода
+    /// </summary>
+    protected void Кнопка(string message, Expression<Action<T>> метод)
+    {
+        string имя = ((MethodCallExpression)метод.Body).Method.Name;
+        if (GUILayout.Button(Подпись(message, имя)))
+        {
+            Action<T> вызов = метод.Compile();
+            foreach (T component in components)
+            {
+                Undo.RecordObject(component, message);
+                вызов(component);
+                EditorUtility.SetDirty(component);
+            }
+        }
+    }
+
     protected TAsset НайтиАссет<TAsset>(string guid) where TAsset : UnityEngine.Object
     {
         #if UNITY_EDITOR
@@ -87,7 +142,22 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
     protected void Кнопка(string message, Action callback)
     {
-        if (GUILayout.Button(message))
+        MethodInfo метод = callback.Method;
+        bool методКомпонента = !метод.Name.Contains("<") && метод.DeclaringType.IsAssignableFrom(target.GetType());
+        GUIContent подпись = методКомпонента ? Подпись(message, метод.Name) : new GUIContent(message);
+
+        if (GUILayout.Button(подпись))
+        {
+            callback();
+        }
+    }
+
+    /// <summary>
+    /// Кнопка для статического метода. Подсказка берётся из описания метода с указанным именем
+    /// </summary>
+    protected void КнопкаМетода(string message, string имяМетода, Action callback)
+    {
+        if (GUILayout.Button(Подпись(message, имяМетода)))
         {
             callback();
         }
@@ -136,7 +206,34 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
     protected void ОтобразитьСобытие(string отображаемоеНазвание, string названиеСобытия)
     {
-        EditorGUILayout.PropertyField(serializedObject.FindProperty(названиеСобытия), new GUIContent(отображаемоеНазвание));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(названиеСобытия), Подпись(отображаемоеНазвание, названиеСобытия.TrimStart('_')));
+    }
+
+    /// <summary>
+    /// Рисует сериализованное поле или список полей стандартным способом Unity
+    /// </summary>
+    protected void ОтобразитьСвойство(string отображаемоеНазвание, string названиеПоля)
+    {
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(названиеПоля), Подпись(отображаемоеНазвание, названиеПоля.TrimStart('_')), true);
+    }
+
+    /// <summary>
+    /// Рисует выбор нескольких тегов для поля типа Теги
+    /// </summary>
+    protected void ОтобразитьТеги(string отображаемоеНазвание, string названиеПоля)
+    {
+        serializedObject.Update();
+        ОтобразитьСвойство(отображаемоеНазвание, названиеПоля);
+        serializedObject.ApplyModifiedProperties();
+    }
+
+    /// <summary>
+    /// Выпадающий список с физическими слоями
+    /// </summary>
+    protected LayerMask ПолеСлоёв(GUIContent title, LayerMask value)
+    {
+        int маска = EditorGUILayout.MaskField(title, UnityEditorInternal.InternalEditorUtility.LayerMaskToConcatenatedLayersMask(value), UnityEditorInternal.InternalEditorUtility.layers);
+        return UnityEditorInternal.InternalEditorUtility.ConcatenatedLayersMaskToLayerMask(маска);
     }
 
     protected void ЗакончитьСобытия()
@@ -218,7 +315,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUI.BeginChangeCheck();
 
         TValue value = drawer(
-            new GUIContent(title),
+            Подпись(title, propertyInfo.Name),
             Get(компонент)
         );
 
@@ -340,6 +437,8 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         НачатьГоризонтальнуюГруппу();
 
         (Дробное, Дробное) value = Get(компонент);
+        GUIContent подпись = Подпись(title, propertyMinInfo.Name);
+        Отметить(propertyMaxInfo.Name, propertyModeInfo.Name);
 
         /*Диапазон value = drawer(
             new GUIContent(title),
@@ -348,7 +447,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         //if (value.диапазон)
         //{
-            GUILayout.Label(title);
+            GUILayout.Label(подпись);
             GUILayout.Label(" от ", GUILayout.Width(25));
             value.Item1 = EditorGUILayout.FloatField(value.Item1, GUILayout.Width(75));
             GUILayout.Label(" до ", GUILayout.Width(25));
@@ -421,7 +520,8 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         GUILayout.Label("Y", GUILayout.Width(25));
         value.y = EditorGUILayout.Toggle(value.y);*/
         Rect rect = EditorGUILayout.GetControlRect();
-        rect = EditorGUI.PrefixLabel(rect, new GUIContent("Flip"));
+        rect = EditorGUI.PrefixLabel(rect, Подпись(title, propertyFirstInfo.Name));
+        Отметить(propertySecondInfo.Name);
         float width = 30f;
         EditorGUI.ToggleLeft(new Rect(rect.x, rect.y, width, rect.height),"X", value.x);
         EditorGUI.ToggleLeft(new Rect(rect.x + width + 10f, rect.y, width, rect.height),"Y", value.y);
@@ -469,7 +569,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUI.BeginChangeCheck();
 
         TValue value = drawer(
-            new GUIContent(title),
+            Подпись(title, propertyInfo.Name),
             Get(компонент)
         );
 
@@ -487,15 +587,18 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         return value;
     }
 
-    protected TEnum EnumField<TEnum>(string title, Func<T, TEnum> getter, Action<T, TEnum> setter) where TEnum : Enum
+    protected TEnum EnumField<TEnum>(string title, Expression<Func<T, TEnum>> property, Action<T, TEnum> setter) where TEnum : Enum
     {
+        Func<T, TEnum> getter = property.Compile();
+        GUIContent подпись = Подпись(title, GetPropertyInfo(property).Name);
+
         EditorGUI.showMixedValue =
             IsChanged(getter);
 
         EditorGUI.BeginChangeCheck();
 
         TEnum value = (TEnum)EditorGUILayout.EnumPopup(
-            label: title,
+            подпись,
             getter(компонент)
         );
 
