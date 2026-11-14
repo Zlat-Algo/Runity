@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -144,6 +144,14 @@ public class КадроваяАнимация : ScriptableObject
 [CustomEditor(typeof(КадроваяАнимация))]
 internal class КадроваяАнимацияEditor : Editor
 {
+    // Картинка в окне Project: первый кадр анимации
+    public override Texture2D RenderStaticPreview(string assetPath, UnityEngine.Object[] subAssets, int width, int height)
+    {
+        КадроваяАнимация анимация = (КадроваяАнимация)target;
+        Sprite первый = анимация.спрайты.Count > 0 || анимация.картинки.Count > 0 ? анимация.ПолучитьСпрайт(0) : null;
+        return ПревьюАссетов.ИзСпрайта(первый, width, height) ?? base.RenderStaticPreview(assetPath, subAssets, width, height);
+    }
+
     bool просмотрИдёт;
     int кадрПросмотра;
     double времяПрошлогоКадра;

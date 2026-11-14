@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Mathematics;
@@ -133,11 +133,8 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
     protected void ПредупреждениеПроУправление()
     {
-        if (Управление.main == null)
-        {
-            Текст("Добавьте объект Управление", MessageType.Error);
-            Пробел();
-        }
+        // Управление создаётся само при запуске игры, поэтому предупреждать не о чем
+
     }
 
     protected void Кнопка(string message, Action callback)
@@ -314,10 +311,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         EditorGUI.BeginChangeCheck();
 
-        TValue value = drawer(
-            Подпись(title, propertyInfo.Name),
-            Get(компонент)
-        );
+        TValue value = НарисоватьСОбязательностью(propertyInfo, title, Get(компонент), drawer);
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -541,6 +535,21 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         return value;
     }
 
+    // Обязательное поле, которое ещё не заполнили, подсвечивается красным, например «Кого копирует» у Спавнера
+    TValue НарисоватьСОбязательностью<TValue>(PropertyInfo propertyInfo, string title, TValue текущее, Func<GUIContent, TValue, TValue> drawer)
+    {
+        GUIContent подпись = Подпись(title, propertyInfo.Name);
+        bool пустоеОбязательное = propertyInfo.IsDefined(typeof(ОбязательноеAttribute), true) && ОтрисовкаАтрибутов.Пустое(текущее);
+        if (!пустоеОбязательное) return drawer(подпись, текущее);
+
+        подпись.tooltip = ОтрисовкаАтрибутов.ПодсказкаОбязательного(подпись.tooltip);
+        Color былЦвет = GUI.color;
+        GUI.color = ОтрисовкаАтрибутов.цветОбязательного;
+        TValue value = drawer(подпись, текущее);
+        GUI.color = былЦвет;
+        ОтрисовкаАтрибутов.Обвести(GUILayoutUtility.GetLastRect());
+        return value;
+    }
     PropertyInfo GetPropertyInfo<TValue>(Expression<Func<T, TValue>> property)
     {
         PropertyInfo propertyInfo = ((MemberExpression)property.Body).Member as PropertyInfo;
@@ -568,10 +577,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         EditorGUI.BeginChangeCheck();
 
-        TValue value = drawer(
-            Подпись(title, propertyInfo.Name),
-            Get(компонент)
-        );
+        TValue value = НарисоватьСОбязательностью(propertyInfo, title, Get(компонент), drawer);
 
         if (EditorGUI.EndChangeCheck())
         {

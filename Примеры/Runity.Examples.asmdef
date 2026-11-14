@@ -1,0 +1,16 @@
+{
+    "name": "Runity.Examples",
+    "rootNamespace": "",
+    "references": [
+        "com.zlatalgo.runity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

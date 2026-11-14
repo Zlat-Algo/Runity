@@ -11,8 +11,13 @@ using UnityEngine;
 [AddComponentMenu("  Runity/ Передвижение/ Управление игроком/Бег")]
 public class Бег : RunityComponent
 {
-    void Awake() => оригинальныйКомпонент = GetComponent<Передвижение>();
+    void Awake()
+    {
+        оригинальныйКомпонент = GetComponent<Передвижение>();
+    }
+
     void OnValidate() => Awake();
+
     /// <summary>
     /// Передвижение, которое ускоряет этот компонент
     /// </summary>
@@ -21,16 +26,22 @@ public class Бег : RunityComponent
     /// <summary>
     /// На сколько увеличивается скорость при беге
     /// </summary>
-    [SerializeField] Дробное _увеличениеСкорости = 2;
+    [SerializeField]
+    Дробное _увеличениеСкорости = 2;
+
     public Дробное увеличениеСкорости { get => _увеличениеСкорости; set => _увеличениеСкорости = value; }
 
-    [SerializeField] События _приНачалеБега;
+    [SerializeField]
+    События _приНачалеБега;
+
     /// <summary>
     /// Срабатывает, когда игрок зажал клавишу ускорения
     /// </summary>
     public События приНачалеБега => _приНачалеБега;
 
-    [SerializeField] События _приКонцеБега;
+    [SerializeField]
+    События _приКонцеБега;
+
     /// <summary>
     /// Срабатывает, когда игрок отпустил клавишу ускорения
     /// </summary>
@@ -39,7 +50,6 @@ public class Бег : RunityComponent
     void Update()
     {
         //if (вРедакторе) return;
-
         if (Управление.ускорениеНажато)
         {
             оригинал.скорость += увеличениеСкорости;

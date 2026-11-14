@@ -17,6 +17,7 @@ public class Следование : RunityComponent
     /// <summary>
     /// За кем следует объект
     /// </summary>
+    [Обязательное]
     public Transform цель { get => _цель; set => _цель = value; }
 
     [SerializeField] Флажок _запомнитьСмещение = да;

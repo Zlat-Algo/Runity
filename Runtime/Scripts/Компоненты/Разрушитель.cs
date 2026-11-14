@@ -11,22 +11,21 @@ public class Разрушитель : RunityComponent
 {
     protected override void OnEnable() { }
     protected override void OnDisable() { }
-    //protected override void OnDestroy() { }
+
+    [SerializeField] GameObject _цель;
     /// <summary>
-    /// Какой объект удалить. Если не указать, то удалится этот объект
+    /// Какой объект удалить. Можно взять объект со сцены. Если не указать, то удалится этот объект
     /// </summary>
     public GameObject цель { get => _цель; set => _цель = value; }
+
+    [SerializeField] float _таймер;
     /// <summary>
     /// Через сколько секунд удалить
     /// </summary>
-    [SerializeField] GameObject _цель;
     public float таймер { get => _таймер; set => _таймер = value; }
-    [SerializeField] float _таймер;
 
     void Start()
     {
-        //if (вРедакторе) return;
-
         if (цель == null)
         {
             Destroy(gameObject, таймер);
@@ -51,7 +50,7 @@ internal class РазрушительEditor : RunityEditor<Разрушител�
         Пробел();
 
         Поле("Цель", x => x.цель,
-            (title, value) => (GameObject)EditorGUILayout.ObjectField(title, value, typeof(GameObject), false));
+            (title, value) => ПолеОбъекта<GameObject>(title, value, true));
 
         Поле("Таймер", x => x.таймер,
             (title, value) => EditorGUILayout.FloatField(title, value));

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -87,6 +87,10 @@ public class Вещь : ScriptableObject
 [CustomEditor(typeof(Вещь))]
 internal class ВещьEditor : Editor
 {
+    // Картинка в окне Project: иконка вещи
+    public override Texture2D RenderStaticPreview(string assetPath, Object[] subAssets, int width, int height)
+        => ПревьюАссетов.ИзСпрайта(((Вещь)target).иконка, width, height) ?? base.RenderStaticPreview(assetPath, subAssets, width, height);
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();

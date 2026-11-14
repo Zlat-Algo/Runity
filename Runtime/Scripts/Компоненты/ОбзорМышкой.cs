@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -23,6 +23,7 @@ public class ОбзорМышкой : RunityComponent
     /// <summary>
     /// Что наклоняется вверх-вниз. Обычно это камера внутри игрока
     /// </summary>
+    [Обязательное]
     public Transform камера { get => _камера; set => _камера = value; }
 
     [SerializeField] Дробное _чувствительность = 0.1;
@@ -45,8 +46,20 @@ public class ОбзорМышкой : RunityComponent
 
     float наклон;
 
+    static bool НадИнтерфейсом() => UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+
     void Update()
     {
+        // На паузе и во время разговора камера не крутится, а мышка нужна для кнопок
+        if (Time.timeScale == 0) return;
+        if (ОкноДиалога.главное != null && ОкноДиалога.главное.идётРазговор) return;
+        if (спрятатьКурсор && Мышка.режим != РежимМышки.Отключенная)
+        {
+            // Курсор мог освободиться, например, клавишей Escape в редакторе. Щелчок прячет его снова
+            if (Управление.ЛКМНажата && !НадИнтерфейсом()) Мышка.режим = РежимМышки.Отключенная;
+            return;
+        }
+
         Направление2D смещение = Мышка.смещение;
 
         transform.Rotate(Vector3.up, смещение.x * чувствительность);

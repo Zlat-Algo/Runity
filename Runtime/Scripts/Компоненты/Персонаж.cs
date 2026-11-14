@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -125,12 +125,49 @@ public class Персонаж : Передвижение
         return результат.normalized;
     }
 
+    // Опора - то, на чём стоит персонаж. Если она движется (лифт, платформа), персонаж едет вместе с ней
+    Transform опора, новаяОпора;
+    Vector3 точкаНаОпоре;
+    float уголОпоры;
+
+    void OnControllerColliderHit(ControllerColliderHit касание)
+    {
+        if (касание.normal.y > 0.5f) новаяОпора = касание.collider.transform;
+    }
+
+    /// <summary>
+    /// То, на чём сейчас стоит персонаж. Пусто, если он в воздухе
+    /// </summary>
+    public Transform наЧёмСтоит => опора;
+
+    void ЕхатьНаОпоре()
+    {
+        if (опора == null) return;
+
+        Vector3 сдвиг = опора.TransformPoint(точкаНаОпоре) - transform.position;
+        float поворот = Mathf.DeltaAngle(уголОпоры, опора.eulerAngles.y);
+        if (сдвиг.sqrMagnitude > 0.000001f && сдвиг.sqrMagnitude < 4) оригинал.Move(сдвиг);
+        if (Mathf.Abs(поворот) > 0.001f && Mathf.Abs(поворот) < 45) transform.Rotate(0, поворот, 0);
+    }
+
+    void ЗапомнитьОпору()
+    {
+        опора = оригинал.isGrounded ? новаяОпора : null;
+        новаяОпора = null;
+        if (опора == null) return;
+        точкаНаОпоре = опора.InverseTransformPoint(transform.position);
+        уголОпоры = опора.eulerAngles.y;
+    }
+
     void Update()
     {
+        ЕхатьНаОпоре();
+
         Vector3 движение = движениеИзКода;
         движениеИзКода = Vector3.zero;
 
-        if (управляетИгрок)
+        // На паузе и во время разговора клавиши не управляют персонажем
+        if (управляетИгрок && Time.timeScale > 0)
         {
             Vector3 вперёд = Вперёд();
             Vector3 вправо = Vector3.Cross(Vector3.up, вперёд);
@@ -164,7 +201,9 @@ public class Персонаж : Передвижение
         }
 
         движение.y += скоростьY;
+        новаяОпора = null;
         оригинал.Move(движение * Время.времяСПрошлогоКадра);
+        ЗапомнитьОпору();
 
         if (оригинал.isGrounded && !былНаЗемле)
         {
@@ -210,6 +249,7 @@ public class Персонаж : Передвижение
         transform.position = точка;
         оригинал.enabled = да;
         скоростьY = 0;
+        опора = null;
     }
 }
 

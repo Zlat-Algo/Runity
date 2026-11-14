@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditorInternal;
 #endif
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,7 +40,10 @@ public class Видео : RunityComponent
     }
 
     /// <summary>
-    /// Ссылка на видео в интернете. Если её указать, то видео возьмётся по ссылке, а не из проекта
+    /// Прямая ссылка на видеофайл в интернете или путь к файлу на компьютере. Если её указать, то видео возьмётся по ссылке, а не из проекта.
+    /// Ссылка должна вести на сам файл, а не на страницу с плеером: ссылки на YouTube или ВКонтакте не подойдут.
+    /// Подходят файлы .mp4 (H.264), .webm (VP8), .mov, .m4v и .ogv; в Windows ещё .avi, .wmv, .asf, .mpg, .mpeg и .dv.
+    /// Надёжнее всего .mp4 с кодеком H.264 - он работает везде
     /// </summary>
     public Строка ссылка
     {
@@ -109,6 +113,35 @@ public class Видео : RunityComponent
     /// </summary>
     public События приЗавершении => _приЗавершении;
 
+    [SerializeField] События _приВоспроизведении;
+    /// <summary>
+    /// Срабатывает, когда видео запустили или сняли с паузы
+    /// </summary>
+    public События приВоспроизведении => _приВоспроизведении;
+
+    [SerializeField] События _приПаузе;
+    /// <summary>
+    /// Срабатывает, когда видео поставили на паузу
+    /// </summary>
+    public События приПаузе => _приПаузе;
+
+    [SerializeField] События _приПеремотке;
+    /// <summary>
+    /// Срабатывает, когда видео перемотали
+    /// </summary>
+    public События приПеремотке => _приПеремотке;
+
+    [SerializeField] События _приОшибке;
+    /// <summary>
+    /// Срабатывает, если видео не получилось открыть, например по неправильной ссылке
+    /// </summary>
+    public События приОшибке => _приОшибке;
+
+    /// <summary>
+    /// Текст последней ошибки видео
+    /// </summary>
+    public Строка последняяОшибка { get; private set; } = "";
+
     /// <summary>
     /// Даёт "да", пока видео играет
     /// </summary>
@@ -129,6 +162,9 @@ public class Видео : RunityComponent
     void Start()
     {
         оригинал.loopPointReached += _ => _приЗавершении.Вызвать();
+        оригинал.started += _ => _приВоспроизведении.Вызвать();
+        оригинал.seekCompleted += _ => _приПеремотке.Вызвать();
+        оригинал.errorReceived += (_, ошибка) => { последняяОшибка = ошибка; _приОшибке.Вызвать(); };
         НастроитьВывод();
     }
 
@@ -177,12 +213,42 @@ public class Видео : RunityComponent
     /// <summary>
     /// Запускает или продолжает видео
     /// </summary>
-    public void Играть() => оригинал.Play();
+    public void Играть()
+    {
+        // Когда видео снимают с паузы, Unity не сообщает о старте, поэтому событие вызывается здесь
+        bool былоНаПаузе = оригинал.isPaused;
+        оригинал.Play();
+        if (былоНаПаузе) _приВоспроизведении.Вызвать();
+    }
 
     /// <summary>
     /// Ставит видео на паузу
     /// </summary>
-    public void Приостановить() => оригинал.Pause();
+    public void Приостановить()
+    {
+        if (!оригинал.isPlaying) return;
+        оригинал.Pause();
+        _приПаузе.Вызвать();
+    }
+
+    /// <summary>
+    /// Ставит на паузу играющее видео и запускает стоящее
+    /// </summary>
+    public void ПереключитьПаузу()
+    {
+        if (оригинал.isPlaying) Приостановить();
+        else Играть();
+    }
+
+    /// <summary>
+    /// Перематывает видео вперёд на указанное количество секунд
+    /// </summary>
+    public void ПеремотатьВперёд(Дробное секунд) => Перемотать((float)текущееВремя + секунд);
+
+    /// <summary>
+    /// Перематывает видео назад на указанное количество секунд
+    /// </summary>
+    public void ПеремотатьНазад(Дробное секунд) => Перемотать((float)текущееВремя - секунд);
 
     /// <summary>
     /// Останавливает видео и возвращает его в начало
@@ -192,7 +258,11 @@ public class Видео : RunityComponent
     /// <summary>
     /// Перематывает видео на указанную секунду
     /// </summary>
-    public void Перемотать(Дробное секунда) => оригинал.time = секунда;
+    public void Перемотать(Дробное секунда)
+    {
+        float конец = длительность > 0 ? (float)длительность : float.MaxValue;
+        оригинал.time = Mathf.Clamp(секунда, 0, конец);
+    }
 }
 
 #if UNITY_EDITOR
@@ -212,6 +282,10 @@ internal class ВидеоEditor : RunityEditor<Видео>
         Синхрополе("Ссылка", x => x.ссылка,
             (title, value) => EditorGUILayout.TextField(title, value));
 
+        if (!string.IsNullOrEmpty(компонент.ссылка))
+        {
+            ПроверкаВидео.Отрисовать(компонент.ссылка);
+        }
         Пробел();
 
         Поле("Куда выводить", x => x.куда,
@@ -244,8 +318,76 @@ internal class ВидеоEditor : RunityEditor<Видео>
         Пробел();
 
         НачатьСобытия();
+        ОтобразитьСобытие("При воспроизведении", "_приВоспроизведении");
+        ОтобразитьСобытие("При паузе", "_приПаузе");
+        ОтобразитьСобытие("При перемотке", "_приПеремотке");
         ОтобразитьСобытие("При завершении", "_приЗавершении");
+        ОтобразитьСобытие("При ошибке", "_приОшибке");
         ЗакончитьСобытия();
+    }
+}
+
+// Проверяет ссылку заранее: создаёт невидимый проигрыватель и пробует подготовить видео
+internal static class ПроверкаВидео
+{
+    static string проверяемая;
+    static string результат;
+    static MessageType вид;
+    static VideoPlayer проигрыватель;
+    static double начало;
+
+    internal static void Отрисовать(string ссылка)
+    {
+        if (проверяемая != ссылка && проигрыватель == null) результат = null;
+
+        EditorGUI.BeginDisabledGroup(проигрыватель != null);
+        if (GUILayout.Button(new GUIContent(проигрыватель != null ? "Проверяю видео..." : "Проверить видео", "Пробует открыть видео по ссылке и сообщает, получилось ли")))
+        {
+            Начать(ссылка);
+        }
+        EditorGUI.EndDisabledGroup();
+
+        if (!string.IsNullOrEmpty(результат) && проверяемая == ссылка)
+        {
+            EditorGUILayout.HelpBox(результат, вид);
+        }
+    }
+
+    static void Начать(string ссылка)
+    {
+        проверяемая = ссылка;
+        результат = null;
+
+        GameObject объект = new GameObject("Проверка видео") { hideFlags = HideFlags.HideAndDontSave };
+        проигрыватель = объект.AddComponent<VideoPlayer>();
+        проигрыватель.playOnAwake = false;
+        проигрыватель.audioOutputMode = VideoAudioOutputMode.None;
+        проигрыватель.renderMode = VideoRenderMode.APIOnly;
+        проигрыватель.source = VideoSource.Url;
+        проигрыватель.url = ссылка;
+        проигрыватель.errorReceived += (_, ошибка) => Закончить($"Видео не открывается: {ошибка}", MessageType.Error);
+        проигрыватель.prepareCompleted += п => Закончить($"Видео открывается. Размер {п.width}×{п.height}, длина {п.length:0.#} с.", MessageType.Info);
+        проигрыватель.Prepare();
+
+        начало = EditorApplication.timeSinceStartup;
+        EditorApplication.update += Ждать;
+    }
+
+    static void Ждать()
+    {
+        if (проигрыватель == null) { EditorApplication.update -= Ждать; return; }
+        if (EditorApplication.timeSinceStartup - начало > 20)
+            Закончить("Видео не ответило за 20 секунд. Проверьте ссылку и интернет", MessageType.Warning);
+    }
+
+    static void Закончить(string текст, MessageType тип)
+    {
+        результат = текст;
+        вид = тип;
+        EditorApplication.update -= Ждать;
+        if (проигрыватель != null) Object.DestroyImmediate(проигрыватель.gameObject);
+        проигрыватель = null;
+        InternalEditorUtility.RepaintAllViews();
     }
 }
 #endif

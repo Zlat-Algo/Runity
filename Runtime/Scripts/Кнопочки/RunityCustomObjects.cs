@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -76,6 +76,30 @@ public class RunityCustomObjects
         GameObject newObj = CreateObject(menuCommand, "Навигационный агент");
 
         newObj.AddComponent<НавигационныйАгент>();
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Навигация/Бродячий агент", false, -50)]
+    private static void БродячийАгент(MenuCommand menuCommand)
+    {
+        GameObject newObj = СоздатьФорму<КоллайдерКапсула>(menuCommand, "Бродячий агент", PrimitiveType.Capsule);
+        newObj.AddComponent<НавигационныйАгент>();
+        newObj.AddComponent<НавигационноеБрождение>();
+    }
+
+    [MenuItem("GameObject/Runity/Передвижение/Навигация/Агент-патрульный", false, -50)]
+    private static void АгентПатрульный(MenuCommand menuCommand)
+    {
+        GameObject newObj = СоздатьФорму<КоллайдерКапсула>(menuCommand, "Агент-патрульный", PrimitiveType.Capsule);
+        newObj.AddComponent<НавигационныйАгент>();
+        НавигационноеПатрулирование патруль = newObj.AddComponent<НавигационноеПатрулирование>();
+
+        for (int i = 0; i < 2; i++)
+        {
+            GameObject точка = new GameObject($"Точка {i + 1}");
+            Undo.RegisterCreatedObjectUndo(точка, "Create " + точка.name);
+            точка.transform.position = newObj.transform.position + new Vector3(i == 0 ? -4 : 4, 0, 0);
+            патруль.точки.Add(точка.transform);
+        }
     }
 
     [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (для платформера)", false, -51)]
@@ -355,7 +379,7 @@ public class RunityCustomObjects
         CreateObject(menuCommand, "Источник звука").AddComponent<ИсточникЗвука>();
     }
 
-    [MenuItem("GameObject/Runity/Механики/Читер", false, 0)]
+    [MenuItem("GameObject/Runity/Ввод/Читер", false, 0)]
     private static void СоздатьЧитера(MenuCommand menuCommand)
     {
         CreateObject(menuCommand, "Читер").AddComponent<Читер>();
@@ -382,6 +406,7 @@ public class RunityCustomObjects
         Undo.RegisterCreatedObjectUndo(newObj, "Create " + newObj.name);
         Интерфейс интерфейс = newObj.AddComponent<Интерфейс>();
         интерфейс.СтандартныеНастройки();
+        АналогиRunity.Добавить(newObj);
         return интерфейс;
     }
 
@@ -405,6 +430,9 @@ public class RunityCustomObjects
         {
             if (текст.font == null) текст.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
+
+        // У каждой части элемента должен быть русский аналог: у картинок - Картинка, у текстов - Текст
+        АналогиRunity.Добавить(элемент);
     }
 
     [MenuItem("GameObject/Runity/Интерфейс/Основа/Интерфейс", false, 10)]
@@ -470,11 +498,11 @@ public class RunityCustomObjects
         фон.color = new Color(0.15f, 0.15f, 0.15f);
         newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(400, 40);
 
+        newObj.AddComponent<Картинка>();
+
         GameObject заполнение = new GameObject("Полоска", typeof(RectTransform));
         заполнение.transform.SetParent(newObj.transform, false);
-        Image картинка = заполнение.AddComponent<Image>();
-        картинка.sprite = белыйКвадрат;
-        картинка.color = new Color(0.3f, 0.8f, 0.3f);
+        заполнение.AddComponent<Image>().sprite = белыйКвадрат;
 
         RectTransform область = заполнение.GetComponent<RectTransform>();
         область.anchorMin = Vector2.zero;
@@ -482,11 +510,12 @@ public class RunityCustomObjects
         область.offsetMin = new Vector2(4, 4);
         область.offsetMax = new Vector2(-4, -4);
 
-        Прогрессбар прогрессбар = newObj.AddComponent<Прогрессбар>();
-        прогрессбар.полоска = картинка;
-        прогрессбар.НастроитьПолоску();
+        Картинка полоска = заполнение.AddComponent<Картинка>();
+        полоска.режим = РежимКартинки.Заполнение;
+        полоска.окраска = ОкраскаКартинки.ПоЗаполненности;
 
         ПоместитьВИнтерфейс(menuCommand, newObj);
+        Selection.activeObject = заполнение;
     }
 
     [MenuItem("GameObject/Runity/Интерфейс/Элементы/Картинка", false, 11)]
@@ -547,6 +576,243 @@ public class RunityCustomObjects
         раскладка.отступМежду = 20;
         раскладка.выравнивание = Выравнивание.ПоЦентру;
         ПоместитьВИнтерфейс(menuCommand, newObj);
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Основа/Экран загрузки", false, 17)]
+    [MenuItem("Assets/Create/Runity/Экран загрузки", false, -80)]
+    private static void СоздатьЭкранЗагрузки()
+    {
+        string путь = "Assets/Resources/" + ЭкранЗагрузки.имяОбразца + ".prefab";
+        if (ЭкранЗагрузки.образец != null)
+        {
+            путь = AssetDatabase.GetAssetPath(ЭкранЗагрузки.образец);
+            EditorUtility.DisplayDialog("Экран загрузки", $"Образец экрана загрузки уже есть: {путь}. Он появляется сам при переходах между сценами", "Понятно");
+        }
+        else
+        {
+            СоздатьОбразецЭкранаЗагрузки("Assets/Resources");
+            EditorUtility.DisplayDialog("Экран загрузки", $"Создан образец экрана загрузки: {путь}. Класть его на сцену не нужно: он появится сам при каждом переходе через Сцены и исчезнет после загрузки. Чтобы изменить его вид, откройте образец двойным щелчком", "Понятно");
+        }
+        Selection.activeObject = AssetDatabase.LoadAssetAtPath<GameObject>(путь);
+        EditorGUIUtility.PingObject(Selection.activeObject);
+    }
+
+    /// <summary>
+    /// Создаёт образец экрана загрузки в указанной папке Resources и даёт путь к нему
+    /// </summary>
+    public static string СоздатьОбразецЭкранаЗагрузки(string папкаResources)
+    {
+        Sprite белыйКвадрат = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guidБелогоКвадрата));
+
+        Интерфейс основа = СоздатьОсновуИнтерфейса();
+        основа.name = "Экран загрузки";
+        основа.порядокОтрисовки = 1000;
+
+        GameObject фон = new GameObject("Фон", typeof(RectTransform));
+        фон.transform.SetParent(основа.transform, false);
+        Image картинкаФона = фон.AddComponent<Image>();
+        картинкаФона.sprite = белыйКвадрат;
+        картинкаФона.color = new Color(0.08f, 0.08f, 0.1f);
+        Растянуть(фон.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        GameObject надпись = DefaultControls.CreateText(РесурсыИнтерфейса());
+        надпись.name = "Текст";
+        надпись.transform.SetParent(основа.transform, false);
+        Text текстНадписи = надпись.GetComponent<Text>();
+        текстНадписи.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        Текст текст = надпись.AddComponent<Текст>();
+        текст.содержимое = "Загрузка... 0%";
+        текст.размер = 40;
+        текст.цвет = Цвет.белый;
+        текстНадписи.alignment = TextAnchor.MiddleCenter;
+        Растянуть(надпись.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-300, 20), new Vector2(300, 90));
+
+        GameObject полоса = new GameObject("Полоса", typeof(RectTransform));
+        полоса.transform.SetParent(основа.transform, false);
+        Image фонПолосы = полоса.AddComponent<Image>();
+        фонПолосы.sprite = белыйКвадрат;
+        фонПолосы.color = new Color(0.2f, 0.2f, 0.25f);
+        Растянуть(полоса.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-300, -30), new Vector2(300, 0));
+
+        GameObject заполнение = new GameObject("Заполнение", typeof(RectTransform));
+        заполнение.transform.SetParent(полоса.transform, false);
+        заполнение.AddComponent<Image>().sprite = белыйКвадрат;
+        Растянуть(заполнение.GetComponent<RectTransform>(), Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+        Картинка полоска = заполнение.AddComponent<Картинка>();
+        полоска.режим = РежимКартинки.Заполнение;
+        полоска.плавность = 0;
+        полоска.окраска = ОкраскаКартинки.Градиент;
+
+        ЭкранЗагрузки экран = основа.gameObject.AddComponent<ЭкранЗагрузки>();
+        экран.полоска = полоска;
+        экран.текст = текстНадписи;
+
+        АналогиRunity.Добавить(основа.gameObject);
+
+        System.IO.Directory.CreateDirectory(папкаResources);
+        string путь = $"{папкаResources}/{ЭкранЗагрузки.имяОбразца}.prefab";
+        PrefabUtility.SaveAsPrefabAsset(основа.gameObject, путь);
+        Object.DestroyImmediate(основа.gameObject);
+        AssetDatabase.Refresh();
+        return путь;
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Окно диалога", false, 18)]
+    private static void СоздатьОкноДиалога(MenuCommand menuCommand)
+    {
+        Sprite белыйКвадрат = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guidБелогоКвадрата));
+
+        GameObject окно = new GameObject("Окно диалога", typeof(RectTransform));
+        Image фон = окно.AddComponent<Image>();
+        фон.sprite = белыйКвадрат;
+        фон.color = new Color(0.07f, 0.07f, 0.1f, 0.92f);
+
+        GameObject портрет = new GameObject("Портрет", typeof(RectTransform));
+        портрет.transform.SetParent(окно.transform, false);
+        Image картинкаПортрета = портрет.AddComponent<Image>();
+        картинкаПортрета.preserveAspect = true;
+        Растянуть((RectTransform)портрет.transform, new Vector2(0, 0), new Vector2(0, 1), new Vector2(20, 20), new Vector2(220, -20));
+
+        Text имя = ТекстОкна(окно.transform, "Имя", 30, FontStyle.Bold, new Vector2(240, -60), new Vector2(-20, -15));
+        имя.color = new Color(1f, 0.85f, 0.4f);
+        Text реплика = ТекстОкна(окно.transform, "Реплика", 26, FontStyle.Normal, new Vector2(240, -170), new Vector2(-20, -65));
+
+        GameObject ответы = new GameObject("Ответы", typeof(RectTransform));
+        ответы.transform.SetParent(окно.transform, false);
+        Растянуть((RectTransform)ответы.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(240, 15), new Vector2(-20, 90));
+        ГруппаЭлементов группа = ответы.AddComponent<ГруппаЭлементов>();
+        группа.режим = РежимГруппы.Горизонтально;
+        группа.отступМежду = 10;
+
+        GameObject образец = DefaultControls.CreateButton(РесурсыИнтерфейса());
+        образец.name = "Образец ответа";
+        образец.transform.SetParent(ответы.transform, false);
+        Text надписьОбразца = образец.GetComponentInChildren<Text>();
+        надписьОбразца.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        надписьОбразца.fontSize = 22;
+        надписьОбразца.text = "Ответ";
+
+        ОкноДиалога компонентОкна = окно.AddComponent<ОкноДиалога>();
+        компонентОкна.текстИмени = имя;
+        компонентОкна.текстРеплики = реплика;
+        компонентОкна.портрет = картинкаПортрета;
+        компонентОкна.образецОтвета = образец.GetComponent<Button>();
+
+        ПоместитьВИнтерфейс(menuCommand, окно);
+        Растянуть((RectTransform)окно.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(40, 30), new Vector2(-40, 290));
+    }
+
+    [MenuItem("GameObject/Runity/Интерфейс/Основа/Игровое меню", false, 17)]
+    private static void СоздатьИгровоеМеню(MenuCommand menuCommand)
+    {
+        Sprite белыйКвадрат = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guidБелогоКвадрата));
+        GameObject объектМеню = CreateObject(menuCommand, "Игровое меню");
+        ИгровоеМеню меню = объектМеню.AddComponent<ИгровоеМеню>();
+
+        ГруппаИнтерфейса Панель(string имя, string заголовок, Color цвет, params (string надпись, string действие)[] кнопки)
+        {
+            GameObject панель = new GameObject(имя, typeof(RectTransform));
+            Image фон = панель.AddComponent<Image>();
+            фон.sprite = белыйКвадрат;
+            фон.color = цвет;
+            панель.AddComponent<CanvasGroup>();
+            ГруппаИнтерфейса группа = панель.AddComponent<ГруппаИнтерфейса>();
+            группа.времяПерехода = 0.3f;
+            // В редакторе панели не закрывают сцену. Во время игры меню показывает их само
+            панель.GetComponent<CanvasGroup>().alpha = 0;
+
+            GameObject надпись = DefaultControls.CreateText(РесурсыИнтерфейса());
+            надпись.name = "Заголовок";
+            надпись.transform.SetParent(панель.transform, false);
+            Растянуть((RectTransform)надпись.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-450, 140), new Vector2(450, 240));
+            Text текст = надпись.GetComponent<Text>();
+            текст.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            текст.fontSize = 56;
+            текст.color = Color.white;
+            текст.alignment = TextAnchor.MiddleCenter;
+            текст.text = заголовок;
+
+            for (int i = 0; i < кнопки.Length; i++)
+            {
+                GameObject кнопка = DefaultControls.CreateButton(РесурсыИнтерфейса());
+                кнопка.name = кнопки[i].надпись;
+                кнопка.transform.SetParent(панель.transform, false);
+                RectTransform область = (RectTransform)кнопка.transform;
+                область.anchoredPosition = new Vector2(0, 60 - i * 85);
+                область.sizeDelta = new Vector2(380, 66);
+                Text подпись = кнопка.GetComponentInChildren<Text>();
+                подпись.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                подпись.fontSize = 28;
+                подпись.text = кнопки[i].надпись;
+                ПодключитьКнопку(кнопка.AddComponent<КнопкаИнтерфейса>(), объектМеню, кнопки[i].действие);
+            }
+
+            ПоместитьВИнтерфейс(menuCommand, панель);
+            Растянуть((RectTransform)панель.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            return группа;
+        }
+
+        меню.пауза = Панель("Пауза", "Пауза", new Color(0.05f, 0.05f, 0.1f, 0.85f),
+            ("Продолжить", "ИгровоеМеню/ Продолжить ()"), ("Начать заново", "ИгровоеМеню/ Заново ()"), ("В главное меню", "ИгровоеМеню/ ВМеню ()"));
+        меню.поражение = Панель("Поражение", "Вы проиграли", new Color(0.25f, 0.03f, 0.03f, 0.85f),
+            ("Попробовать снова", "ИгровоеМеню/ Заново ()"), ("В главное меню", "ИгровоеМеню/ ВМеню ()"));
+        меню.победа = Панель("Победа", "Победа!", new Color(0.05f, 0.18f, 0.08f, 0.85f),
+            ("Сыграть ещё раз", "ИгровоеМеню/ Заново ()"), ("В главное меню", "ИгровоеМеню/ ВМеню ()"));
+
+        Selection.activeObject = объектМеню;
+    }
+
+    /// <summary>
+    /// Добавляет кнопке действие при нажатии: метод компонента на указанном объекте, например "ИгровоеМеню/ Заново ()"
+    /// </summary>
+    public static void ПодключитьКнопку(КнопкаИнтерфейса кнопка, GameObject цель, string действие, string строка = "")
+    {
+        SerializedObject данные = new SerializedObject(кнопка);
+        SerializedProperty список = данные.FindProperty("_приНажатии.события");
+        int номер = список.arraySize;
+        список.arraySize++;
+        SerializedProperty событие = список.GetArrayElementAtIndex(номер);
+        событие.FindPropertyRelative("объект").objectReferenceValue = цель;
+        событие.FindPropertyRelative("компонент").stringValue = действие;
+        событие.FindPropertyRelative("_string").stringValue = строка;
+        данные.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    static Text ТекстОкна(Transform родитель, string имя, int размер, FontStyle стиль, Vector2 отступОт, Vector2 отступДо)
+    {
+        GameObject объект = new GameObject(имя, typeof(RectTransform));
+        объект.transform.SetParent(родитель, false);
+        Растянуть((RectTransform)объект.transform, new Vector2(0, 1), new Vector2(1, 1), отступОт, отступДо);
+        Text текст = объект.AddComponent<Text>();
+        текст.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        текст.fontSize = размер;
+        текст.fontStyle = стиль;
+        текст.color = Color.white;
+        текст.alignment = TextAnchor.UpperLeft;
+        return текст;
+    }
+
+    [MenuItem("GameObject/Runity/Механики/Журнал заданий", false, 0)]
+    private static void СоздатьЖурналЗаданий(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateText(РесурсыИнтерфейса());
+        newObj.name = "Журнал заданий";
+        Text текст = newObj.GetComponent<Text>();
+        текст.fontSize = 24;
+        текст.color = Color.white;
+        текст.alignment = TextAnchor.UpperRight;
+        текст.supportRichText = true;
+        newObj.AddComponent<ЖурналЗаданий>().текст = текст;
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+        Растянуть((RectTransform)newObj.transform, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-520, -400), new Vector2(-20, -20));
+    }
+
+    static void Растянуть(RectTransform область, Vector2 якорьОт, Vector2 якорьДо, Vector2 отступОт, Vector2 отступДо)
+    {
+        область.anchorMin = якорьОт;
+        область.anchorMax = якорьДо;
+        область.offsetMin = отступОт;
+        область.offsetMax = отступДо;
     }
 
     [MenuItem("GameObject/Runity/Интерфейс/Инвентарь/Ячейка инвентаря", false, 20)]

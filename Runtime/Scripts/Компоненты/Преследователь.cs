@@ -13,6 +13,7 @@ public class Преследователь : RunityComponent
     /// <summary>
     /// За кем движется объект
     /// </summary>
+    [Обязательное]
     public Transform цель { get => _цель; set => _цель = value; }
     /// <summary>
     /// Если "да", то объект не двигается по оси Z

@@ -28,6 +28,7 @@ public class Наведение : RunityComponent
     /// <summary>
     /// К какому объекту поворачиваться
     /// </summary>
+    [Обязательное]
     public Transform цель { get => _цель; set => _цель = value; }
 
     [SerializeField] Флажок _режим2D = да;

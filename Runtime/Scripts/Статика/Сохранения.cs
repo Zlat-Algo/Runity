@@ -5,15 +5,14 @@ using UnityEngine;
 /// </summary>
 public static class Сохранения
 {
-    /// <summary>
-    /// Сохраняет целое число под указанным названием
-    /// </summary>
-    public static void СохранитьЧисло(Строка название, Число значение)
-    {
-        PlayerPrefs.SetInt(название, значение);
-        PlayerPrefs.Save();
-    }
-
+    // /// <summary>
+    // /// Сохраняет целое число под указанным названием
+    // /// </summary>
+    // public static void СохранитьЧисло(Строка название, Число значение)
+    //     PlayerPrefs.SetInt(название, значение);
+    // {
+    //     PlayerPrefs.Save();
+    // }
     /// <summary>
     /// Сохраняет дробное число под указанным названием
     /// </summary>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -13,7 +13,12 @@ using UnityEngine.Events;
 public class Взаимодействие : RunityComponent
 {
     protected override void OnEnable() { }
-    protected override void OnDisable() { }
+    protected override void OnDisable()
+    {
+        if (!взаимодействиеДоступно) return;
+        взаимодействиеДоступно = нет;
+        _когдаНельзяВзаимодействовать.Вызвать();
+    }
 
     /// <summary>
     /// С какого расстояния от камеры можно взаимодействовать
@@ -39,7 +44,6 @@ public class Взаимодействие : RunityComponent
     [SerializeField] bool _ЛКМВместоЕ;
     public bool ЛКМВместоЕ { get => _ЛКМВместоЕ; set => _ЛКМВместоЕ = value; }
 
-    bool камераБлизко => (transform.position - Camera.main.transform.position).magnitude <= дальностьВзаимодействия;
     bool взаимодействиеДоступно;
 
     /// <summary>
@@ -58,39 +62,93 @@ public class Взаимодействие : RunityComponent
     [SerializeField] События _когдаВзаимодействует;
     public События когдаВзаимодействует => _когдаВзаимодействует;
 
-    void OnMouseOver()
-    {
-        //if (вРедакторе) return;
-        if (включен && камераБлизко && !взаимодействиеДоступно)
-        {
-            взаимодействиеДоступно = да;
-            _когдаМожноВзаимодействовать.Вызвать();
-        }
-        else if (взаимодействиеДоступно && !(включен && камераБлизко))
-        {
-            взаимодействиеДоступно = нет;
-            _когдаНельзяВзаимодействовать.Вызвать();
-        }
-    }
+    /// <summary>
+    /// Даёт "да", пока игрок смотрит на объект и может с ним взаимодействовать
+    /// </summary>
+    public Флажок доступно => взаимодействиеДоступно;
 
-    void OnMouseExit()
+    /// <summary>
+    /// Срабатывает так, будто игрок нажал кнопку взаимодействия
+    /// </summary>
+    public void Взаимодействовать()
     {
-        //if (вРедакторе) return;
-        if (взаимодействиеДоступно)
-        {
-            взаимодействиеДоступно = нет;
-            _когдаНельзяВзаимодействовать.Вызвать();
-        }
+        if (!включен) return;
+        _когдаВзаимодействует.Вызвать();
+        if (!многоразовый) включен = false;
     }
 
     void Update()
     {
-        //if (вРедакторе) return;
-        if (включен && взаимодействиеДоступно && ((!ЛКМВместоЕ && Управление.использоватьНажато) || (ЛКМВместоЕ && Управление.ЛКМНажата)))
+        bool можно = включен && НаведеноНаМеня();
+        if (можно != взаимодействиеДоступно)
         {
-            _когдаВзаимодействует.Вызвать();
-            if (!многоразовый) включен = false; 
+            взаимодействиеДоступно = можно;
+            if (можно) _когдаМожноВзаимодействовать.Вызвать();
+            else _когдаНельзяВзаимодействовать.Вызвать();
         }
+
+        // Пока игра стоит (пауза, разговор), нажатия не считаются
+        if (взаимодействиеДоступно && Time.timeScale > 0 && ((!ЛКМВместоЕ && Управление.использоватьНажато) || (ЛКМВместоЕ && Управление.ЛКМНажата)))
+        {
+            Взаимодействовать();
+        }
+    }
+
+    bool НаведеноНаМеня()
+    {
+        Transform цель = ЧтоПодПрицелом(out float расстояние);
+        return цель != null && расстояние <= дальностьВзаимодействия && (цель == transform || цель.IsChildOf(transform));
+    }
+
+    // Луч из камеры ищется один раз за кадр для всех объектов сразу.
+    // Если курсор спрятан (вид от первого лица) или мыши нет, луч идёт в центр экрана, иначе - под курсор
+    static int кадрЛуча = -1;
+    static Transform подПрицелом;
+    static float расстояниеДоЦели;
+    static readonly RaycastHit[] попадания = new RaycastHit[16];
+
+    static Transform ЧтоПодПрицелом(out float расстояние)
+    {
+        if (кадрЛуча != Time.frameCount)
+        {
+            кадрЛуча = Time.frameCount;
+            подПрицелом = null;
+            расстояниеДоЦели = float.MaxValue;
+            Camera камера = Camera.main;
+            if (камера != null)
+            {
+                Vector2 точка = Мышка.режим == РежимМышки.Отключенная || UnityEngine.InputSystem.Mouse.current == null ? new Vector2(Screen.width / 2f, Screen.height / 2f) : (Vector2)Мышка.позицияНаЭкране;
+                НайтиВ3D(камера.ScreenPointToRay(точка));
+                if (подПрицелом == null) НайтиВ2D(камера, точка);
+            }
+        }
+        расстояние = расстояниеДоЦели;
+        return подПрицелом;
+    }
+
+    static void НайтиВ3D(Ray луч)
+    {
+        int сколько = Physics.RaycastNonAlloc(луч, попадания, 1000, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+        for (int i = 0; i < сколько; i++)
+        {
+            RaycastHit попадание = попадания[i];
+            if (попадание.distance >= расстояниеДоЦели) continue;
+            // Невидимые зоны-триггеры не загораживают объекты, если с ними самими нельзя взаимодействовать
+            if (попадание.collider.isTrigger && попадание.collider.GetComponentInParent<Взаимодействие>() == null) continue;
+            // Свой персонаж тоже не загораживает: камера часто стоит внутри него
+            if (попадание.collider is CharacterController) continue;
+            подПрицелом = попадание.collider.transform;
+            расстояниеДоЦели = попадание.distance;
+        }
+    }
+
+    static void НайтиВ2D(Camera камера, Vector2 точка)
+    {
+        Vector3 вМире = камера.ScreenToWorldPoint(new Vector3(точка.x, точка.y, -камера.transform.position.z));
+        Collider2D найденный = Physics2D.OverlapPoint(вМире);
+        if (найденный == null) return;
+        подПрицелом = найденный.transform;
+        расстояниеДоЦели = Vector2.Distance(камера.transform.position, найденный.transform.position);
     }
 }
 

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -21,7 +21,7 @@ public class Сцены : RunityComponent
     {
         if (номерСцены < количествоСцен)
         {
-            SceneManager.LoadScene((int)номерСцены);
+            ЗагрузитьСцену(номерСцены);
         }
         else
         {
@@ -29,23 +29,74 @@ public class Сцены : RunityComponent
         }
     }
     /// <summary>
-    /// Запускает указанную сцену
+    /// Запускает указанную сцену. В редакторе её можно запустить, даже если её нет в списке сцен
     /// </summary>
     public static void Запустить(Строка имяСцены) //=> SceneManager.LoadScene((string)имяСцены);
     {
         if (ПроверитьНаличиеСцены(имяСцены))
         {
-            SceneManager.LoadScene(имяСцены);
+            ЗагрузитьСцену(имяСцены);
         }
         else
         {
             Консоль.НапечататьОшибку($"Сцены {имяСцены} нет среди зарегистрированных. Всего зарегистрировано {количествоСцен} сцен. Вы можете зарегистрировать новые сцены через меню Runity - Список сцен");
         }
     }
+    // Если в Resources есть образец Экрана загрузки, переход идёт через него, иначе - сразу
+    static void ЗагрузитьСцену(Число номер)
+    {
+        int n = номер;
+        if (!ЭкранЗагрузки.Начать(() => SceneManager.LoadSceneAsync(n))) SceneManager.LoadScene(n);
+    }
+
+    static void ЗагрузитьСцену(Строка имя)
+    {
+        string n = имя;
+        if (!ЭкранЗагрузки.Начать(() => ЗагрузитьФоном(n))) ЗагрузитьФоном(n);
+    }
+
     /// <summary>
     /// Запускает текущую сцену заново
     /// </summary>
-    public static void Перезапустить() => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    public static void Перезапустить()
+    {
+        Scene сцена = SceneManager.GetActiveScene();
+        if (!ЭкранЗагрузки.Начать(() => ЗагрузитьФоном(сцена))) ЗагрузитьФоном(сцена);
+    }
+
+    // Загружает сцену по имени. В редакторе находит её в проекте, даже если её нет в списке сцен
+    internal static AsyncOperation ЗагрузитьФоном(string имя)
+    {
+#if UNITY_EDITOR
+        if (!Application.CanStreamedLevelBeLoaded(имя))
+        {
+            string путь = ПутьВПроекте(имя);
+            if (путь != null) return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(путь, new LoadSceneParameters(LoadSceneMode.Single));
+        }
+#endif
+        return SceneManager.LoadSceneAsync(имя);
+    }
+
+    internal static AsyncOperation ЗагрузитьФоном(Scene сцена)
+    {
+#if UNITY_EDITOR
+        if (сцена.buildIndex < 0) return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(сцена.path, new LoadSceneParameters(LoadSceneMode.Single));
+#endif
+        return SceneManager.LoadSceneAsync(сцена.buildIndex);
+    }
+
+#if UNITY_EDITOR
+    static string ПутьВПроекте(string имя)
+    {
+        foreach (string guid in AssetDatabase.FindAssets("t:Scene " + имя))
+        {
+            string путь = AssetDatabase.GUIDToAssetPath(guid);
+            if (System.IO.Path.GetFileNameWithoutExtension(путь) == имя) return путь;
+        }
+        return null;
+    }
+#endif
+
     /// <summary>
     /// Запускает сцену со следующим номером
     /// </summary>
@@ -53,7 +104,7 @@ public class Сцены : RunityComponent
     {
         if (номерАктивнойСцены + 1 < количествоСцен)
         {
-            SceneManager.LoadScene(номерАктивнойСцены + 1);
+            ЗагрузитьСцену((int)номерАктивнойСцены + 1);
             return true;
         }
         else
@@ -69,7 +120,7 @@ public class Сцены : RunityComponent
     {
         if (номерАктивнойСцены > 0)
         {
-            SceneManager.LoadScene(номерАктивнойСцены - 1);
+            ЗагрузитьСцену((int)номерАктивнойСцены - 1);
             return true;
         }
         else
@@ -99,6 +150,10 @@ public class Сцены : RunityComponent
     /// </summary>
     public static Флажок ПроверитьНаличиеСцены(Строка имяСцены)
     {
+#if UNITY_EDITOR
+        // В редакторе можно запускать любые сцены проекта
+        if (ПутьВПроекте(имяСцены) != null) return true;
+#endif
         return Application.CanStreamedLevelBeLoaded(имяСцены);
     }
     /// <summary>

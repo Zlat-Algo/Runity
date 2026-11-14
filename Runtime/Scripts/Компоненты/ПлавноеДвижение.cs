@@ -5,11 +5,6 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Как меняется скорость во время плавного движения
-/// </summary>
-public enum ВидПлавности { Равномерно, ПлавныйСтарт, ПлавнаяОстановка, ПлавноСОбеихСторон, СПружинкой }
-
-/// <summary>
 /// Плавно двигает, поворачивает и меняет размер объекта за указанное время: двери, лифты, всплывающие окна
 /// </summary>
 [DisallowMultipleComponent]
@@ -30,6 +25,12 @@ public class ПлавноеДвижение : RunityComponent
     /// Как меняется скорость во время движения
     /// </summary>
     public ВидПлавности плавность { get => _плавность; set => _плавность = value; }
+
+    [SerializeField] AnimationCurve _своя = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    /// <summary>
+    /// Своя кривая плавности: слева начало движения, справа конец. Работает при плавности «Своя кривая»
+    /// </summary>
+    public AnimationCurve своя { get => _своя; set => _своя = value; }
 
     [SerializeField] Флажок _вЛокальныхКоординатах = нет;
     /// <summary>
@@ -131,7 +132,7 @@ public class ПлавноеДвижение : RunityComponent
     {
         for (float прошло = 0; прошло < длительность; прошло += Время.времяСПрошлогоКадра)
         {
-            шаг(Плавность(прошло / длительность));
+            шаг(Сгладить(прошло / длительность));
             yield return null;
         }
 
@@ -140,14 +141,7 @@ public class ПлавноеДвижение : RunityComponent
         _приЗавершении.Вызвать();
     }
 
-    float Плавность(float t) => плавность switch
-    {
-        ВидПлавности.ПлавныйСтарт => t * t,
-        ВидПлавности.ПлавнаяОстановка => 1 - (1 - t) * (1 - t),
-        ВидПлавности.ПлавноСОбеихСторон => t * t * (3 - 2 * t),
-        ВидПлавности.СПружинкой => 1 + 2.7f * Mathf.Pow(t - 1, 3) + 1.7f * Mathf.Pow(t - 1, 2),
-        _ => t
-    };
+    float Сгладить(float t) => Плавность.Применить(плавность, t, своя);
 }
 
 #if UNITY_EDITOR
@@ -166,6 +160,9 @@ internal class ПлавноеДвижениеEditor : RunityEditor<Плавно�
 
         Поле("Плавность", x => x.плавность,
             (title, value) => (ВидПлавности)EditorGUILayout.EnumPopup(title, value));
+
+        if (компонент.плавность == ВидПлавности.СвояКривая)
+            Поле("Своя кривая", x => x.своя, (title, value) => EditorGUILayout.CurveField(title, value));
 
         Поле("В локальных координатах", x => x.вЛокальныхКоординатах,
             (title, value) => EditorGUILayout.Toggle(title, value));

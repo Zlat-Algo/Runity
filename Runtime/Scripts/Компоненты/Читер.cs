@@ -35,7 +35,7 @@ public class ЧитКод
 /// Следит за тем, что набирает игрок, и выполняет чит-коды
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Механики/Читер")]
+[AddComponentMenu("  Runity/ Ввод/Читер")]
 public class Читер : RunityComponent
 {
     protected override void OnEnable()
