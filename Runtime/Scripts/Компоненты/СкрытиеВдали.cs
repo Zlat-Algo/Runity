@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -92,7 +92,7 @@ public class СкрытиеВдали : RunityComponent
         if (скрыт == !видно) return;
         скрыт = !видно;
 
-        foreach (Renderer отрисовщик in отрисовщики) if (отрисовщик != null) отрисовщик.forceRenderingOff = !видно;
+        foreach (Renderer отрисовщик in отрисовщики) ВидимостьОтрисовщиков.Далеко(отрисовщик, !видно);
         if (выключатьПоведение) foreach (Behaviour поведение in поведения) if (поведение != null) поведение.enabled = видно;
 
         if (видно) _приПоявлении.Вызвать();

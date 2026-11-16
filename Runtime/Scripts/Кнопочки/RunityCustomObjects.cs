@@ -273,7 +273,7 @@ public class RunityCustomObjects
     private static void ФормаЦилиндр(MenuCommand menuCommand) => СоздатьФорму<КоллайдерКапсула>(menuCommand, "Цилиндр", PrimitiveType.Cylinder);
 
     [MenuItem("GameObject/Runity/3D/Формы/Плоскость", false, -100)]
-    private static void ФормаПлоскость(MenuCommand menuCommand) => СоздатьФорму<КоллайдерМеш>(menuCommand, "Плоскость", PrimitiveType.Plane);
+    private static void ФормаПлоскость(MenuCommand menuCommand) => СоздатьФорму<КоллайдерМодели>(menuCommand, "Плоскость", PrimitiveType.Plane);
 
     static GameObject СоздатьФорму<TКоллайдер>(MenuCommand menuCommand, string имя, PrimitiveType тип) where TКоллайдер : Коллайдер3D
     {
@@ -527,6 +527,23 @@ public class RunityCustomObjects
         ПоместитьВИнтерфейс(menuCommand, newObj);
     }
 
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Фоновая картинка", false, 11)]
+    private static void СоздатьФоновуюКартинку(MenuCommand menuCommand)
+    {
+        GameObject newObj = DefaultControls.CreateImage(РесурсыИнтерфейса());
+        newObj.name = "Фоновая картинка";
+        Картинка картинка = newObj.AddComponent<Картинка>();
+        картинка.спрайт = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guidБелогоКвадрата));
+        картинка.ловитМышь = false;
+        ПоместитьВИнтерфейс(menuCommand, newObj);
+
+        // Фон лежит позади всего интерфейса и заполняет экран без пустых краёв при любых пропорциях
+        Canvas основа = newObj.GetComponentInParent<Canvas>();
+        if (основа != null) newObj.transform.SetParent(основа.rootCanvas.transform, false);
+        newObj.transform.SetAsFirstSibling();
+        картинка.размер = РазмерКартинки.БезПустыхКраёв;
+    }
+
     [MenuItem("GameObject/Runity/Интерфейс/Элементы/Галочка", false, 13)]
     private static void СоздатьГалочку(MenuCommand menuCommand)
     {
@@ -683,6 +700,9 @@ public class RunityCustomObjects
         ГруппаЭлементов группа = ответы.AddComponent<ГруппаЭлементов>();
         группа.режим = РежимГруппы.Горизонтально;
         группа.отступМежду = 10;
+        // Кнопки ответов делят ряд поровну
+        группа.подгонятьРазмерЭлементов = true;
+        группа.растягиватьЭлементы = true;
 
         GameObject образец = DefaultControls.CreateButton(РесурсыИнтерфейса());
         образец.name = "Образец ответа";
@@ -792,7 +812,7 @@ public class RunityCustomObjects
         return текст;
     }
 
-    [MenuItem("GameObject/Runity/Механики/Журнал заданий", false, 0)]
+    [MenuItem("GameObject/Runity/Интерфейс/Элементы/Журнал заданий", false, 19)]
     private static void СоздатьЖурналЗаданий(MenuCommand menuCommand)
     {
         GameObject newObj = DefaultControls.CreateText(РесурсыИнтерфейса());

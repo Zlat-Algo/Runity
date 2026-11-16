@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,6 +19,11 @@ public enum ОкраскаКартинки { Цвет, Градиент, ПоЗ�
 /// Куда идёт градиент: от первого цвета к последнему
 /// </summary>
 public enum НаправлениеГрадиента { СлеваНаправо, СправаНалево, СнизуВверх, СверхуВниз }
+
+/// <summary>
+/// Как картинка подстраивает размер под родителя: остаётся своей, растягивается целиком, заполняет всё без пустых краёв (лишнее обрезается) или помещается целиком
+/// </summary>
+public enum РазмерКартинки { Свой, РастянутьПоРодителю, БезПустыхКраёв, ВсёВидно }
 
 /// <summary>
 /// В какую сторону заполняется картинка
@@ -223,6 +228,21 @@ public class Картинка : RunityComponent, IMeshModifier
     /// </summary>
     public Дробное плавность { get => _плавность; set => _плавность = value; }
 
+    [SerializeField] Направление2D _прокрутка;
+    /// <summary>
+    /// С какой скоростью картинка прокручивается внутри себя: сколько её размеров в секунду по X и по Y. Подходит для бегущего фона в раннерах.
+    /// У текстуры должен быть включён повтор (Wrap Mode - Repeat)
+    /// </summary>
+    public Направление2D прокрутка { get => _прокрутка; set => _прокрутка = value; }
+
+    [SerializeField] РазмерКартинки _размер = РазмерКартинки.Свой;
+    /// <summary>
+    /// Как картинка подстраивает размер под родителя. Для фона на весь экран подходит «Без пустых краёв»
+    /// </summary>
+    public РазмерКартинки размер { get => _размер; set { _размер = value; ПодстроитьРазмер(); } }
+
+    Vector2 смещение;
+
     [SerializeField] События _приИзменении;
     /// <summary>
     /// Срабатывает при изменении значения
@@ -321,6 +341,7 @@ public class Картинка : RunityComponent, IMeshModifier
 
     void Start()
     {
+        ПодстроитьРазмер();
         if (режим != РежимКартинки.Заполнение) return;
 
         ВзятьИзИсточника();
@@ -330,6 +351,14 @@ public class Картинка : RunityComponent, IMeshModifier
 
     void Update()
     {
+        if ((Vector2)прокрутка != Vector2.zero)
+        {
+            // Смещение растёт бесконечно, поэтому от него оставляется только дробная часть
+            смещение += (Vector2)прокрутка * Время.времяСПрошлогоКадра;
+            смещение = new Vector2(смещение.x - Mathf.Floor(смещение.x), смещение.y - Mathf.Floor(смещение.y));
+            оригинал.SetVerticesDirty();
+        }
+        if (размер != РазмерКартинки.Свой) ПодстроитьРазмер();
         if (режим != РежимКартинки.Заполнение) return;
 
         ВзятьИзИсточника();
@@ -346,6 +375,34 @@ public class Картинка : RunityComponent, IMeshModifier
     /// </summary>
     public void ПодогнатьРазмер() => оригинал.SetNativeSize();
 
+    /// <summary>
+    /// Сразу подстраивает размер под родителя по настройке «Размер»
+    /// </summary>
+    public void ПодстроитьРазмер()
+    {
+        if (размер == РазмерКартинки.Свой || оригинал == null || !(transform.parent is RectTransform родитель)) return;
+        RectTransform область = (RectTransform)transform;
+        if (размер == РазмерКартинки.РастянутьПоРодителю || оригинал.sprite == null)
+        {
+            область.anchorMin = Vector2.zero;
+            область.anchorMax = Vector2.one;
+            область.offsetMin = область.offsetMax = Vector2.zero;
+            return;
+        }
+
+        Vector2 место = родитель.rect.size;
+        float пропорция = оригинал.sprite.rect.width / Mathf.Max(1, оригинал.sprite.rect.height);
+        if (место.x <= 0 || место.y <= 0) return;
+        bool шире = место.x / место.y > пропорция;
+        // Без пустых краёв картинка упирается в большую сторону и обрезается, а «Всё видно» - в меньшую
+        bool поШирине = размер == РазмерКартинки.БезПустыхКраёв ? шире : !шире;
+        Vector2 нужный = поШирине ? new Vector2(место.x, место.x / пропорция) : new Vector2(место.y * пропорция, место.y);
+        область.anchorMin = область.anchorMax = new Vector2(0.5f, 0.5f);
+        область.pivot = new Vector2(0.5f, 0.5f);
+        область.anchoredPosition = Vector2.zero;
+        if ((область.sizeDelta - нужный).sqrMagnitude > 0.01f) область.sizeDelta = нужный;
+    }
+
     #region Раскраска вершин
 
     void IMeshModifier.ModifyMesh(Mesh mesh) { }
@@ -353,6 +410,20 @@ public class Картинка : RunityComponent, IMeshModifier
     void IMeshModifier.ModifyMesh(VertexHelper вершины)
     {
         if (!isActiveAndEnabled || вершины.currentVertCount == 0) return;
+
+        if (смещение != Vector2.zero && оригинал.sprite != null)
+        {
+            // Прокрутка сдвигает развёртку на долю размера картинки в текстуре
+            Vector4 границы = UnityEngine.Sprites.DataUtility.GetOuterUV(оригинал.sprite);
+            Vector2 сдвиг = new Vector2(смещение.x * (границы.z - границы.x), смещение.y * (границы.w - границы.y));
+            UIVertex точка = new UIVertex();
+            for (int i = 0; i < вершины.currentVertCount; i++)
+            {
+                вершины.PopulateUIVertex(ref точка, i);
+                точка.uv0 = new Vector4(точка.uv0.x + сдвиг.x, точка.uv0.y + сдвиг.y, точка.uv0.z, точка.uv0.w);
+                вершины.SetUIVertex(точка, i);
+            }
+        }
 
         if (окраска == ОкраскаКартинки.ПоЗаполненности)
         {
@@ -461,7 +532,7 @@ public class Картинка : RunityComponent, IMeshModifier
 [CustomEditor(typeof(Картинка))]
 internal class КартинкаEditor : RunityEditor<Картинка>
 {
-    public override bool RequiresConstantRepaint() => Application.isPlaying && компонент.режим == РежимКартинки.Заполнение;
+    public override bool RequiresConstantRepaint() => Application.isPlaying && (компонент.режим == РежимКартинки.Заполнение || (Vector2)компонент.прокрутка != Vector2.zero);
 
     protected override void Отрисовать()
     {
@@ -474,7 +545,7 @@ internal class КартинкаEditor : RunityEditor<Картинка>
 
         EnumField("Режим", x => x.режим, (component, value) => component.режим = value);
 
-        if ((компонент.режим == РежимКартинки.Рамка || компонент.режим == РежимКартинки.Плитка) && компонент.оригинал.sprite != null && компонент.оригинал.sprite.border == Vector4.zero)
+        if (компонент.режим == РежимКартинки.Рамка && компонент.оригинал.sprite != null && компонент.оригинал.sprite.border == Vector4.zero)
         {
             Текст("У спрайта не размечены края. Разметьте их в Sprite Editor, иначе картинка будет растягиваться целиком", MessageType.Warning);
         }
@@ -534,6 +605,33 @@ internal class КартинкаEditor : RunityEditor<Картинка>
 
             Поле("Плавность", x => x.плавность,
                 (title, value) => EditorGUILayout.FloatField(title, value));
+        }
+
+        Пробел();
+
+        Поле("Размер", x => x.размер,
+            (title, value) => (РазмерКартинки)EditorGUILayout.EnumPopup(title, value));
+        if (компонент.размер != РазмерКартинки.Свой && !Application.isPlaying)
+            foreach (Картинка картинка in components) картинка.ПодстроитьРазмер();
+
+        Поле("Прокрутка", x => x.прокрутка,
+            (title, value) => EditorGUILayout.Vector2Field(title, value));
+        if ((Vector2)компонент.прокрутка != Vector2.zero && компонент.оригинал.sprite != null)
+        {
+            Texture2D текстура = компонент.оригинал.sprite.texture;
+            if (текстура.wrapMode != TextureWrapMode.Repeat)
+            {
+                Текст("Чтобы картинка прокручивалась по кругу, у текстуры должен быть включён повтор", MessageType.Warning);
+                if (GUILayout.Button("Включить повтор у текстуры") && AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(текстура)) is TextureImporter импорт)
+                {
+                    импорт.wrapMode = TextureWrapMode.Repeat;
+                    импорт.SaveAndReimport();
+                }
+            }
+            if (компонент.оригинал.sprite.packed || компонент.оригинал.sprite.rect.size != new Vector2(текстура.width, текстура.height))
+            {
+                Текст("Прокрутка работает, только если спрайт занимает всю текстуру и не упакован в атлас", MessageType.Warning);
+            }
         }
 
         Пробел();

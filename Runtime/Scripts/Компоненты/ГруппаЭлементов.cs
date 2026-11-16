@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -80,10 +80,11 @@ public class ГруппаЭлементов : RunityComponent
 #endif
             оригинальныйКомпонент = gameObject.AddComponent(тип);
 
+            // Элементы сохраняют свой размер: иначе кнопки и картинки без заданного размера сжимаются до точек
             if (линия != null)
             {
-                линия.childControlWidth = true;
-                линия.childControlHeight = true;
+                линия.childControlWidth = false;
+                линия.childControlHeight = false;
                 линия.childForceExpandWidth = false;
                 линия.childForceExpandHeight = false;
             }
@@ -132,6 +133,21 @@ public class ГруппаЭлементов : RunityComponent
             if (линия == null) return;
             линия.childForceExpandWidth = value;
             линия.childForceExpandHeight = value;
+        }
+    }
+
+    /// <summary>
+    /// По горизонтали и вертикали: если "да", группа сама задаёт размер элементов. Вместе с «Растягивать элементы» они делят место поровну.
+    /// Если "нет", у элементов остаётся их собственный размер
+    /// </summary>
+    public Флажок подгонятьРазмерЭлементов
+    {
+        get => линия != null && (линия.childControlWidth || линия.childControlHeight);
+        set
+        {
+            if (линия == null) return;
+            линия.childControlWidth = value;
+            линия.childControlHeight = value;
         }
     }
 
@@ -197,6 +213,12 @@ internal class ГруппаЭлементовEditor : RunityEditor<Группа�
         }
         else
         {
+            Синхрополе("Подгонять размер элементов", x => x.подгонятьРазмерЭлементов,
+                (title, value) => EditorGUILayout.Toggle(title, value));
+            if (компонент.подгонятьРазмерЭлементов && !компонент.растягиватьЭлементы)
+            {
+                Текст("Элементы сожмутся до своего наименьшего размера. Чтобы они заполнили место, включите «Растягивать элементы»", MessageType.Info);
+            }
             Синхрополе("Растягивать элементы", x => x.растягиватьЭлементы,
                 (title, value) => EditorGUILayout.Toggle(title, value));
         }

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -67,6 +67,52 @@ public class НавигационныйАгент : Передвижение
     {
         get => оригинал.stoppingDistance;
         set => оригинал.stoppingDistance = value;
+    }
+
+    /// <summary>
+    /// На какой высоте над картой стоит агент. Если модель проваливается в пол или висит над ним, поменяйте это число:
+    /// например, для капсулы с центром посередине нужна половина её высоты
+    /// </summary>
+    public float базовоеСмещение
+    {
+        get => оригинал.baseOffset;
+        set => оригинал.baseOffset = value;
+    }
+
+    /// <summary>
+    /// Рост агента: под препятствия ниже него он не проходит
+    /// </summary>
+    public float высота
+    {
+        get => оригинал.height;
+        set => оригинал.height = value;
+    }
+
+    /// <summary>
+    /// Насколько широк агент: так близко он подходит к стенам и другим агентам
+    /// </summary>
+    public float радиус
+    {
+        get => оригинал.radius;
+        set => оригинал.radius = value;
+    }
+
+    /// <summary>
+    /// Если "да", агент обходит других агентов, а не проходит сквозь них
+    /// </summary>
+    public Флажок обходитьДругих
+    {
+        get => оригинал.obstacleAvoidanceType != ObstacleAvoidanceType.NoObstacleAvoidance;
+        set => оригинал.obstacleAvoidanceType = value ? ObstacleAvoidanceType.HighQualityObstacleAvoidance : ObstacleAvoidanceType.NoObstacleAvoidance;
+    }
+
+    /// <summary>
+    /// Кто кому уступает дорогу: агент с меньшим числом важнее. От 0 до 99
+    /// </summary>
+    public Число важность
+    {
+        get => оригинал.avoidancePriority;
+        set => оригинал.avoidancePriority = Mathf.Clamp(value, 0, 99);
     }
 
     [SerializeField] События _приДостиженииЦели;
@@ -209,6 +255,26 @@ internal class НавигационныйАгентEditor : Передвижен
 
         Синхрополе("Скорость поворота", x => x.скоростьПоворота,
             (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Пробел();
+
+        Синхрополе("Базовое смещение", x => x.базовоеСмещение,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Синхрополе("Высота", x => x.высота,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Синхрополе("Радиус", x => x.радиус,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Синхрополе("Обходить других", x => x.обходитьДругих,
+            (title, value) => EditorGUILayout.Toggle(title, value));
+
+        if (компонент.обходитьДругих)
+        {
+            Синхрополе("Важность", x => x.важность,
+                (title, value) => EditorGUILayout.IntSlider(title, value, 0, 99));
+        }
 
         Пробел();
 

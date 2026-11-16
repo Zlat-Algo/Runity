@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,7 +91,13 @@ public class РаспаковкаАрхивов : AssetPostprocessor
 
             if (!распаковано)
             {
-                Debug.LogWarning($"Не получилось распаковать {архив}. Для архивов RAR и 7z установите программу 7-Zip, а ZIP распаковывается сам");
+                string как = UnityEngine.Application.platform switch
+                {
+                    UnityEngine.RuntimePlatform.OSXEditor => "командой «brew install sevenzip» в Терминале",
+                    UnityEngine.RuntimePlatform.LinuxEditor => "командой «sudo apt install 7zip»",
+                    _ => "с сайта 7-zip.org или командой «winget install 7zip.7zip»"
+                };
+                Программы.ПредложитьУстановку($"Не получилось распаковать {Path.GetFileName(архив)}. Архивы ZIP Runity распаковывает сам, а для RAR и 7z нужна бесплатная программа 7-Zip. Установите её {как}, перезапустите Unity и снова перетащите архив", "https://www.7-zip.org/");
                 return false;
             }
 
@@ -154,7 +160,8 @@ public class РаспаковкаАрхивов : AssetPostprocessor
         return true;
     }
 
-    // RAR, 7z и tar распаковывает 7-Zip, а если его нет - встроенная в Windows программа tar
+    // RAR, 7z и tar распаковывает 7-Zip, а если его нет - встроенная в систему программа tar.
+    // В Windows 11 и macOS она умеет открывать и RAR, и 7z
     static bool РаспаковатьПрограммой(string архив, string куда)
     {
         string[] пути7zip =
@@ -162,7 +169,7 @@ public class РаспаковкаАрхивов : AssetPostprocessor
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "7-Zip", "7z.exe"),
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "7-Zip", "7z.exe")
         };
-        string семьZip = пути7zip.FirstOrDefault(File.Exists);
+        string семьZip = пути7zip.FirstOrDefault(File.Exists) ?? Программы.Найти("7z") ?? Программы.Найти("7zz");
 
         if (семьZip != null && Запустить(семьZip, $"x \"{Path.GetFullPath(архив)}\" -o\"{куда}\" -y")) return true;
         return Запустить("tar", $"-xf \"{Path.GetFullPath(архив)}\" -C \"{куда}\"") && Directory.EnumerateFileSystemEntries(куда).Any();

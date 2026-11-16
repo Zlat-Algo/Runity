@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using Unity.AI.Navigation;
@@ -23,7 +23,7 @@ public static class АналогиRunity
         (typeof(BoxCollider), typeof(КоллайдерКуб)),
         (typeof(SphereCollider), typeof(КоллайдерСфера)),
         (typeof(CapsuleCollider), typeof(КоллайдерКапсула)),
-        (typeof(MeshCollider), typeof(КоллайдерМеш)),
+        (typeof(MeshCollider), typeof(КоллайдерМодели)),
         (typeof(BoxCollider2D), typeof(КоллайдерПрямоугольник2D)),
         (typeof(CircleCollider2D), typeof(КоллайдерКруг2D)),
         (typeof(CapsuleCollider2D), typeof(КоллайдерКапсула2D)),
@@ -137,24 +137,18 @@ public static class АналогиRunity
         return true;
     }
 
-    [MenuItem("GameObject/Runity/Добавить аналоги Runity", false, 1000)]
-    static void ДобавитьВыделенным(MenuCommand команда)
+    [MenuItem("Runity/Аналоги Runity/Добавить выделенным объектам", false, 200)]
+    static void ДобавитьВыделенным()
     {
-        // Пункт вызывается для каждого выделенного объекта, поэтому работаем один раз
-        if (команда.context != null && команда.context != Selection.activeGameObject) return;
-        GameObject[] выделенные = Selection.gameObjects;
-        if (выделенные.Length == 0)
-        {
-            ДобавитьНаСцену();
-            return;
-        }
-
         int всего = 0;
-        foreach (GameObject объект in выделенные) всего += Добавить(объект, true);
+        foreach (GameObject объект in Selection.gameObjects) всего += Добавить(объект, true);
         Консоль.Напечатать($"Добавлено компонентов Runity: {всего}");
     }
 
-    [MenuItem("Runity/Добавить аналоги Runity на всю сцену", false, 200)]
+    [MenuItem("Runity/Аналоги Runity/Добавить выделенным объектам", true)]
+    static bool ЕстьВыделенные() => Selection.gameObjects.Length > 0;
+
+    [MenuItem("Runity/Аналоги Runity/Добавить на всю сцену", false, 201)]
     static void ДобавитьНаСцену()
     {
         int всего = 0;
@@ -162,6 +156,14 @@ public static class АналогиRunity
         {
             всего += Добавить(корень, true);
         }
+        Консоль.Напечатать($"Добавлено компонентов Runity: {всего}");
+    }
+
+    // Пункт в меню шестерёнки у Transform в инспекторе: работает для этого объекта и всех его детей
+    [MenuItem("CONTEXT/Transform/Добавить аналоги Runity")]
+    static void ДобавитьИзИнспектора(MenuCommand команда)
+    {
+        int всего = Добавить(((Transform)команда.context).gameObject, true);
         Консоль.Напечатать($"Добавлено компонентов Runity: {всего}");
     }
 }

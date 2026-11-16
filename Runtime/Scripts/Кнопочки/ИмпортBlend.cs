@@ -14,7 +14,7 @@ using UnityEngine.Rendering;
 /// Модификаторы, анимации и кости не переносятся - для них нужен установленный Blender, тогда Unity откроет файл сам.
 /// Если Blender не установлен, Runity включает этот способ сам. Переключить способ можно в окне Inspector файла
 /// </summary>
-[ScriptedImporter(1, new string[0], new[] { "blend" })]
+[ScriptedImporter(2, new string[0], new[] { "blend" })]
 public class ИмпортBlend : ScriptedImporter
 {
     [Подсказка("Во сколько раз изменить размер модели")]
@@ -25,6 +25,9 @@ public class ИмпортBlend : ScriptedImporter
 
     [Подсказка("Если \"да\", то к каждой части модели добавляется коллайдер по её форме")]
     public bool коллайдер = false;
+
+    [Подсказка("Если \"нет\", поверхность матовая: без гладкости, металлического блеска и бликов. Если \"да\", гладкость и металл берутся из файла")]
+    public bool гладкостьИзФайла = false;
 
     public override void OnImportAsset(AssetImportContext ctx)
     {
@@ -76,7 +79,7 @@ public class ИмпортBlend : ScriptedImporter
                 foreach (int частьМатериала in материалыЧастей)
                 {
                     ulong адрес = частьМатериала >= 0 && частьМатериала < адресаМатериалов.Count ? адресаМатериалов[частьМатериала] : 0;
-                    набор.Add(адрес == 0 ? стандартный : Материал(файл, адрес, материалы, ctx));
+                    набор.Add(адрес == 0 ? стандартный : Материал(файл, адрес, материалы, ctx, гладкостьИзФайла));
                 }
                 наборы[адресСетки] = набор;
             }
@@ -87,7 +90,7 @@ public class ИмпортBlend : ScriptedImporter
             if (коллайдер)
             {
                 созданный.AddComponent<MeshCollider>().sharedMesh = сетка;
-                созданный.AddComponent<КоллайдерМеш>();
+                созданный.AddComponent<КоллайдерМодели>();
             }
         }
 
@@ -115,7 +118,7 @@ public class ИмпортBlend : ScriptedImporter
         return Shader.Find(urp ? "Universal Render Pipeline/Lit" : "Standard") ?? Shader.Find("Standard");
     }
 
-    static Material Материал(ФайлBlend файл, ulong адрес, Dictionary<ulong, Material> готовые, AssetImportContext ctx)
+    static Material Материал(ФайлBlend файл, ulong адрес, Dictionary<ulong, Material> готовые, AssetImportContext ctx, bool гладкостьИзФайла)
     {
         if (готовые.TryGetValue(адрес, out Material готовый)) return готовый;
         ФайлBlend.Структура описание = файл.Прочитать(адрес);
@@ -125,6 +128,7 @@ public class ИмпортBlend : ScriptedImporter
         материал.SetColor(urp ? "_BaseColor" : "_Color", цвет);
         материал.SetFloat("_Metallic", описание.Дробное("metallic", 0));
         материал.SetFloat(urp ? "_Smoothness" : "_Glossiness", 1 - описание.Дробное("roughness", 0.5f));
+        if (!гладкостьИзФайла) МатовыеМатериалы.Сделать(материал, urp);
         ctx.AddObjectToAsset("материал " + готовые.Count, материал);
         готовые[адрес] = материал;
         return материал;
@@ -700,5 +704,28 @@ internal class ИмпортBlender : AssetPostprocessor
         Debug.LogError($"Не удалось открыть {assetPath}. Unity читает файлы .blend с помощью самой программы Blender: установите её с сайта blender.org " +
                        "и перезапустите Unity. Если Blender уже установлен, откройте файл в нём и выберите в окне Inspector этого файла способ «ИмпортBlend» - Runity прочитает его без Blender");
     }
+}
+// Общая для импортов моделей настройка матовой поверхности
+internal static class МатовыеМатериалы
+{
+    // Матовая поверхность: без гладкости, металла, бликов и отражений
+    internal static void Сделать(Material материал, bool urp)
+    {
+        материал.SetFloat("_Metallic", 0);
+        материал.SetFloat(urp ? "_Smoothness" : "_Glossiness", 0);
+        материал.SetFloat("_SpecularHighlights", 0);
+        материал.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+        if (urp)
+        {
+            материал.SetFloat("_EnvironmentReflections", 0);
+            материал.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+        }
+        else
+        {
+            материал.SetFloat("_GlossyReflections", 0);
+            материал.EnableKeyword("_GLOSSYREFLECTIONS_OFF");
+        }
+    }
+
 }
 #endif

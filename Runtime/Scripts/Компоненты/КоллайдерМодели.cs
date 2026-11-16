@@ -8,8 +8,8 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(MeshCollider))]
-[AddComponentMenu("  Runity/ Физика 3D/ Коллайдеры/Коллайдер Меш")]
-public class КоллайдерМеш : Коллайдер3D
+[AddComponentMenu("  Runity/ Физика 3D/ Коллайдеры/Коллайдер модели")]
+public class КоллайдерМодели : Коллайдер3D
 {
     MeshCollider меш => (MeshCollider)оригинальныйКомпонент;
 
@@ -26,8 +26,8 @@ public class КоллайдерМеш : Коллайдер3D
 
 #if UNITY_EDITOR
 [CanEditMultipleObjects]
-[CustomEditor(typeof(КоллайдерМеш))]
-internal class КоллайдерМешEditor : RunityEditor<КоллайдерМеш>
+[CustomEditor(typeof(КоллайдерМодели))]
+internal class КоллайдерМоделиEditor : RunityEditor<КоллайдерМодели>
 {
     protected override void Отрисовать()
     {

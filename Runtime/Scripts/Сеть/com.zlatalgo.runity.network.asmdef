@@ -13,7 +13,15 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
+    "defineConstraints": [
+        "RUNITY_NETCODE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.netcode.gameobjects",
+            "expression": "",
+            "define": "RUNITY_NETCODE"
+        }
+    ],
     "noEngineReferences": false
 }

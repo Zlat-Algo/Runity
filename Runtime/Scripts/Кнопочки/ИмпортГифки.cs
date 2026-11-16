@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -78,6 +78,12 @@ public static class ИмпортГифки
             return;
         }
 
+        ЗаполнитьКадрами(анимация, гифка);
+    }
+
+    // Сохраняет готовые кадры картинками рядом с анимацией и подключает их к ней. Так работают гифки и анимированные webp
+    internal static void ЗаполнитьКадрами(КадроваяАнимация анимация, ДекодерГифок.Результат гифка)
+    {
         string путьАнимации = AssetDatabase.GetAssetPath(анимация);
         string папка = Path.GetDirectoryName(путьАнимации).Replace("\\", "/");
         string папкаКадров = $"{папка}/{анимация.name} кадры";

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -6,6 +6,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+
+/// <summary>
+/// Где рисуется интерфейс: поверх экрана, перед камерой или в мире
+/// </summary>
+public enum РежимИнтерфейса { ПоверхЭкрана, ПередКамерой, ВМире }
 
 /// <summary>
 /// Как интерфейс подстраивается под экран, пропорции которого отличаются от эталонного разрешения
@@ -55,6 +60,56 @@ public class Интерфейс : RunityComponent
     {
         get => оригинал.renderMode == RenderMode.WorldSpace;
         set => оригинал.renderMode = value ? RenderMode.WorldSpace : RenderMode.ScreenSpaceOverlay;
+    }
+
+    /// <summary>
+    /// Где рисуется интерфейс. Поверх экрана - над всем остальным. Перед камерой - на заданном расстоянии от камеры: так на интерфейс действуют эффекты камеры, а 3D-объекты могут оказаться перед ним. В мире - как обычный объект на сцене
+    /// </summary>
+    public РежимИнтерфейса режим
+    {
+        get => оригинал.renderMode switch
+        {
+            RenderMode.ScreenSpaceCamera => РежимИнтерфейса.ПередКамерой,
+            RenderMode.WorldSpace => РежимИнтерфейса.ВМире,
+            _ => РежимИнтерфейса.ПоверхЭкрана
+        };
+        set
+        {
+            оригинал.renderMode = value switch
+            {
+                РежимИнтерфейса.ПередКамерой => RenderMode.ScreenSpaceCamera,
+                РежимИнтерфейса.ВМире => RenderMode.WorldSpace,
+                _ => RenderMode.ScreenSpaceOverlay
+            };
+            if (value == РежимИнтерфейса.ПередКамерой && оригинал.worldCamera == null) оригинал.worldCamera = Camera.main;
+        }
+    }
+
+    /// <summary>
+    /// Через какую камеру смотрит интерфейс в режиме «Перед камерой» и кто нажимает на него в режиме «В мире». Если пусто - главная камера
+    /// </summary>
+    public Camera камера
+    {
+        get => оригинал.worldCamera;
+        set => оригинал.worldCamera = value;
+    }
+
+    /// <summary>
+    /// На каком расстоянии от камеры висит интерфейс в режиме «Перед камерой»
+    /// </summary>
+    public Дробное расстояниеОтКамеры
+    {
+        get => оригинал.planeDistance;
+        set => оригинал.planeDistance = Mathf.Max(0.01f, value);
+    }
+
+    /// <summary>
+    /// Если "да", картинки и текст выравниваются по пикселям экрана и не размываются. Подходит для пиксельной графики
+    /// </summary>
+    public Флажок попиксельно
+    {
+        get => оригинал.pixelPerfect;
+        set => оригинал.pixelPerfect = value;
     }
 
     /// <summary>
@@ -183,8 +238,24 @@ internal class ИнтерфейсEditor : RunityEditor<Интерфейс>
 
         Пробел();
 
-        Синхрополе("В мире", x => x.вМире,
-            (title, value) => EditorGUILayout.Toggle(title, value));
+        Отметить(nameof(Интерфейс.вМире));
+        Синхрополе("Режим", x => x.режим,
+            (title, value) => (РежимИнтерфейса)EditorGUILayout.EnumPopup(title, value));
+        if (компонент.режим != РежимИнтерфейса.ПоверхЭкрана)
+        {
+            Синхрополе("Камера", x => x.камера,
+                (title, value) => ПолеОбъекта<Camera>(title, value, true));
+        }
+        if (компонент.режим == РежимИнтерфейса.ПередКамерой)
+        {
+            Синхрополе("Расстояние от камеры", x => x.расстояниеОтКамеры,
+                (title, value) => EditorGUILayout.FloatField(title, value));
+        }
+        if (компонент.режим != РежимИнтерфейса.ВМире)
+        {
+            Синхрополе("Попиксельно", x => x.попиксельно,
+                (title, value) => EditorGUILayout.Toggle(title, value));
+        }
 
         Синхрополе("Порядок отрисовки", x => x.порядокОтрисовки,
             (title, value) => EditorGUILayout.IntField(title, value));

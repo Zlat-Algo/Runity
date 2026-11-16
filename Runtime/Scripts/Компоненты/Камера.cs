@@ -14,6 +14,7 @@ public enum ОтрисовкаКамеры { КакВПроекте, Отрис�
 /// Камера, через которую игрок видит игру
 /// </summary>
 [ExecuteAlways]
+[DefaultExecutionOrder(1000)]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Camera))]
 [AddComponentMenu("  Runity/Камера")]
@@ -168,6 +169,101 @@ public class Камера : RunityComponent
     }
 
     /// <summary>
+    /// Насколько широко видит камера в перспективе, в градусах. Больше - шире, как у рыбьего глаза
+    /// </summary>
+    public Дробное уголОбзора
+    {
+        get => оригинал.fieldOfView;
+        set => оригинал.fieldOfView = Mathf.Clamp(value, 1, 179);
+    }
+
+    /// <summary>
+    /// Какие слои видит камера. Так можно спрятать от неё, например, слой интерфейса мини-карты
+    /// </summary>
+    public LayerMask слои
+    {
+        get => оригинал.cullingMask;
+        set => оригинал.cullingMask = value;
+    }
+
+    /// <summary>
+    /// Если камер несколько, та, у которой число больше, рисуется поверх
+    /// </summary>
+    public Дробное порядок
+    {
+        get => оригинал.depth;
+        set => оригинал.depth = value;
+    }
+
+    /// <summary>
+    /// Какую часть экрана занимает камера: от 0 до 1 по каждой стороне. Например, для игры вдвоём на одном экране
+    /// </summary>
+    public Rect областьЭкрана
+    {
+        get => оригинал.rect;
+        set => оригинал.rect = value;
+    }
+
+    /// <summary>
+    /// Если "да", на картинку камеры действуют эффекты постобработки: свечение, цветокоррекция и другие
+    /// </summary>
+    public Флажок постобработка
+    {
+        get => оригинал.GetUniversalAdditionalCameraData().renderPostProcessing;
+        set => оригинал.GetUniversalAdditionalCameraData().renderPostProcessing = value;
+    }
+
+    /// <summary>
+    /// Если "да", края объектов сглаживаются и не выглядят лесенкой
+    /// </summary>
+    public Флажок сглаживание
+    {
+        get => оригинал.GetUniversalAdditionalCameraData().antialiasing != AntialiasingMode.None;
+        set => оригинал.GetUniversalAdditionalCameraData().antialiasing = value ? AntialiasingMode.FastApproximateAntialiasing : AntialiasingMode.None;
+    }
+
+    /// <summary>
+    /// Даёт "да", пока камера трясётся
+    /// </summary>
+    public Флажок трясётся => осталосьТрясти > 0;
+
+    float силаТряски, длительностьТряски, осталосьТрясти;
+    Vector3 смещениеТряски;
+
+    /// <summary>
+    /// Трясёт камеру: от удара, взрыва или землетрясения. Сила - насколько далеко она смещается, длительность - в секундах. Тряска плавно затухает
+    /// </summary>
+    public void Встряхнуть(Дробное сила, Дробное длительность)
+    {
+        силаТряски = Mathf.Max(силаТряски * (осталосьТрясти / Mathf.Max(длительностьТряски, 0.0001f)), сила);
+        длительностьТряски = Mathf.Max(0.01f, длительность);
+        осталосьТрясти = длительностьТряски;
+    }
+
+    /// <summary>
+    /// Слегка трясёт камеру, как от удара
+    /// </summary>
+    public void Встряхнуть() => Встряхнуть(0.15f, 0.25f);
+
+    // Тряска добавляется после всех движений камеры (например, Следования) и убирается перед следующим кадром,
+    // поэтому камера не уплывает со своего места
+    void Update()
+    {
+        if (!Application.isPlaying || смещениеТряски == Vector3.zero) return;
+        transform.localPosition -= смещениеТряски;
+        смещениеТряски = Vector3.zero;
+    }
+
+    void LateUpdate()
+    {
+        if (!Application.isPlaying || осталосьТрясти <= 0) return;
+        осталосьТрясти -= Time.unscaledDeltaTime;
+        float затухание = Mathf.Clamp01(осталосьТрясти / длительностьТряски);
+        смещениеТряски = UnityEngine.Random.insideUnitSphere * силаТряски * затухание;
+        transform.localPosition += смещениеТряски;
+    }
+
+    /// <summary>
     /// Камера, созданная последней
     /// </summary>
     public static Камера главная;
@@ -203,6 +299,25 @@ internal class КамераEditor : RunityEditor<Камера>
 
         Синхрополе("Отрисовка", x => x.отрисовка,
             (title, value) => (ОтрисовкаКамеры)EditorGUILayout.EnumPopup(title, value));
+
+        if (компонент.перспектива)
+        {
+            Синхрополе("Угол обзора", x => x.уголОбзора,
+                (title, value) => EditorGUILayout.Slider(title, value, 1, 179));
+        }
+        Синхрополе("Слои", x => x.слои,
+            (title, value) => ПолеСлоёв(title, value));
+        Синхрополе("Порядок", x => x.порядок,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+        Синхрополе("Область экрана", x => x.областьЭкрана,
+            (title, value) => EditorGUILayout.RectField(title, value));
+
+        Пробел();
+
+        Синхрополе("Постобработка", x => x.постобработка,
+            (title, value) => EditorGUILayout.Toggle(title, value));
+        Синхрополе("Сглаживание", x => x.сглаживание,
+            (title, value) => EditorGUILayout.Toggle(title, value));
 
         Пробел();
 

@@ -73,7 +73,7 @@ public abstract class ИмпортМодели : ScriptedImporter
         if (коллайдер)
         {
             объект.AddComponent<MeshCollider>().sharedMesh = меш;
-            объект.AddComponent<КоллайдерМеш>();
+            объект.AddComponent<КоллайдерМодели>();
         }
 
         контекст.AddObjectToAsset("меш", меш);

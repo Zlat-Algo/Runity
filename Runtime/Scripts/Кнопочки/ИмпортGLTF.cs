@@ -14,7 +14,7 @@ using UnityEngine.Rendering;
 /// Переносит объекты, их расположение, модели, материалы и текстуры. Анимации и кости пока не переносятся.
 /// Если в проект установлен официальный пакет glTFast, модели читает он
 /// </summary>
-[ScriptedImporter(1, new[] { "gltf", "glb" })]
+[ScriptedImporter(2, new[] { "gltf", "glb" })]
 public class ИмпортGLTF : ScriptedImporter
 {
     [Подсказка("Во сколько раз изменить размер модели. В glTF размеры в метрах, как и в Unity")]
@@ -25,6 +25,9 @@ public class ИмпортGLTF : ScriptedImporter
 
     [Подсказка("Если \"нет\", то вместо материалов из файла ставится стандартный")]
     public bool материалы = true;
+
+    [Подсказка("Если \"нет\", поверхность матовая: без гладкости, металлического блеска и бликов. Многие модели из интернета без этого выглядят как пластик или лакированные. Если \"да\", гладкость и металл берутся из файла")]
+    public bool гладкостьИзФайла = false;
 
     Dictionary<string, object> json;
     byte[][] буферы;
@@ -282,6 +285,7 @@ public class ИмпортGLTF : ScriptedImporter
                 if (картаСвечения != null) материал.SetTexture("_EmissionMap", картаСвечения);
                 материал.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
+            if (!гладкостьИзФайла) МатовыеМатериалы.Сделать(материал, urp);
             if (прозрачный) СделатьПрозрачным(материал, urp);
             if (сОбеихСторон) материал.SetFloat(urp ? "_Cull" : "_CullMode", 0);
 
@@ -460,7 +464,7 @@ public class ИмпортGLTF : ScriptedImporter
             if (коллайдер)
             {
                 объект.AddComponent<MeshCollider>().sharedMesh = модель;
-                объект.AddComponent<КоллайдерМеш>();
+                объект.AddComponent<КоллайдерМодели>();
             }
         }
 
