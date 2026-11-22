@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine;
 /// Зона, которая толкает все объекты внутри в одну сторону: ветер, поток воздуха, гравитационный лифт
 /// </summary>
 [RequireComponent(typeof(AreaEffector2D))]
-[AddComponentMenu("  Runity/ Физика 2D/ Зоны/Зона силы")]
+[AddComponentMenu("  Runity/ Физика 2D/ Зоны/Зона Силы")]
 public class ЗонаСилы : Эффектор2D
 {
     protected override bool нуженНетвёрдыйКоллайдер => true;

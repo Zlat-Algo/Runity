@@ -8,7 +8,7 @@ using UnityEngine;
 /// Перестаёт рисовать объект, когда он далеко от камеры, и снова показывает, когда камера рядом. Ускоряет большие уровни
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Визуал/ Оптимизация/Скрытие вдали")]
+[AddComponentMenu("  Runity/ Визуал/ Оптимизация/Скрытие Вдали")]
 public class СкрытиеВдали : RunityComponent
 {
     protected override void OnEnable()

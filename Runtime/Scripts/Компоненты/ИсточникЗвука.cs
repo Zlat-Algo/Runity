@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(AudioSource))]
-[AddComponentMenu("  Runity/ Звук/Источник звука")]
+[AddComponentMenu("  Runity/ Звук/Источник Звука")]
 public class ИсточникЗвука : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<AudioSource>();

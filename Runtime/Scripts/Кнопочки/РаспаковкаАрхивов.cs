@@ -17,7 +17,7 @@ public class РаспаковкаАрхивов : AssetPostprocessor
     const string ключВключено = "Runity.РаспаковкаАрхивов";
     const string пунктМеню = "Runity/Распаковывать архивы в проекте";
 
-    static readonly string[] другиеАрхивы = { ".rar", ".7z", ".tar", ".gz", ".tgz" };
+    static readonly string[] другиеАрхивы = { ".rar", ".7z", ".tar", ".gz", ".tgz", ".unitypackage" };
 
     /// <summary>
     /// Если "да", то архивы распаковываются сами
@@ -63,7 +63,7 @@ public class РаспаковкаАрхивов : AssetPostprocessor
         };
     }
 
-    static bool ЭтоАрхив(string путь)
+    internal static bool ЭтоАрхив(string путь)
     {
         string расширение = Path.GetExtension(путь).ToLowerInvariant();
         return расширение == ".zip" || другиеАрхивы.Contains(расширение);
@@ -85,8 +85,9 @@ public class РаспаковкаАрхивов : AssetPostprocessor
         {
             Directory.CreateDirectory(временная);
 
-            bool распаковано = Path.GetExtension(архив).Equals(".zip", StringComparison.OrdinalIgnoreCase)
-                ? РаспаковатьZip(архив, временная)
+            string расширение = Path.GetExtension(архив).ToLowerInvariant();
+            bool распаковано = расширение == ".zip" ? РаспаковатьZip(архив, временная)
+                : расширение == ".unitypackage" ? ПакетUnity.Распаковать(архив, временная) >= 0
                 : РаспаковатьПрограммой(архив, временная);
 
             if (!распаковано)

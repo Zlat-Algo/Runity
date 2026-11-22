@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +11,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Показывает в тексте значение любого поля любого компонента: здоровье, количество монет, скорость и так далее
 /// </summary>
-[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Вывод значения")]
+[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Вывод Значения")]
 public class ВыводЗначения : RunityComponent
 {
     protected override void OnEnable() { }

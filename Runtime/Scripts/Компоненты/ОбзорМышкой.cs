@@ -7,7 +7,7 @@ using UnityEngine;
 /// Вид от первого лица: мышка поворачивает объект влево-вправо, а камеру вверх-вниз
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Передвижение/ Управление игроком/Обзор мышкой")]
+[AddComponentMenu("  Runity/ Передвижение/ Управление игроком/Обзор Мышкой")]
 public class ОбзорМышкой : RunityComponent
 {
     protected override void OnEnable()

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Засчитывает цель задания: при касании, из события или кода. Например, ставится на точку, до которой надо дойти, или на врага
 /// </summary>
-[AddComponentMenu("  Runity/ Механики/ Задания/Отметка задания")]
+[AddComponentMenu("  Runity/ Механики/ Задания/Отметка Задания")]
 public class ОтметкаЗадания : RunityComponent
 {
     protected override void OnEnable() { }

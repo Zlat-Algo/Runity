@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine.AI;
 /// Навигационный агент сам ходит в случайные точки вокруг места, где появился, и обходит препятствия
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационное брождение")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационное Брождение")]
 public class НавигационноеБрождение : РасширениеАгента
 {
     [SerializeField] Дробное _радиус = 5;

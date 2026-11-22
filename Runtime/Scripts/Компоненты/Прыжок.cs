@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -89,38 +89,79 @@ public class Прыжок : RunityComponent
     /// </summary>
     public Флажок чегоТоКасается => contacts.Count > 0;
 
+    [SerializeField] Дробное _времяКойота = 0.12f;
+    /// <summary>
+    /// Сколько секунд после схода с края ещё можно прыгнуть, как с земли. Так прыжок не теряется, если нажать чуть поздно
+    /// </summary>
+    public Дробное времяКойота { get => _времяКойота; set => _времяКойота = value; }
+
+    [SerializeField] Дробное _буферПрыжка = 0.12f;
+    /// <summary>
+    /// Если нажать прыжок за столько секунд до приземления, прыжок случится сразу при касании земли
+    /// </summary>
+    public Дробное буферПрыжка { get => _буферПрыжка; set => _буферПрыжка = value; }
+
+    [SerializeField] Флажок _прыгатьОтСтен = нет;
+    /// <summary>
+    /// Если "да", прыгать можно, касаясь чего угодно, в том числе стены. Если "нет" - только стоя на поверхности
+    /// </summary>
+    public Флажок прыгатьОтСтен { get => _прыгатьОтСтен; set => _прыгатьОтСтен = value; }
+
+    /// <summary>
+    /// Даёт "да", пока объект стоит на чём-то: касается поверхности, обращённой вверх
+    /// </summary>
+    public Флажок наЗемле => земля.Count > 0;
+
+    readonly HashSet<Component> земля = new HashSet<Component>();
+    float былНаЗемле = -100, нажат = -100;
+    bool прыгнулСЗемли;
+
     Флажок клавишаНажата => (наПробел && Управление.пробелНажат) || (наВперёд && Управление.вперёдНажато) || (наЛКМ && Управление.ЛКМНажата);
     Флажок клавишаУдерживается => (наПробел && Управление.пробелУдерживается) || (наВперёд && Управление.вперёдУдерживается) || (наЛКМ && Управление.ЛКМУдерживается);
 
-
     void Update()
     {
-        if (contacts.RemoveAll(контакт => контакт == null) > 0 && contacts.Count == 0)
-        {
-            _приОтрывеОтЗемли.Вызвать();
-        }
+        contacts.RemoveAll(контакт => контакт == null);
+        if (земля.RemoveWhere(поверхность => поверхность == null) > 0 && земля.Count == 0) Оторвался();
 
-        if (клавишаНажата && (прыжковВВоздухеОсталось != 0 || чегоТоКасается))
+        if (наЗемле) былНаЗемле = Time.time;
+        if (Time.timeScale > 0 && клавишаНажата) нажат = Time.time;
+        if (Time.time - нажат > (float)буферПрыжка) return;
+
+        // С земли можно прыгнуть и чуть позже схода с края - это «время койота»
+        bool какСЗемли = наЗемле || (!прыгнулСЗемли && Time.time - былНаЗемле <= (float)времяКойота) || (прыгатьОтСтен && чегоТоКасается);
+        if (какСЗемли)
         {
-            if (прыжковВВоздухеОсталось > 0 && !чегоТоКасается)
-            {
-                прыжковВВоздухеОсталось--;
-            }
+            нажат = -100;
+            прыгнулСЗемли = true;
+            Прыгнуть();
+        }
+        else if (Time.time == нажат && прыжковВВоздухеОсталось != 0)
+        {
+            нажат = -100;
+            if (прыжковВВоздухеОсталось > 0) прыжковВВоздухеОсталось--;
             Прыгнуть();
         }
     }
 
-    void КогдаКоснулсяПоверхности()
+    void Приземлился()
     {
+        прыгнулСЗемли = false;
         ВосстановитьПрыжкиВВоздухе();
-        if (contacts.Count == 1)
+        _приПриземлении.Вызвать();
+        if (клавишаУдерживается && покаДержишь) Прыгнуть();
+    }
+
+    void Оторвался() => _приОтрывеОтЗемли.Вызвать();
+
+    // Землёй считается поверхность, обращённая вверх. Стены и потолок - нет
+    void ОтметитьЗемлю(Component поверхность, bool этоЗемля)
+    {
+        if (этоЗемля)
         {
-            _приПриземлении.Вызвать();
+            if (земля.Add(поверхность) && земля.Count == 1) Приземлился();
         }
-        if (клавишаУдерживается && покаДержишь)
-        {
-            Прыгнуть();
-        }
+        else if (земля.Remove(поверхность) && земля.Count == 0) Оторвался();
     }
 
     /// <summary>
@@ -155,52 +196,44 @@ public class Прыжок : RunityComponent
         прыжковВВоздухеОсталось = прыжковВВоздухе;
     }
 
-    void OnCollisionEnter(Collision collision)
+    void OnCollisionEnter(Collision collision) => Коснулся3D(collision);
+    void OnCollisionStay(Collision collision) => Коснулся3D(collision);
+
+    void Коснулся3D(Collision collision)
     {
-        if (contacts.IndexOf(collision.collider) == -1)
-        {
-            if (TryGetComponent(out Collider myCollider) && collision.thisCollider == myCollider)
-            {
-                contacts.Add(collision.collider);
-                КогдаКоснулсяПоверхности();
-            }
-        }
+        if (!TryGetComponent(out Collider myCollider) || collision.thisCollider != myCollider) return;
+        if (!contacts.Contains(collision.collider)) contacts.Add(collision.collider);
+        bool этоЗемля = false;
+        for (int i = 0; i < collision.contactCount; i++) этоЗемля |= collision.GetContact(i).normal.y > 0.5f;
+        ОтметитьЗемлю(collision.collider, этоЗемля);
     }
 
     void OnCollisionExit(Collision collision)
     {
-        if (TryGetComponent(out Collider myCollider) && collision.thisCollider == myCollider)
-        {
-            КогдаПерестаёмКасаться(collision.collider);
-        }
+        if (TryGetComponent(out Collider myCollider) && collision.thisCollider == myCollider) Перестал(collision.collider);
     }
 
-    void КогдаПерестаёмКасаться(Component поверхность)
+    void Перестал(Component поверхность)
     {
-        if (contacts.Remove(поверхность) && contacts.Count == 0)
-        {
-            _приОтрывеОтЗемли.Вызвать();
-        }
+        contacts.Remove(поверхность);
+        ОтметитьЗемлю(поверхность, false);
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionEnter2D(Collision2D collision) => Коснулся2D(collision);
+    void OnCollisionStay2D(Collision2D collision) => Коснулся2D(collision);
+
+    void Коснулся2D(Collision2D collision)
     {
-        if (contacts.IndexOf(collision.collider) == -1)
-        {
-            if (TryGetComponent(out Collider2D myCollider) && collision.otherCollider == myCollider)
-            {
-                contacts.Add(collision.collider);
-                КогдаКоснулсяПоверхности();
-            }
-        }
+        if (!TryGetComponent(out Collider2D myCollider) || collision.otherCollider != myCollider) return;
+        if (!contacts.Contains(collision.collider)) contacts.Add(collision.collider);
+        bool этоЗемля = false;
+        for (int i = 0; i < collision.contactCount; i++) этоЗемля |= collision.GetContact(i).normal.y > 0.5f;
+        ОтметитьЗемлю(collision.collider, этоЗемля);
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        if (TryGetComponent(out Collider2D myCollider) && collision.otherCollider == myCollider)
-        {
-            КогдаПерестаёмКасаться(collision.collider);
-        }
+        if (TryGetComponent(out Collider2D myCollider) && collision.otherCollider == myCollider) Перестал(collision.collider);
     }
 }
 
@@ -237,6 +270,13 @@ internal class ПрыжокEditor : RunityEditor<Прыжок>
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Пробел();
+
+        Поле("Время койота", x => x.времяКойота,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+        Поле("Буфер прыжка", x => x.буферПрыжка,
+            (title, value) => EditorGUILayout.FloatField(title, value));
+        Поле("Прыгать от стен", x => x.прыгатьОтСтен,
+            (title, value) => EditorGUILayout.Toggle(title, value));
 
         Поле("Прыжков в воздухе", x => x.прыжковВВоздухе,
             (title, value) => EditorGUILayout.IntField(title, value));

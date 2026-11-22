@@ -13,7 +13,7 @@ public enum РежимГруппы { Горизонтально, Вертика�
 /// Сама расставляет дочерние элементы интерфейса по горизонтали, вертикали или сеткой. Не нужно двигать каждую кнопку вручную
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Интерфейс/ Основа/Группа элементов")]
+[AddComponentMenu("  Runity/ Интерфейс/ Основа/Группа Элементов")]
 public class ГруппаЭлементов : RunityComponent
 {
     void Awake()

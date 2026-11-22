@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(AudioListener))]
-[AddComponentMenu("  Runity/ Звук/Слушатель звука")]
+[AddComponentMenu("  Runity/ Звук/Слушатель Звука")]
 public class СлушательЗвука : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<AudioListener>();

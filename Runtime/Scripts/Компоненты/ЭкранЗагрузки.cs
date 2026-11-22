@@ -9,12 +9,12 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Экран, который закрывает игру, пока грузится следующая сцена, и показывает, сколько загрузилось.
-/// Он хранится образцом (префабом) в папке Resources с именем «Экран загрузки», появляется сам при каждом переходе через Сцены
+/// Он хранится образцом (префабом) и появляется сам при каждом переходе через Сцены. Какой образец использовать, выбирается в компоненте Сцены или в коде через Сцены.экранЗагрузки, а если не выбран - берётся «Экран загрузки» из папки Resources
 /// и исчезает, когда сцена загрузилась. На сцену его класть не нужно. Создать образец: Assets - Create - Runity - Экран загрузки
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CanvasGroup))]
-[AddComponentMenu("  Runity/ Интерфейс/ Основа/Экран загрузки")]
+[AddComponentMenu("  Runity/ Интерфейс/ Основа/Экран Загрузки")]
 public class ЭкранЗагрузки : RunityComponent
 {
     protected override void OnEnable() { }
@@ -104,7 +104,7 @@ public class ЭкранЗагрузки : RunityComponent
     internal static bool Начать(Func<AsyncOperation> начать)
     {
         if (текущий != null) return true;
-        ЭкранЗагрузки шаблон = образец;
+        ЭкранЗагрузки шаблон = Сцены.экранЗагрузки;
         if (шаблон == null) return false;
 
         GameObject копия = Instantiate(шаблон.transform.root.gameObject);
@@ -232,7 +232,7 @@ internal class ЭкранЗагрузкиEditor : RunityEditor<ЭкранЗаг�
         }
         else if (компонент.transform.root.name != ЭкранЗагрузки.имяОбразца || !AssetDatabase.GetAssetPath(компонент).Contains("/Resources/"))
         {
-            Текст($"Чтобы экран появлялся при переходах, образец должен лежать в папке Resources и называться «{ЭкранЗагрузки.имяОбразца}»", MessageType.Warning);
+            Текст($"Чтобы экран появлялся при переходах, выберите его в компоненте Сцены. А чтобы он работал во всём проекте сам, положите его в папку Resources с именем «{ЭкранЗагрузки.имяОбразца}»", MessageType.Info);
         }
 
         Пробел();

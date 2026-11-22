@@ -24,7 +24,7 @@ public class РеакцияДиалога
 /// Окно в интерфейсе, которое показывает разговор: имя, портрет, текст по буквам и кнопки ответов
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Окно диалога")]
+[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Окно Диалога")]
 public class ОкноДиалога : RunityComponent, IPointerClickHandler
 {
     protected override void OnEnable() { }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,7 +10,7 @@ using UnityEngine;
 /// Проверка лёгкая: за кадр проверяется лишь часть объектов, и только те, что попадают в поле зрения камеры
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Визуал/ Оптимизация/Скрытие за препятствиями")]
+[AddComponentMenu("  Runity/ Визуал/ Оптимизация/Скрытие За Препятствиями")]
 public class СкрытиеЗаПрепятствиями : RunityComponent
 {
     protected override void OnEnable()

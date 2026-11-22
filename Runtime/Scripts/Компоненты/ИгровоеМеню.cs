@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// Панели - это Группы интерфейса: меню показывает и прячет их само
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Интерфейс/ Основа/Игровое меню")]
+[AddComponentMenu("  Runity/ Интерфейс/ Основа/Игровое Меню")]
 public class ИгровоеМеню : RunityComponent
 {
     protected override void OnEnable() { }

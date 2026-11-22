@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 #if UNITY_EDITOR
@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NetworkObject), typeof(СетевойМост))]
-[AddComponentMenu("  Runity/ Сеть/Сетевой объект")]
+[AddComponentMenu("  Runity/ Сеть/Сетевой Объект")]
 public class СетевойОбъект : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<NetworkObject>();
@@ -157,34 +157,6 @@ public class СетевойОбъект : RunityComponent
         НайтиУправление();
         ОбновитьКомпоненты();
     }
-}
-
-/// <summary>
-/// Связь Сетевого объекта с сетью Unity. Добавляется сама, настраивать её не нужно
-/// </summary>
-[DisallowMultipleComponent]
-[AddComponentMenu("")]
-public class СетевойМост : NetworkBehaviour
-{
-    public override void OnNetworkSpawn()
-    {
-        if (TryGetComponent(out СетевойОбъект объект)) объект.ПриПоявленииВСети();
-    }
-
-    [Rpc(SendTo.Everyone, RequireOwnership = false)]
-    internal void ВызватьУВсехRpc(int номер)
-    {
-        if (TryGetComponent(out СетевойОбъект объект)) объект.ВызватьЗдесь(номер);
-    }
-}
-
-/// <summary>
-/// Синхронизация положения, при которой объект двигает его владелец, а не хозяин игры. Так управление отзывается без задержки
-/// </summary>
-[AddComponentMenu("")]
-public class ВладельческаяСинхронизация : NetworkTransform
-{
-    protected override bool OnIsServerAuthoritative() => false;
 }
 
 #if UNITY_EDITOR

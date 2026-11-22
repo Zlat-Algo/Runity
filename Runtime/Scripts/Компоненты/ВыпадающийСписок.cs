@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,7 +11,7 @@ using UnityEngine.UI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Dropdown))]
-[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Выпадающий список")]
+[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Выпадающий Список")]
 public class ВыпадающийСписок : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Dropdown>();

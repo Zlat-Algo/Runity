@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine;
 /// Банни-хоп как в CS2: скорость набирается стрейфом в воздухе, а прыжок ровно в момент приземления не даёт трению её съесть
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Передвижение/ Персонаж/Банни-хоп")]
+[AddComponentMenu("  Runity/ Передвижение/ Персонаж/Банни Хоп")]
 public class БанниХоп : РасширениеПерсонажа
 {
     // Движение Source считается в дюймах: 1 единица = 0.0254 метра. Все постоянные ниже взяты из CS2 и переведены в метры

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -84,7 +84,25 @@ public class Выбор : RunityComponent
 
     readonly Dictionary<Object, Color> исходныеЦвета = new Dictionary<Object, Color>();
 
-    void Start() => Применить();
+    [SerializeField] Флажок _случайныйНаСтарте = нет;
+    /// <summary>
+    /// Если "да", в начале игры выбирается случайный вариант: случайный скин, оружие, погода или точка появления
+    /// </summary>
+    public Флажок случайныйНаСтарте { get => _случайныйНаСтарте; set => _случайныйНаСтарте = value; }
+
+    /// <summary>
+    /// Выбирает случайный вариант
+    /// </summary>
+    public void ВыбратьСлучайный()
+    {
+        if (_варианты.Count > 0) Выбрать((Число)UnityEngine.Random.Range(0, _варианты.Count));
+    }
+
+    void Start()
+    {
+        if (случайныйНаСтарте && _варианты.Count > 0) _номер = UnityEngine.Random.Range(0, _варианты.Count);
+        Применить();
+    }
 
     void Update()
     {
@@ -199,6 +217,9 @@ internal class ВыборEditor : RunityEditor<Выбор>
 
         Поле("Номер", x => x.номер,
             (title, value) => EditorGUILayout.IntSlider(title, value, 0, Mathf.Max(0, компонент.количество - 1)));
+
+        Поле("Случайный на старте", x => x.случайныйНаСтарте,
+            (title, value) => EditorGUILayout.Toggle(title, value));
 
         Поле("Режим", x => x.режим,
             (title, value) => (РежимВыбора)EditorGUILayout.EnumPopup(title, value));

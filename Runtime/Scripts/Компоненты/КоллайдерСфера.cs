@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -39,7 +39,7 @@ internal class КоллайдерСфераEditor : RunityEditor<Коллайд�
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => ПолеОбъекта<PhysicsMaterial>(title, value));
+            (title, value) => ПолеФизическогоМатериала(title, value));
 
         Пробел();
 

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!21 &-6731202278434234316
+--- !u!21 &-3539101728414704899
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d931d258d5d6ca40807826aa8deb3a6, type: 3}
   m_Name: "\u041F\u0435\u0440\u044C\u044F"
   m_EditorClassIdentifier: "com.zlatalgo.runity::\u041C\u0430\u0442\u0435\u0440\u0438\u0430\u043B"
-  "_\u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B": {fileID: -6731202278434234316}
+  "_\u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B": {fileID: -3539101728414704899}
   "_\u0432\u0438\u0434": 0
   "_\u0446\u0432\u0435\u0442": {r: 0.95, g: 0.95, b: 0.9, a: 1}
   "_\u0442\u0435\u043A\u0441\u0442\u0443\u0440\u0430": {fileID: 0}

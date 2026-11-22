@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(CanvasGroup))]
-[AddComponentMenu("  Runity/ Интерфейс/ Основа/Группа интерфейса")]
+[AddComponentMenu("  Runity/ Интерфейс/ Основа/Группа Интерфейса")]
 public class ГруппаИнтерфейса : RunityComponent
 {
     protected override void OnEnable() { }

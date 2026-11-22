@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -48,7 +48,7 @@ internal class КоллайдерПолигональный2DEditor : RunityEdit
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => ПолеОбъекта<PhysicsMaterial2D>(title, value));
+            (title, value) => ПолеФизическогоМатериала2D(title, value));
     }
 
 }

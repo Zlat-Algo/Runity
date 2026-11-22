@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -12,7 +12,7 @@ public enum РежимФизическогоТела { Динамичное, П�
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Физика 2D/Физическое тело 2D")]
+[AddComponentMenu("  Runity/ Физика 2D/Физическое Тело 2D")]
 public class ФизическоеТело2D : ФизическоеТелоЛюбое
 {
     internal bool eventFoldout = false;
@@ -239,7 +239,7 @@ internal class ФизическоеТело2DEditor : RunityEditor<Физиче�
         Пробел();
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => ПолеОбъекта<PhysicsMaterial2D>(title, value));
+            (title, value) => ПолеФизическогоМатериала2D(title, value));
         EnumField(
             "Режим",
             component => component.режим,

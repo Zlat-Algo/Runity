@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Button))]
-[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Кнопка")]
+[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Кнопка Интерфейса")]
 public class КнопкаИнтерфейса : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Button>();

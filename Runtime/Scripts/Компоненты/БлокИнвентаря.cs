@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RectTransform), typeof(ГруппаЭлементов))]
-[AddComponentMenu("  Runity/ Механики/ Инвентарь/Блок инвентаря")]
+[AddComponentMenu("  Runity/ Механики/ Инвентарь/Блок Инвентаря")]
 public class БлокИнвентаря : RunityComponent
 {
     protected override void OnEnable() { }

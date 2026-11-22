@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -50,7 +50,7 @@ public class АнимацияСостояния
 /// Сам переключает анимации персонажа: стоит, идёт, прыгает, падает, получает урон и другие. Нужно только разложить анимации по состояниям
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Анимация/Аниматор игрока")]
+[AddComponentMenu("  Runity/ Анимация/Аниматор Игрока")]
 public class АниматорИгрока : RunityComponent
 {
     protected override void OnEnable() { }

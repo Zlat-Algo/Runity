@@ -93,5 +93,41 @@ internal static class СетьМеню
         Selection.activeObject = игрок;
         EditorUtility.DisplayDialog("Сетевой игрок", "Перетащите этого игрока в окно Project, чтобы получился образец (префаб), удалите его со сцены и укажите образец в поле «Игрок» у Сети", "Понятно");
     }
+
+    [MenuItem("GameObject/Runity/Сеть/Чат", false, 2)]
+    static void Чат(MenuCommand команда)
+    {
+        EditorApplication.ExecuteMenuItem("GameObject/Runity/Интерфейс/Основа/Панель");
+        GameObject панель = Selection.activeGameObject;
+        панель.name = "Чат";
+        RectTransform область = (RectTransform)панель.transform;
+        область.anchorMin = область.anchorMax = new Vector2(0, 0);
+        область.pivot = new Vector2(0, 0);
+        область.anchoredPosition = new Vector2(20, 20);
+        область.sizeDelta = new Vector2(460, 320);
+        СетевойЧат чат = панель.AddComponent<СетевойЧат>();
+
+        EditorApplication.ExecuteMenuItem("GameObject/Runity/Интерфейс/Элементы/Текст");
+        GameObject сообщения = Selection.activeGameObject;
+        сообщения.name = "Сообщения";
+        сообщения.transform.SetParent(панель.transform, false);
+        Text текст = сообщения.GetComponent<Text>();
+        текст.fontSize = 18;
+        текст.alignment = TextAnchor.LowerLeft;
+        текст.supportRichText = true;
+        ((RectTransform)сообщения.transform).sizeDelta = new Vector2(420, 200);
+        чат.текстЧата = сообщения.GetComponent<Текст>();
+
+        EditorApplication.ExecuteMenuItem("GameObject/Runity/Интерфейс/Элементы/Ввод текста");
+        GameObject ввод = Selection.activeGameObject;
+        ввод.name = "Сообщение";
+        ввод.transform.SetParent(панель.transform, false);
+        ВводТекста поле = ввод.GetComponent<ВводТекста>();
+        поле.подсказка = "Напишите сообщение и нажмите Enter";
+        чат.полеВвода = поле;
+
+        Кнопка(панель.transform, "Отправить", панель, "СетевойЧат/ ОтправитьИзПоля ()");
+        Selection.activeObject = панель;
+    }
 }
 #endif

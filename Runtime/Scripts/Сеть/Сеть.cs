@@ -153,6 +153,11 @@ public class Сеть : RunityComponent
     public static Строка мойАдрес => string.Join(", ", ПоискИгр.СвоиАдреса().Select(а => а.адрес.ToString()).OrderByDescending(а => а.StartsWith("26.")));
 
     /// <summary>
+    /// Задержка связи с хозяином в миллисекундах. У хозяина всегда 0
+    /// </summary>
+    public Число пинг => оригинал != null && оригинал.IsConnectedClient && !оригинал.IsServer && транспорт != null ? (int)транспорт.GetCurrentRtt(NetworkManager.ServerClientId) : 0;
+
+    /// <summary>
     /// Что сейчас происходит с сетью, обычными словами. Удобно выводить через Вывод значения
     /// </summary>
     public Строка состояние

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -14,7 +14,7 @@ public enum ФормаПрепятствия { Коробка, Капсула }
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshObstacle))]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Препятствие навигации")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Препятствие Навигации")]
 public class ПрепятствиеНавигации : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<NavMeshObstacle>();

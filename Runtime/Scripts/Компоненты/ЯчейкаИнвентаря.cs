@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -14,7 +14,7 @@ public enum ЧтоПоказываетЯчейка { ЯчейкуПоНомер�
 /// Показывает в интерфейсе одну ячейку инвентаря: иконку вещи и её количество
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Механики/ Инвентарь/Ячейка инвентаря")]
+[AddComponentMenu("  Runity/ Механики/ Инвентарь/Ячейка Инвентаря")]
 public class ЯчейкаИнвентаря : RunityComponent, IPointerClickHandler
 {
     protected override void OnEnable()

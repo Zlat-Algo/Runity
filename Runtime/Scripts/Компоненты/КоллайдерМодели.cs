@@ -1,14 +1,16 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
 
+// Раньше компонент назывался КоллайдерМеш: Unity сам исправит это имя в скриптах пользователей
 /// <summary>
 /// Физический объём точно по форме 3D-модели. Подходит для неподвижных стен, скал и зданий
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(MeshCollider))]
-[AddComponentMenu("  Runity/ Физика 3D/ Коллайдеры/Коллайдер модели")]
+[AddComponentMenu("  Runity/ Физика 3D/ Коллайдеры/Коллайдер Модели")]
+[UnityEngine.Scripting.APIUpdating.MovedFrom(true, null, null, "КоллайдерМеш")]
 public class КоллайдерМодели : Коллайдер3D
 {
     MeshCollider меш => (MeshCollider)оригинальныйКомпонент;
@@ -39,7 +41,7 @@ internal class КоллайдерМоделиEditor : RunityEditor<Коллай�
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => ПолеОбъекта<PhysicsMaterial>(title, value));
+            (title, value) => ПолеФизическогоМатериала(title, value));
 
         Пробел();
 
@@ -48,6 +50,12 @@ internal class КоллайдерМоделиEditor : RunityEditor<Коллай�
 
         Синхрополе("Выпуклый", x => x.выпуклый,
             (title, value) => EditorGUILayout.Toggle(title, value));
+
+        if (компонент.модель == null)
+        {
+            Текст("Модель не выбрана: такой коллайдер ничего не делает", MessageType.Warning);
+            if (GUILayout.Button("Удалить пустые Коллайдеры Модели на всех сценах")) ДействияRunity.УдалитьПустыеКоллайдерыМодели();
+        }
 
         if (!компонент.выпуклый && (!компонент.твёрдый || компонент.TryGetComponent(out ФизическоеТело _)))
         {

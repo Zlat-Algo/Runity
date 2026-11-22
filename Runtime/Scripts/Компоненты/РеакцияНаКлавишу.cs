@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Запускает события при нажатии любой клавиши или кнопки мыши. Код писать не нужно
 /// </summary>
-[AddComponentMenu("  Runity/ Ввод/Реакция на клавишу")]
+[AddComponentMenu("  Runity/ Ввод/Реакция На Клавишу")]
 public class РеакцияНаКлавишу : RunityComponent
 {
     protected override void OnEnable() { }

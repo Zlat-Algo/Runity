@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 #if UNITY_EDITOR
@@ -11,7 +11,7 @@ using UnityEngine.UI;
 /// Хранит взятые задания и их прогресс, засчитывает цели и может показывать список заданий в тексте
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Механики/ Задания/Журнал заданий")]
+[AddComponentMenu("  Runity/ Механики/ Задания/Журнал Заданий")]
 public class ЖурналЗаданий : RunityComponent
 {
     protected override void OnEnable() { }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Unity.Mathematics;
@@ -79,7 +80,104 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         видимые.Clear();
         Отрисовать();
         Пробел();
+        ОтрисоватьПрочее();
         Справка.ОтобразитьВИнспекторе(target.GetType(), видимые);
+    }
+
+    // Три уровня настроек: сверху - главное (рисует сам компонент), в «Прочем» - все остальные настройки этого компонента
+    // и компонентов Unity, на которых он построен, а в «Скрытом» - то, что доступно только из кода и событий
+    readonly System.Collections.Generic.Dictionary<Type, Editor> встроенные = new System.Collections.Generic.Dictionary<Type, Editor>();
+
+    // Эти компоненты Unity слишком сложные для простого списка настроек - для них показывается их собственный инспектор
+    static readonly System.Collections.Generic.HashSet<string> сложные = new System.Collections.Generic.HashSet<string> { "ParticleSystem", "Animator", "PlayerInput", "NetworkManager", "UnityTransport", "NetworkObject", "VideoPlayer", "TilemapRenderer" };
+
+    void ОтрисоватьПрочее()
+    {
+        serializedObject.Update();
+        System.Collections.Generic.List<SerializedProperty> свои = new System.Collections.Generic.List<SerializedProperty>();
+        SerializedProperty свойство = serializedObject.GetIterator();
+        for (bool есть = свойство.NextVisible(true); есть; есть = свойство.NextVisible(false))
+        {
+            string имя = свойство.name.TrimStart('_');
+            if (свойство.name == "m_Script" || видимые.Contains(имя)) continue;
+            свои.Add(свойство.Copy());
+            видимые.Add(имя);
+        }
+
+        System.Collections.Generic.List<Type> оригиналы = ТипыОригиналов();
+        if (свои.Count == 0 && оригиналы.Count == 0) return;
+
+        string ключ = "Runity.Прочее." + target.GetType().Name;
+        bool открыто = SessionState.GetBool(ключ, false);
+        bool новое = EditorGUILayout.Foldout(открыто, new GUIContent("Прочее", "Все остальные настройки: этого компонента и компонентов Unity, на которых он построен"), true);
+        if (новое != открыто) SessionState.SetBool(ключ, новое);
+        if (!новое) return;
+
+        EditorGUI.indentLevel++;
+        if (свои.Count > 0)
+        {
+            foreach (SerializedProperty поле in свои)
+            {
+                string имя = поле.name.TrimStart('_');
+                EditorGUILayout.PropertyField(поле, new GUIContent(ПереводНастроек.ИзИмени(поле.name), Справка.Описание(target.GetType(), имя)), true);
+            }
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        foreach (Type тип in оригиналы)
+        {
+            UnityEngine.Object[] части = components.Select(к => (UnityEngine.Object)к.GetComponent(тип)).Where(к => к != null).ToArray();
+            if (части.Length == 0) continue;
+
+            Пробел();
+            string русское = АналогиRunity.Аналог(тип) is Type аналог ? ObjectNames.NicifyVariableName(аналог.Name) : ObjectNames.NicifyVariableName(тип.Name);
+            EditorGUILayout.LabelField(new GUIContent(русское, $"Настройки компонента Unity {тип.Name}"), EditorStyles.boldLabel);
+
+            if (сложные.Contains(тип.Name))
+            {
+                встроенные.TryGetValue(тип, out Editor редактор);
+                Editor.CreateCachedEditor(части, null, ref редактор);
+                встроенные[тип] = редактор;
+                редактор.OnInspectorGUI();
+                continue;
+            }
+
+            SerializedObject данные = new SerializedObject(части);
+            данные.Update();
+            SerializedProperty настройка = данные.GetIterator();
+            for (bool есть = настройка.NextVisible(true); есть; есть = настройка.NextVisible(false))
+            {
+                if (настройка.name == "m_Script" || настройка.name == "m_ObjectHideFlags") continue;
+                EditorGUILayout.PropertyField(настройка, new GUIContent(ПереводНастроек.Перевести(настройка.displayName), $"{настройка.displayName} - так эта настройка называется в Unity"), true);
+            }
+            данные.ApplyModifiedProperties();
+        }
+        EditorGUI.indentLevel--;
+    }
+
+    // Компоненты Unity, на которых построен этот компонент Runity: его оригинал и всё, что он требует
+    System.Collections.Generic.List<Type> ТипыОригиналов()
+    {
+        System.Collections.Generic.List<Type> типы = new System.Collections.Generic.List<Type>();
+        void Добавить(Component найденный)
+        {
+            if (найденный == null || найденный is Компонент || найденный is Transform || типы.Contains(найденный.GetType())) return;
+            типы.Add(найденный.GetType());
+        }
+
+        Добавить(компонент.оригинальныйКомпонент);
+        foreach (RequireComponent требование in target.GetType().GetCustomAttributes(typeof(RequireComponent), true))
+        {
+            foreach (Type нужный in new[] { требование.m_Type0, требование.m_Type1, требование.m_Type2 })
+                if (нужный != null) Добавить(компонент.GetComponent(нужный));
+        }
+        return типы;
+    }
+
+    void OnDisable()
+    {
+        foreach (Editor редактор in встроенные.Values) if (редактор != null) DestroyImmediate(редактор);
+        встроенные.Clear();
     }
 
     /// <summary>
@@ -191,6 +289,30 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         EditorGUILayout.Space(ширина);
     }
 
+    // Поле материала коллайдера: принимает и физический материал Unity, и Физический Материал Runity
+    protected PhysicsMaterial ПолеФизическогоМатериала(GUIContent title, PhysicsMaterial value)
+    {
+        UnityEngine.Object новое = EditorGUILayout.ObjectField(title, ВладелецМатериала(value), typeof(UnityEngine.Object), false);
+        if (новое is ФизическийМатериал русский) return русский.для3D;
+        return новое == null ? null : новое as PhysicsMaterial ?? value;
+    }
+
+    protected PhysicsMaterial2D ПолеФизическогоМатериала2D(GUIContent title, PhysicsMaterial2D value)
+    {
+        UnityEngine.Object новое = EditorGUILayout.ObjectField(title, ВладелецМатериала(value), typeof(UnityEngine.Object), false);
+        if (новое is ФизическийМатериал русский) return русский.для2D;
+        return новое == null ? null : новое as PhysicsMaterial2D ?? value;
+    }
+
+    // Если материал Unity лежит внутри Физического Материала Runity, в поле показывается сам Физический Материал
+    static UnityEngine.Object ВладелецМатериала(UnityEngine.Object материал)
+    {
+        if (материал == null) return null;
+        string путь = AssetDatabase.GetAssetPath(материал);
+        UnityEngine.Object главный = string.IsNullOrEmpty(путь) ? null : AssetDatabase.LoadMainAssetAtPath(путь);
+        return главный is ФизическийМатериал ? главный : материал;
+    }
+
     protected TObj ПолеОбъекта<TObj>(GUIContent title, UnityEngine.Object obj, bool fromScene = false) where TObj : UnityEngine.Object
     {
         return (TObj)EditorGUILayout.ObjectField(title, obj, typeof(TObj), fromScene);
@@ -293,18 +415,59 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         }
     }
 
+    // Отражение не умеет неявные преобразования: Дробное в float, Число в int, Флажок в bool и обратно.
+    // Поэтому все значения полей читаются и записываются через эти функции
+    protected static void Записать(PropertyInfo свойство, object цель, object значение) => свойство.SetValue(цель, Привести(значение, свойство.PropertyType));
+
+    protected static object Привести(object значение, Type тип)
+    {
+        if (значение == null || тип.IsInstanceOfType(значение)) return значение;
+        Type из = значение.GetType();
+
+        MethodInfo оператор = Оператор(из, тип);
+        if (оператор != null) return оператор.Invoke(null, new[] { значение });
+
+        // Через простой тип: например, Дробное -> float -> double
+        foreach (Type промежуточный in new[] { typeof(float), typeof(int), typeof(bool), typeof(string), typeof(double) })
+        {
+            MethodInfo первый = Оператор(из, промежуточный);
+            if (первый == null) continue;
+            object простое = первый.Invoke(null, new[] { значение });
+            if (тип.IsInstanceOfType(простое)) return простое;
+            MethodInfo второй = Оператор(промежуточный, тип);
+            if (второй != null) return второй.Invoke(null, new[] { простое });
+            if (тип.IsPrimitive && промежуточный.IsPrimitive) return Convert.ChangeType(простое, тип);
+        }
+
+        if (тип.IsEnum && из.IsPrimitive) return Enum.ToObject(тип, значение);
+        return Convert.ChangeType(значение, тип);
+    }
+
+    static MethodInfo Оператор(Type из, Type в)
+    {
+        foreach (Type владелец in new[] { в, из })
+        {
+            foreach (MethodInfo метод in владелец.GetMethods(BindingFlags.Public | BindingFlags.Static))
+            {
+                if ((метод.Name == "op_Implicit" || метод.Name == "op_Explicit") && метод.ReturnType == в && метод.GetParameters()[0].ParameterType == из)
+                    return метод;
+            }
+        }
+        return null;
+    }
+
     protected TValue Поле<TValue>(string title, Expression<Func<T, TValue>> property, Func<GUIContent, TValue, TValue> drawer)
     {
         PropertyInfo propertyInfo = GetPropertyInfo(property);
 
         TValue Get(T component)
         {
-            return (TValue)propertyInfo.GetValue(component);
+            return (TValue)Привести(propertyInfo.GetValue(component), typeof(TValue));
         }
 
         void Set(T component, TValue value)
         {
-            propertyInfo.SetValue(component, value);
+            Записать(propertyInfo, component, value);
         }
 
         EditorGUI.showMixedValue = IsChanged(Get);
@@ -344,7 +507,7 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         void Set(T component, Диапазон value)
         {
-            propertyInfo.SetValue(component, value);
+            Записать(propertyInfo, component, value);
         }
 
         EditorGUI.showMixedValue = IsChanged(Get);
@@ -412,15 +575,15 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         (Дробное, Дробное) Get(T component)
         {
-            (Дробное, Дробное) диапазон = ((float)propertyMinInfo.GetValue(component), (float)propertyMaxInfo.GetValue(component));
+            (Дробное, Дробное) диапазон = ((float)Привести(propertyMinInfo.GetValue(component), typeof(float)), (float)Привести(propertyMaxInfo.GetValue(component), typeof(float)));
             //диапазон.диапазон = (bool)propertyModeInfo.GetValue(component);
             return диапазон;
         }
 
         void Set(T component, (Дробное, Дробное) value)
         {
-            propertyMinInfo.SetValue(component, value.Item1);
-            propertyMaxInfo.SetValue(component, value.Item2);
+            Записать(propertyMinInfo, component, value.Item1);
+            Записать(propertyMaxInfo, component, value.Item2);
             //propertyModeInfo.SetValue(component, value.диапазон);
         }
 
@@ -491,14 +654,14 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
         bool2 Get(T component)
         {
             return new bool2(
-                (bool)propertyFirstInfo.GetValue(component),
-                (bool)propertySecondInfo.GetValue(component));
+                (bool)Привести(propertyFirstInfo.GetValue(component), typeof(bool)),
+                (bool)Привести(propertySecondInfo.GetValue(component), typeof(bool)));
         }
 
         void Set(T component, bool2 value)
         {
-            propertyFirstInfo.SetValue(component, value.x);
-            propertySecondInfo.SetValue(component, value.y);
+            Записать(propertyFirstInfo, component, value.x);
+            Записать(propertySecondInfo, component, value.y);
         }
 
         EditorGUI.showMixedValue = IsChanged(Get);
@@ -552,7 +715,10 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
     }
     PropertyInfo GetPropertyInfo<TValue>(Expression<Func<T, TValue>> property)
     {
-        PropertyInfo propertyInfo = ((MemberExpression)property.Body).Member as PropertyInfo;
+        // Если тип поля и свойства разный (например, float и Дробное), C# оборачивает свойство в преобразование
+        Expression тело = property.Body;
+        while (тело is UnaryExpression преобразование && (тело.NodeType == ExpressionType.Convert || тело.NodeType == ExpressionType.ConvertChecked)) тело = преобразование.Operand;
+        PropertyInfo propertyInfo = (тело as MemberExpression)?.Member as PropertyInfo;
         if (propertyInfo == null)
             throw new ArgumentException("GUIField ожидает свойство.");
         return propertyInfo;
@@ -564,12 +730,12 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
 
         TValue Get(T component)
         {
-            return (TValue)propertyInfo.GetValue(component);
+            return (TValue)Привести(propertyInfo.GetValue(component), typeof(TValue));
         }
 
         void Set(T component, TValue value)
         {
-            propertyInfo.SetValue(component, value);
+            Записать(propertyInfo, component, value);
         }
 
         EditorGUI.showMixedValue =

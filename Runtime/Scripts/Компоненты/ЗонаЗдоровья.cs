@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Касание))]
-[AddComponentMenu("  Runity/ Механики/ Бой/Зона здоровья")]
+[AddComponentMenu("  Runity/ Механики/ Бой/Зона Здоровья")]
 public class ЗонаЗдоровья : RunityComponent
 {
     protected override void OnEnable() { }

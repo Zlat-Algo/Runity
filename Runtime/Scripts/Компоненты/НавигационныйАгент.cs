@@ -9,7 +9,7 @@ using UnityEngine.AI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshAgent))]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационный агент")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационный Агент")]
 public class НавигационныйАгент : Передвижение
 {
     void Awake() => оригинальныйКомпонент = GetComponent<NavMeshAgent>();

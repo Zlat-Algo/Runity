@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,7 +8,7 @@ using UnityEngine;
 /// Навигационный агент ходит по указанным точкам, обходя препятствия, и ждёт на каждой из них
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационное патрулирование")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационное Патрулирование")]
 public class НавигационноеПатрулирование : РасширениеАгента
 {
     [SerializeField] List<Transform> _точки = new List<Transform>();

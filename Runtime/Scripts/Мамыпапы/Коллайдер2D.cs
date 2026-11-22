@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider2D))]
@@ -51,7 +51,7 @@ public class Коллайдер2DEditor : RunityEditor<Коллайдер2D>
             (title, value) => EditorGUILayout.Toggle(title, value));
 
         Синхрополе("Материал", x => x.материал,
-            (title, value) => Объект<PhysicsMaterial2D>(title, value));
+            (title, value) => ПолеФизическогоМатериала2D(title, value));
     }
 
 }*/

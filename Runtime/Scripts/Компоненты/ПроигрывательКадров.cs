@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// Проигрывает Кадровую анимацию на Спрайтере или картинке интерфейса на этом объекте
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Анимация/Проигрыватель кадров")]
+[AddComponentMenu("  Runity/ Анимация/Проигрыватель Кадров")]
 public class ПроигрывательКадров : RunityComponent
 {
     protected override void OnEnable()

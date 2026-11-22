@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -13,7 +13,21 @@ public class Передвижение2D : Передвижение
 {
     protected override void OnEnable() { }
     protected override void OnDisable() { }
-    void Awake() => оригинальныйКомпонент = GetComponent<ФизическоеТело2D>();
+    void Awake()
+    {
+        оригинальныйКомпонент = GetComponent<ФизическоеТело2D>();
+        // Без трения персонаж не цепляется за стены, когда в прыжке прижимается к ним
+        if (Application.isPlaying && неЦеплятьсяЗаСтены && TryGetComponent(out Collider2D коллайдер) && коллайдер.sharedMaterial == null)
+            коллайдер.sharedMaterial = безТрения ??= new PhysicsMaterial2D("Без трения") { friction = 0, bounciness = 0 };
+    }
+
+    static PhysicsMaterial2D безТрения;
+
+    [SerializeField] Флажок _неЦеплятьсяЗаСтены = да;
+    /// <summary>
+    /// Если "да", персонаж не прилипает к стенам, когда прыгает и прижимается к ним. Работает, если у коллайдера не выбран свой физический материал
+    /// </summary>
+    public Флажок неЦеплятьсяЗаСтены { get => _неЦеплятьсяЗаСтены; set => _неЦеплятьсяЗаСтены = value; }
     void OnValidate() => Awake();
     /// <summary>
     /// Физическое тело, которое двигает этот компонент
@@ -91,6 +105,9 @@ internal class Передвижение2DСверхуEditor : Передвиже
 
         Поле("Скорость", x => x.скорость,
             (title, value) => EditorGUILayout.FloatField(title, value));
+
+        Поле("Не цепляться за стены", x => x.неЦеплятьсяЗаСтены,
+            (title, value) => EditorGUILayout.Toggle(title, value));
 
         Пробел();
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,7 +8,7 @@ using UnityEngine;
 /// Замечает объекты, которые попали в конус перед этим объектом, и запускает события
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Механики/Поле зрения")]
+[AddComponentMenu("  Runity/ Механики/Поле Зрения")]
 public class ПолеЗрения : RunityComponent
 {
     protected override void OnEnable() { }

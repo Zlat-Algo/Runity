@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -34,7 +34,7 @@ public class ВариантМатериала
 /// Меняет материал объекта на один из заранее заданных вариантов. Подходит для скинов, а ещё чтобы показывать состояния: эмоции, поломку, подсветку, команду
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Визуал/Смена материала")]
+[AddComponentMenu("  Runity/ Визуал/Смена Материала")]
 public class СменаМатериала : RunityComponent
 {
     protected override void OnEnable() { }

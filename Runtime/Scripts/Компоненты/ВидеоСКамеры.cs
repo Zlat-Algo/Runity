@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RawImage))]
-[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Видео с камеры")]
+[AddComponentMenu("  Runity/ Интерфейс/ Элементы/Видео С Камеры")]
 public class ВидеоСКамеры : RunityComponent
 {
     void Awake() => оригинальныйКомпонент = GetComponent<RawImage>();

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,7 +8,7 @@ using UnityEngine;
 /// Плавно двигает, поворачивает и меняет размер объекта за указанное время: двери, лифты, всплывающие окна
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Работа с объектами/ Движение/Плавное движение")]
+[AddComponentMenu("  Runity/ Работа с объектами/ Движение/Плавное Движение")]
 public class ПлавноеДвижение : RunityComponent
 {
     protected override void OnEnable() { }

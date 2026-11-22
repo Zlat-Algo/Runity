@@ -4,6 +4,7 @@
     "references": [
         "com.zlatalgo.runity",
         "Unity.Netcode.Runtime",
+        "Unity.Collections",
         "Unity.Networking.Transport",
         "UnityEngine.UI"
     ],

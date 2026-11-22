@@ -11,7 +11,7 @@ using UnityEngine.AI;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NavMeshSurface))]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационная карта")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Навигационная Карта")]
 public class НавигационнаяКарта : RunityComponent
 {
     void Awake()

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Физика 3D/Физическое тело")]
+[AddComponentMenu("  Runity/ Физика 3D/Физическое Тело")]
 public class ФизическоеТело : ФизическоеТелоЛюбое
 {
     void Awake() => оригинальныйКомпонент = GetComponent<Rigidbody>();

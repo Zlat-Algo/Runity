@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(FixedJoint))]
-[AddComponentMenu("  Runity/ Физика 3D/ Соединения/Жёсткое соединение")]
+[AddComponentMenu("  Runity/ Физика 3D/ Соединения/Жёсткое Соединение")]
 public class ЖёсткоеСоединение : Соединение3D
 {
 }

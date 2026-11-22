@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -9,7 +9,7 @@ using UnityEngine.AI;
 /// Выбирает для Навигационного агента ближайший объект из указанных. Расстояние считается по пути в обход препятствий, а не напрямую
 /// </summary>
 [DisallowMultipleComponent]
-[AddComponentMenu("  Runity/ Передвижение/ Навигация/Выбор ближайшей цели")]
+[AddComponentMenu("  Runity/ Передвижение/ Навигация/Выбор Ближайшей Цели")]
 public class ВыборБлижайшейЦели : РасширениеАгента
 {
     [SerializeField] List<Transform> _кандидаты = new List<Transform>();

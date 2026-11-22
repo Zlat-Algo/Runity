@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,7 +8,7 @@ using UnityEngine;
 /// Платформа, на которую можно запрыгнуть снизу и спрыгнуть вниз сквозь неё
 /// </summary>
 [RequireComponent(typeof(PlatformEffector2D))]
-[AddComponentMenu("  Runity/ Физика 2D/ Зоны/Односторонняя платформа")]
+[AddComponentMenu("  Runity/ Физика 2D/ Зоны/Односторонняя Платформа")]
 public class ОдносторонняяПлатформа : Эффектор2D
 {
     protected override bool нуженНетвёрдыйКоллайдер => false;
