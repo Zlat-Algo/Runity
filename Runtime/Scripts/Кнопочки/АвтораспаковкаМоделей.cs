@@ -74,7 +74,7 @@ public class АвтораспаковкаМоделей : AssetPostprocessor
     }
 
     internal static bool МожноРаспаковать(string путь) =>
-        путь.StartsWith("Assets/") && модели.Contains(Path.GetExtension(путь).ToLowerInvariant()) && !Path.GetFileName(путь).Contains("@");
+        путь.StartsWith("Assets/") && !путь.StartsWith("Assets/Runity/Runtime/") && модели.Contains(Path.GetExtension(путь).ToLowerInvariant()) && !Path.GetFileName(путь).Contains("@");
 
     static void OnPostprocessAllAssets(string[] импортированные, string[] удалённые, string[] перенесённые, string[] откуда)
     {

@@ -1,0 +1,10 @@
+Модели и анимации персонажей Runity сделал Кевин Иглесиас (Kevin Iglesias) и разрешил использовать их в Runity.
+Это часть его бесплатных наборов: Human Basic Motions FREE, Dwarf Basic Motions FREE, Dwarf Melee Animations FREE,
+Skeleton Animations FREE, Zombie Animations FREE и Humanoid Giant Animations.
+
+Полные наборы с сотнями анимаций:
+  https://www.keviniglesias.com
+  https://kevdev.itch.io
+  Unity Asset Store - Kevin Iglesias
+
+Characters' models and animations by Kevin Iglesias (www.keviniglesias.com), used in Runity with the author's permission.

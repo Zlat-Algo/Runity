@@ -1,71 +1,169 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Манекен Runity: человечек со скелетом и готовыми анимациями (стоит, идёт, бежит, прыгает, машет).
+/// Готовые персонажи Runity со скелетом человека (Humanoid) и анимациями
+/// </summary>
+public enum ВидПерсонажа
+{
+    /// <summary>Манекен-мужчина</summary>
+    Манекен,
+    /// <summary>Манекен-девушка</summary>
+    МанекенДевушка,
+    /// <summary>Гном</summary>
+    Гном,
+    /// <summary>Великан</summary>
+    Великан,
+    /// <summary>Скелет</summary>
+    Скелет,
+    /// <summary>Зомби</summary>
+    Зомби,
+    /// <summary>Простой человечек Runity</summary>
+    Простой,
+}
+
+/// <summary>
+/// Манекен и другие персонажи Runity: модели и анимации Кевина Иглесиаса (Kevin Iglesias, keviniglesias.com).
 /// Анимации включаются сами: персонаж стоит - «Стоит», двигается - «Идёт», с ускорением - «Бежит», в воздухе - «Прыгает»
 /// </summary>
 public static class МанекенRunity
 {
     const string имяФайла = "Манекен.glb";
 
+    // Папка персонажа в Runtime/Персонажи и файл модели
+    static readonly Dictionary<ВидПерсонажа, (string папка, string модель)> персонажи = new Dictionary<ВидПерсонажа, (string, string)>
+    {
+        { ВидПерсонажа.Манекен, ("Человек", "HumanM_Model.fbx") },
+        { ВидПерсонажа.МанекенДевушка, ("Человек", "HumanF_Model.fbx") },
+        { ВидПерсонажа.Гном, ("Гном", "DwarfM_Model.fbx") },
+        { ВидПерсонажа.Великан, ("Великан", "GiantDummy.fbx") },
+        { ВидПерсонажа.Скелет, ("Скелет", "Skeleton.fbx") },
+        { ВидПерсонажа.Зомби, ("Зомби", "ZombieModel.fbx") },
+    };
+
     /// <summary>
-    /// Модель манекена из пакета Runity
+    /// Папка с персонажами Runity (в пакете или в Assets)
     /// </summary>
-    public static GameObject модель
+    public static string папкаПерсонажей
     {
         get
         {
-            string путь = AssetDatabase.FindAssets("Манекен")
+            string путь = AssetDatabase.FindAssets("HumanM_Model")
                 .Select(AssetDatabase.GUIDToAssetPath)
-                .FirstOrDefault(п => п.EndsWith("/Манекен/" + имяФайла));
-            return путь != null ? AssetDatabase.LoadAssetAtPath<GameObject>(путь) : null;
+                .FirstOrDefault(п => п.EndsWith("/Персонажи/Человек/HumanM_Model.fbx"));
+            return путь == null ? null : путь.Substring(0, путь.Length - "/Человек/HumanM_Model.fbx".Length);
         }
     }
 
     /// <summary>
-    /// Анимация манекена по названию: Стоит, Идёт, Бежит, Прыгает, Машет
+    /// Модель персонажа Runity
+    /// </summary>
+    public static GameObject Модель(ВидПерсонажа вид)
+    {
+        if (вид == ВидПерсонажа.Простой)
+        {
+            string простой = AssetDatabase.FindAssets("Манекен")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .FirstOrDefault(п => п.EndsWith("/Манекен/" + имяФайла));
+            return простой != null ? AssetDatabase.LoadAssetAtPath<GameObject>(простой) : null;
+        }
+        string папка = папкаПерсонажей;
+        if (папка == null) return null;
+        var (своя, файл) = персонажи[вид];
+        return AssetDatabase.LoadAssetAtPath<GameObject>(папка + "/" + своя + "/" + файл);
+    }
+
+    /// <summary>
+    /// Модель манекена Runity
+    /// </summary>
+    public static GameObject модель => Модель(ВидПерсонажа.Манекен) ?? Модель(ВидПерсонажа.Простой);
+
+    // Русские названия анимаций манекена и то, как они называются у Кевина
+    static readonly Dictionary<string, string> названия = new Dictionary<string, string>
+    {
+        { "Стоит", "HumanM@Idle01" }, { "Идёт", "HumanM@Walk01_Forward" }, { "Бежит", "HumanM@Run01_Forward" },
+        { "Прыгает", "HumanM@Jump01 - Begin" }, { "Падает", "HumanM@Fall01" }, { "Приземляется", "HumanM@Jump01 - Land" },
+        { "Машет", "HumanM@Talk01" }, { "Говорит", "HumanM@Talk01" }, { "Спринт", "HumanM@Sprint01_Forward" },
+        { "Урон", "HumanM@Damage01" }, { "Умирает", "HumanM@Death01" },
+    };
+
+    /// <summary>
+    /// Анимация манекена по названию: Стоит, Идёт, Бежит, Спринт, Прыгает, Падает, Приземляется, Говорит, Урон, Умирает (или название из файла)
     /// </summary>
     public static AnimationClip Анимация(string название)
     {
-        GameObject модельМанекена = модель;
-        if (модельМанекена == null) return null;
-        return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(модельМанекена)).OfType<AnimationClip>().FirstOrDefault(к => к.name == название);
+        string папка = папкаПерсонажей;
+        if (папка != null)
+        {
+            string имя = названия.TryGetValue(название, out string своё) ? своё : название;
+            AnimationClip клип = AssetDatabase.FindAssets("t:AnimationClip", new[] { папка + "/Человек" })
+                .Select(AssetDatabase.GUIDToAssetPath).Distinct()
+                .SelectMany(путь => AssetDatabase.LoadAllAssetsAtPath(путь).OfType<AnimationClip>())
+                .FirstOrDefault(к => к.name == имя);
+            if (клип != null) return клип;
+        }
+        GameObject простой = Модель(ВидПерсонажа.Простой);
+        if (простой == null) return null;
+        return AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(простой)).OfType<AnimationClip>().FirstOrDefault(к => к.name == название);
     }
 
     /// <summary>
     /// Ставит манекена на сцену. Анимации переключаются сами по движению
     /// </summary>
-    public static GameObject Создать(Transform родитель = null, string имя = "Манекен")
+    public static GameObject Создать(Transform родитель = null, string имя = "Манекен") => Создать(ВидПерсонажа.Манекен, родитель, имя);
+
+    /// <summary>
+    /// Ставит персонажа Runity на сцену: манекена, гнома, великана, скелета или зомби. Анимации переключаются сами по движению
+    /// </summary>
+    public static GameObject Создать(ВидПерсонажа вид, Transform родитель = null, string имя = null)
     {
-        GameObject образец = модель;
+        GameObject образец = Модель(вид);
+        if (образец == null && вид != ВидПерсонажа.Простой) { вид = ВидПерсонажа.Простой; образец = Модель(вид); }
         if (образец == null)
         {
-            Debug.LogWarning("Runity: не найдена модель манекена «" + имяФайла + "». Переустановите Runity через менеджер пакетов");
+            Debug.LogWarning("Runity: не найдены модели персонажей. Переустановите Runity через менеджер пакетов");
             return null;
         }
 
-        GameObject манекен = (GameObject)PrefabUtility.InstantiatePrefab(образец);
-        манекен.name = имя;
-        if (родитель != null) манекен.transform.SetParent(родитель, false);
+        GameObject персонаж = (GameObject)PrefabUtility.InstantiatePrefab(образец);
+        персонаж.name = имя ?? ИмяПерсонажа(вид);
+        if (родитель != null) персонаж.transform.SetParent(родитель, false);
 
         // Анимациями управляет Аниматор Игрока, схема из файла не нужна
-        if (манекен.TryGetComponent(out Animator аниматор)) аниматор.runtimeAnimatorController = null;
+        Animator аниматор = персонаж.GetComponent<Animator>();
+        if (аниматор == null) аниматор = персонаж.AddComponent<Animator>();
+        аниматор.runtimeAnimatorController = null;
+        аниматор.applyRootMotion = false;
 
-        АниматорИгрока анимации = манекен.GetComponent<АниматорИгрока>();
-        if (анимации == null) анимации = манекен.AddComponent<АниматорИгрока>();
-        Назначить(анимации.стоит, "Стоит");
-        Назначить(анимации.идёт, "Идёт");
-        Назначить(анимации.бежит, "Бежит");
-        Назначить(анимации.прыгает, "Прыгает");
-        Назначить(анимации.падает, "Прыгает");
-        // Свои анимации проекта (например, из Asset Store) рядом с манекеном не лежат - их можно добавить кнопкой в Аниматоре игрока
+        АниматорИгрока анимации = персонаж.GetComponent<АниматорИгрока>();
+        if (анимации == null) анимации = персонаж.AddComponent<АниматорИгрока>();
+        if (вид == ВидПерсонажа.Простой)
+        {
+            Назначить(анимации.стоит, "Стоит");
+            Назначить(анимации.идёт, "Идёт");
+            Назначить(анимации.бежит, "Бежит");
+            Назначить(анимации.прыгает, "Прыгает");
+            Назначить(анимации.падает, "Прыгает");
+        }
+        else
+        {
+            // Свои анимации персонажа, а чего не хватает (например, прыжка у скелета) - от манекена: скелет у всех человеческий
+            НайтиАнимации(анимации, папкаПерсонажей + "/" + персонажи[вид].папка);
+            if (вид != ВидПерсонажа.Манекен && вид != ВидПерсонажа.МанекенДевушка) АнимацииМанекена(анимации);
+        }
         EditorUtility.SetDirty(анимации);
-        return манекен;
+        return персонаж;
     }
+
+    static string ИмяПерсонажа(ВидПерсонажа вид) => вид switch
+    {
+        ВидПерсонажа.МанекенДевушка => "Манекен",
+        ВидПерсонажа.Простой => "Манекен",
+        _ => вид.ToString(),
+    };
 
     static void Назначить(АнимацияСостояния состояние, string клип)
     {
@@ -145,8 +243,10 @@ public static class МанекенRunity
     /// </summary>
     public static int АнимацииМанекена(АниматорИгрока аниматор, bool заменять = false)
     {
-        GameObject модельМанекена = модель;
-        return модельМанекена == null ? 0 : НайтиАнимации(аниматор, System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(модельМанекена)).Replace('\\', '/'), заменять);
+        string папка = папкаПерсонажей;
+        if (папка != null) return НайтиАнимации(аниматор, папка + "/Человек", заменять);
+        GameObject простой = Модель(ВидПерсонажа.Простой);
+        return простой == null ? 0 : НайтиАнимации(аниматор, System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(простой)).Replace('\\', '/'), заменять);
     }
 
     /// <summary>
@@ -186,13 +286,29 @@ public static class МанекенRunity
     [MenuItem("Assets/Runity/Поставить на сцену как персонажа", true)]
     static bool МожноПоставить() => Selection.activeObject is GameObject объект && AssetDatabase.Contains(объект) && объект.GetComponentInChildren<Renderer>(true) != null;
 
-    [MenuItem("GameObject/Runity/3D/Манекен", false, -99)]
-    static void СоздатьИзМеню(MenuCommand команда)
+    static void СоздатьИзМеню(MenuCommand команда, ВидПерсонажа вид)
     {
-        GameObject манекен = Создать((команда.context as GameObject)?.transform);
-        if (манекен == null) return;
-        Undo.RegisterCreatedObjectUndo(манекен, "Манекен");
-        Selection.activeObject = манекен;
+        GameObject персонаж = Создать(вид, (команда.context as GameObject)?.transform);
+        if (персонаж == null) return;
+        Undo.RegisterCreatedObjectUndo(персонаж, персонаж.name);
+        Selection.activeObject = персонаж;
     }
+
+    [MenuItem("GameObject/Runity/3D/Манекен", false, -99)]
+    static void СоздатьМанекена(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Манекен);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Манекен", false, -98)]
+    static void СоздатьМанекена2(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Манекен);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Манекен-девушка", false, -97)]
+    static void СоздатьДевушку(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.МанекенДевушка);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Гном", false, -96)]
+    static void СоздатьГнома(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Гном);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Великан", false, -95)]
+    static void СоздатьВеликана(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Великан);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Скелет", false, -94)]
+    static void СоздатьСкелета(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Скелет);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Зомби", false, -93)]
+    static void СоздатьЗомби(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Зомби);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Простой манекен", false, -92)]
+    static void СоздатьПростого(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Простой);
 }
 #endif
