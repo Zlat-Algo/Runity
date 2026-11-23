@@ -15,6 +15,8 @@ public enum ВидПерсонажа
     МанекенДевушка,
     /// <summary>Гном</summary>
     Гном,
+    /// <summary>Гном-девушка</summary>
+    ГномДевушка,
     /// <summary>Великан</summary>
     Великан,
     /// <summary>Скелет</summary>
@@ -33,16 +35,27 @@ public static class МанекенRunity
 {
     const string имяФайла = "Манекен.glb";
 
-    // Папка персонажа в Runtime/Персонажи и файл модели
-    static readonly Dictionary<ВидПерсонажа, (string папка, string модель)> персонажи = new Dictionary<ВидПерсонажа, (string, string)>
+    // Папка персонажа в Runtime/Персонажи, файл модели и папка его анимаций
+    static readonly Dictionary<ВидПерсонажа, (string папка, string модель, string анимации)> персонажи = new Dictionary<ВидПерсонажа, (string, string, string)>
     {
-        { ВидПерсонажа.Манекен, ("Человек", "HumanM_Model.fbx") },
-        { ВидПерсонажа.МанекенДевушка, ("Человек", "HumanF_Model.fbx") },
-        { ВидПерсонажа.Гном, ("Гном", "DwarfM_Model.fbx") },
-        { ВидПерсонажа.Великан, ("Великан", "GiantDummy.fbx") },
-        { ВидПерсонажа.Скелет, ("Скелет", "Skeleton.fbx") },
-        { ВидПерсонажа.Зомби, ("Зомби", "ZombieModel.fbx") },
+        { ВидПерсонажа.Манекен, ("Человек", "HumanM_Model.fbx", "Человек/Анимации/Мужские") },
+        { ВидПерсонажа.МанекенДевушка, ("Человек", "HumanF_Model.fbx", "Человек/Анимации/Женские") },
+        { ВидПерсонажа.Гном, ("Гном", "DwarfM_Model.fbx", "Гном/Анимации/Мужские") },
+        { ВидПерсонажа.ГномДевушка, ("Гном", "DwarfF_Model.fbx", "Гном/Анимации/Женские") },
+        { ВидПерсонажа.Великан, ("Великан", "GiantDummy.fbx", "Великан/Анимации") },
+        { ВидПерсонажа.Скелет, ("Скелет", "Skeleton.fbx", "Скелет/Анимации") },
+        { ВидПерсонажа.Зомби, ("Зомби", "ZombieModel.fbx", "Зомби/Анимации") },
     };
+
+    /// <summary>
+    /// Папка с анимациями персонажа Runity. Анимации человеческие (Humanoid): их можно давать любому человеку
+    /// </summary>
+    public static string ПапкаАнимаций(ВидПерсонажа вид)
+    {
+        string папка = папкаПерсонажей;
+        if (папка == null || !персонажи.ContainsKey(вид)) return null;
+        return папка + "/" + персонажи[вид].анимации;
+    }
 
     /// <summary>
     /// Папка с персонажами Runity (в пакете или в Assets)
@@ -72,7 +85,7 @@ public static class МанекенRunity
         }
         string папка = папкаПерсонажей;
         if (папка == null) return null;
-        var (своя, файл) = персонажи[вид];
+        var (своя, файл, _) = персонажи[вид];
         return AssetDatabase.LoadAssetAtPath<GameObject>(папка + "/" + своя + "/" + файл);
     }
 
@@ -99,10 +112,10 @@ public static class МанекенRunity
         if (папка != null)
         {
             string имя = названия.TryGetValue(название, out string своё) ? своё : название;
-            AnimationClip клип = AssetDatabase.FindAssets("t:AnimationClip", new[] { папка + "/Человек" })
-                .Select(AssetDatabase.GUIDToAssetPath).Distinct()
-                .SelectMany(путь => AssetDatabase.LoadAllAssetsAtPath(путь).OfType<AnimationClip>())
-                .FirstOrDefault(к => к.name == имя);
+            string путь = AssetDatabase.FindAssets("t:AnimationClip", new[] { папка + "/Человек" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .FirstOrDefault(п => System.IO.Path.GetFileNameWithoutExtension(п) == имя);
+            AnimationClip клип = путь != null ? AssetDatabase.LoadAssetAtPath<AnimationClip>(путь) : null;
             if (клип != null) return клип;
         }
         GameObject простой = Модель(ВидПерсонажа.Простой);
@@ -151,7 +164,7 @@ public static class МанекенRunity
         else
         {
             // Свои анимации персонажа, а чего не хватает (например, прыжка у скелета) - от манекена: скелет у всех человеческий
-            НайтиАнимации(анимации, папкаПерсонажей + "/" + персонажи[вид].папка);
+            НайтиАнимации(анимации, ПапкаАнимаций(вид));
             if (вид != ВидПерсонажа.Манекен && вид != ВидПерсонажа.МанекенДевушка) АнимацииМанекена(анимации);
         }
         EditorUtility.SetDirty(анимации);
@@ -161,6 +174,7 @@ public static class МанекенRunity
     static string ИмяПерсонажа(ВидПерсонажа вид) => вид switch
     {
         ВидПерсонажа.МанекенДевушка => "Манекен",
+        ВидПерсонажа.ГномДевушка => "Гном",
         ВидПерсонажа.Простой => "Манекен",
         _ => вид.ToString(),
     };
@@ -244,7 +258,7 @@ public static class МанекенRunity
     public static int АнимацииМанекена(АниматорИгрока аниматор, bool заменять = false)
     {
         string папка = папкаПерсонажей;
-        if (папка != null) return НайтиАнимации(аниматор, папка + "/Человек", заменять);
+        if (папка != null) return НайтиАнимации(аниматор, ПапкаАнимаций(ВидПерсонажа.Манекен), заменять);
         GameObject простой = Модель(ВидПерсонажа.Простой);
         return простой == null ? 0 : НайтиАнимации(аниматор, System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(простой)).Replace('\\', '/'), заменять);
     }
@@ -302,6 +316,8 @@ public static class МанекенRunity
     static void СоздатьДевушку(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.МанекенДевушка);
     [MenuItem("GameObject/Runity/3D/Персонажи/Гном", false, -96)]
     static void СоздатьГнома(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Гном);
+    [MenuItem("GameObject/Runity/3D/Персонажи/Гном-девушка", false, -96)]
+    static void СоздатьГномаДевушку(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.ГномДевушка);
     [MenuItem("GameObject/Runity/3D/Персонажи/Великан", false, -95)]
     static void СоздатьВеликана(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Великан);
     [MenuItem("GameObject/Runity/3D/Персонажи/Скелет", false, -94)]
