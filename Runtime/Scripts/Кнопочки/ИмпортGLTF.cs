@@ -15,7 +15,7 @@ using UnityEngine.Rendering;
 /// (из физических расширений glTF и по именам вроде UCX_ или -col).
 /// Если в проект установлен официальный пакет glTFast, модели читает он
 /// </summary>
-[ScriptedImporter(3, new[] { "gltf", "glb" })]
+[ScriptedImporter(4, new[] { "gltf", "glb" })]
 public class ИмпортGLTF : ScriptedImporter
 {
     [Подсказка("Во сколько раз изменить размер модели. В glTF размеры в метрах, как и в Unity")]
@@ -36,7 +36,14 @@ public class ИмпортGLTF : ScriptedImporter
     [Подсказка("Если \"да\", переносятся анимации: на модель ставится Аниматор, и первая анимация играет сама")]
     public bool анимации = true;
 
+    [Подсказка("Если \"да\" и у модели скелет человека, она получает аватар Humanoid: к ней подходят анимации людей из других моделей (Mixamo, Asset Store, манекен Runity), а её анимации - к другим людям")]
+    public bool скелетЧеловека = true;
+
+    [Подсказка("Если \"да\" и модель получилась крошечной из-за перевода сантиметров в метры (так бывает у моделей Sketchfab, сделанных из fbx), она увеличивается в 100 раз")]
+    public bool подогнатьРазмер = true;
+
     Dictionary<string, object> json;
+    Avatar аватар;
     byte[][] буферы;
     string папка;
     AssetImportContext контекст;
@@ -89,7 +96,7 @@ public class ИмпортGLTF : ScriptedImporter
         ЗагрузитьМатериалы();
         ЗагрузитьСетки();
 
-        string имя = Path.GetFileNameWithoutExtension(ctx.assetPath);
+        string имя = ИмяМодели(ctx.assetPath, json);
         GameObject объектКорня = new GameObject(имя);
         корень = объектКорня.transform;
         List<object> всеУзлы = Список("nodes");
@@ -117,13 +124,56 @@ public class ИмпортGLTF : ScriptedImporter
             foreach (object канал in (List<object>)((Dictionary<string, object>)анимация)["channels"])
                 if (((Dictionary<string, object>)((Dictionary<string, object>)канал)["target"]).TryGetValue("node", out object цель)) анимированные.Add(Convert.ToInt32(цель));
         if (сократитьИерархию) СократитьИерархию(анимированные);
+        foreach (SkinnedMeshRenderer кожа in корень.GetComponentsInChildren<SkinnedMeshRenderer>(true)) ПосчитатьГраницы(кожа);
+        аватар = скелетЧеловека ? СкелетЧеловека.Построить(корень) : null;
+        if (аватар != null) ctx.AddObjectToAsset("аватар", аватар);
         if (анимации) СоздатьАнимации();
+        if (аватар != null)
+        {
+            Animator аниматорЧеловека = корень.GetComponent<Animator>();
+            if (аниматорЧеловека == null) аниматорЧеловека = корень.gameObject.AddComponent<Animator>();
+            аниматорЧеловека.avatar = аватар;
+        }
 
         корень.localScale = Vector3.one * масштаб;
+        if (подогнатьРазмер)
+        {
+            float размер = РазмерМодели(корень);
+            if (размер > 0 && размер < 0.1f && масштабОбёрток < 0.011f)
+            {
+                корень.localScale *= 100;
+                ctx.LogImportWarning($"Модель {корень.name} была крошечной ({размер * 100:0.#} см) и увеличена в 100 раз. Отключается галочкой «Подогнать размер» в настройках модели");
+            }
+        }
         GameObject корень_ = объектКорня;
 
         ctx.AddObjectToAsset("модель", корень_);
         ctx.SetMainObject(корень_);
+    }
+
+    // Sketchfab и многие программы называют файл просто scene.gltf - тогда модель называется по папке или по названию из файла
+    static readonly string[] безликиеИмена = { "scene", "model", "untitled", "mesh", "object", "export", "asset" };
+
+    internal static string ИмяМодели(string путь, Dictionary<string, object> json)
+    {
+        string имя = Path.GetFileNameWithoutExtension(путь);
+        if (Array.IndexOf(безликиеИмена, имя.ToLowerInvariant()) < 0) return имя;
+        string папка = Path.GetFileName(Path.GetDirectoryName(путь));
+        if (!string.IsNullOrEmpty(папка) && !папка.Equals("Assets", StringComparison.OrdinalIgnoreCase) && !папка.Equals("source", StringComparison.OrdinalIgnoreCase))
+            return ЧистоеИмя(папка);
+        if (json != null && json.TryGetValue("asset", out object а) && ((Dictionary<string, object>)а).TryGetValue("extras", out object э)
+            && ((Dictionary<string, object>)э).TryGetValue("title", out object название) && !string.IsNullOrWhiteSpace(название as string))
+            return ЧистоеИмя((string)название);
+        return имя;
+    }
+
+    // Убирает из имени архива приписки формата: eternal_war_gltf - eternal_war
+    internal static string ЧистоеИмя(string имя)
+    {
+        foreach (string приписка in new[] { "_gltf", "-gltf", " gltf", "_glb", "-glb", "_fbx", "-fbx", " fbx", "_obj", "-obj", "_blend", "-blend" })
+            if (имя.EndsWith(приписка, StringComparison.OrdinalIgnoreCase)) имя = имя.Substring(0, имя.Length - приписка.Length);
+        foreach (char запрещённый in Path.GetInvalidFileNameChars()) имя = имя.Replace(запрещённый, '_');
+        return имя.Trim();
     }
 
     List<object> Список(string ключ) => json.TryGetValue(ключ, out object значение) ? (List<object>)значение : new List<object>();
@@ -225,7 +275,17 @@ public class ИмпортGLTF : ScriptedImporter
                 байты = new byte[длина];
                 Buffer.BlockCopy(данные, начало, байты, 0, длина);
             }
-            else байты = ПрочитатьАдрес((string)картинка["uri"]);
+            else
+            {
+                string адрес = (string)картинка["uri"];
+                Texture2D изПроекта = ТекстураПроекта(адрес, линейные.Contains(i));
+                if (изПроекта != null)
+                {
+                    загруженные[i] = изПроекта;
+                    continue;
+                }
+                байты = ПрочитатьАдрес(адрес);
+            }
 
             Texture2D текстура = new Texture2D(2, 2, TextureFormat.RGBA32, true, линейные.Contains(i));
             if (!текстура.LoadImage(байты))
@@ -233,7 +293,9 @@ public class ИмпортGLTF : ScriptedImporter
                 контекст.LogImportWarning($"Картинку {i} не удалось прочитать: подходят только PNG и JPG");
                 continue;
             }
-            текстура.name = картинка.TryGetValue("name", out object имя) ? (string)имя : "Текстура " + i;
+            текстура.name = картинка.TryGetValue("name", out object имя) && !string.IsNullOrEmpty(имя as string) ? (string)имя
+                : картинка.TryGetValue("uri", out object адресКартинки) && !((string)адресКартинки).StartsWith("data:") ? Path.GetFileNameWithoutExtension(Uri.UnescapeDataString((string)адресКартинки))
+                : "Текстура " + i;
             текстура.wrapMode = TextureWrapMode.Repeat;
             текстура.Compress(true);
             контекст.AddObjectToAsset("текстура " + i, текстура);
@@ -247,6 +309,20 @@ public class ИмпортGLTF : ScriptedImporter
             int источник = ИсточникТекстуры(i);
             if (источник >= 0 && источник < загруженные.Length) текстуры[i] = загруженные[источник];
         }
+    }
+
+    // Картинка, которая лежит рядом в проекте, используется сама: так у текстур нет копий, а правки картинки сразу видны на модели.
+    // Карта неровностей подходит, только если Unity уже импортировал её как карту неровностей (это делает ПодготовкаТекстурМоделей)
+    Texture2D ТекстураПроекта(string адрес, bool картаНеровностей)
+    {
+        if (адрес.StartsWith("data:")) return null;
+        string путь = Path.Combine(папка, Uri.UnescapeDataString(адрес)).Replace('\\', '/');
+        if (!File.Exists(путь) || !путь.StartsWith("Assets/")) return null;
+        контекст.DependsOnArtifact(путь);
+        Texture2D текстура = AssetDatabase.LoadAssetAtPath<Texture2D>(путь);
+        if (текстура == null) return null;
+        if (картаНеровностей && !(AssetImporter.GetAtPath(путь) is TextureImporter импорт && импорт.textureType == TextureImporterType.NormalMap)) return null;
+        return текстура;
     }
 
     int ИсточникТекстуры(int номер)
@@ -624,6 +700,64 @@ public class ИмпортGLTF : ScriptedImporter
         кожа.updateWhenOffscreen = false;
     }
 
+    // Unity решает, видна ли анимированная модель, по её границам. Границы сетки не учитывают кости (их размер и положение),
+    // поэтому считаем их по позе покоя: каждая вершина ставится туда, куда её ставит главная кость
+    static readonly Dictionary<SkinnedMeshRenderer, Bounds> точныеГраницы = new Dictionary<SkinnedMeshRenderer, Bounds>();
+
+    static void ПосчитатьГраницы(SkinnedMeshRenderer кожа)
+    {
+        Mesh сетка = кожа.sharedMesh;
+        Transform[] кости = кожа.bones;
+        if (сетка == null || кости == null || кости.Length == 0) return;
+        Matrix4x4[] позы = сетка.bindposes;
+        BoneWeight[] веса = сетка.boneWeights;
+        Vector3[] вершины = сетка.vertices;
+        Transform опора = кожа.rootBone != null ? кожа.rootBone : кожа.transform;
+        Matrix4x4[] вОпору = new Matrix4x4[кости.Length];
+        for (int i = 0; i < кости.Length; i++)
+            вОпору[i] = кости[i] != null && i < позы.Length ? опора.worldToLocalMatrix * кости[i].localToWorldMatrix * позы[i] : опора.worldToLocalMatrix * кожа.transform.localToWorldMatrix;
+        Matrix4x4 безКостей = опора.worldToLocalMatrix * кожа.transform.localToWorldMatrix;
+        bool есть = false;
+        Bounds рамка = default;
+        for (int v = 0; v < вершины.Length; v++)
+        {
+            Matrix4x4 м = веса.Length == вершины.Length && веса[v].boneIndex0 < вОпору.Length ? вОпору[веса[v].boneIndex0] : безКостей;
+            Vector3 точка = м.MultiplyPoint3x4(вершины[v]);
+            if (!есть) { рамка = new Bounds(точка, Vector3.zero); есть = true; }
+            else рамка.Encapsulate(точка);
+        }
+        if (!есть) return;
+        точныеГраницы[кожа] = рамка;
+        // С запасом: в анимации части модели двигаются
+        рамка.Expand(рамка.size.magnitude * 0.25f);
+        кожа.localBounds = рамка;
+    }
+
+    // Размер модели (диагональ) в метрах: по видимым частям, у анимированных - по посчитанным границам
+    static float РазмерМодели(Transform корень)
+    {
+        bool есть = false;
+        Bounds всё = default;
+        void Добавить(Matrix4x4 матрица, Bounds рамка)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 угол = рамка.center + Vector3.Scale(рамка.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                Vector3 точка = матрица.MultiplyPoint3x4(угол);
+                if (!есть) { всё = new Bounds(точка, Vector3.zero); есть = true; } else всё.Encapsulate(точка);
+            }
+        }
+        foreach (MeshFilter фильтр in корень.GetComponentsInChildren<MeshFilter>(true))
+            if (фильтр.sharedMesh != null && фильтр.GetComponent<MeshRenderer>() != null) Добавить(фильтр.transform.localToWorldMatrix, фильтр.sharedMesh.bounds);
+        foreach (SkinnedMeshRenderer кожа in корень.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            Bounds рамка = точныеГраницы.TryGetValue(кожа, out Bounds точная) ? точная : кожа.localBounds;
+            Добавить((кожа.rootBone != null ? кожа.rootBone : кожа.transform).localToWorldMatrix, рамка);
+        }
+        точныеГраницы.Clear();
+        return есть ? всё.size.magnitude : 0;
+    }
+
     #region Коллайдеры
 
     // Соглашения об именах коллайдеров из других движков
@@ -772,26 +906,35 @@ public class ИмпортGLTF : ScriptedImporter
 
     #region Иерархия
 
-    // Убирает пустые обёртки с одним ребёнком (Sketchfab_model, root, GLTF_SceneRootNode). Их расположение переносится на детей,
-    // поэтому модель выглядит так же. Обёртку над анимированными узлами со своим поворотом или размером оставляем: иначе анимация съехала бы
+    // Что сделать с анимацией узла, у которого убрали обёртку: новое расположение = матрица обёртки * старое
+    readonly Dictionary<Transform, Matrix4x4> поправкиАнимаций = new Dictionary<Transform, Matrix4x4>();
+
+    // Убирает пустые обёртки с одним ребёнком (Sketchfab_model, *.fbx, Object_2, RootNode, GLTF_SceneRootNode и т.п.), пока не дойдёт
+    // до объекта, в котором несколько частей. Расположение обёртки переносится на детей, а их анимации пересчитываются, поэтому модель выглядит так же
     void СократитьИерархию(HashSet<int> анимированные)
     {
+        поправкиАнимаций.Clear();
+        масштабОбёрток = 1;
         HashSet<Transform> анимируемые = new HashSet<Transform>();
         foreach (int номер in анимированные) if (номер >= 0 && номер < узлы.Length && узлы[номер] != null) анимируемые.Add(узлы[номер]);
+        HashSet<Transform> кости = new HashSet<Transform>();
+        foreach (SkinnedMeshRenderer кожа in корень.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            foreach (Transform кость in кожа.bones) if (кость != null) кости.Add(кость);
 
         while (корень.childCount == 1)
         {
             Transform обёртка = корень.GetChild(0);
-            if (обёртка.GetComponents<Component>().Length > 1 || анимируемые.Contains(обёртка) || обёртка.childCount == 0) break;
-
-            bool своёРасположение = обёртка.localPosition != Vector3.zero || обёртка.localRotation != Quaternion.identity || обёртка.localScale != Vector3.one;
-            bool естьАнимацияНиже = false;
-            foreach (Transform часть in обёртка.GetComponentsInChildren<Transform>(true)) естьАнимацияНиже |= анимируемые.Contains(часть);
-            if (своёРасположение && естьАнимацияНиже) break;
+            if (обёртка.GetComponents<Component>().Length > 1 || анимируемые.Contains(обёртка) || кости.Contains(обёртка) || обёртка.childCount == 0) break;
 
             Matrix4x4 матрица = Matrix4x4.TRS(обёртка.localPosition, обёртка.localRotation, обёртка.localScale);
+            Vector3 размер = обёртка.localScale;
+            float допуск = 1e-4f * Mathf.Abs(размер.x) + 1e-6f;
+            bool ровныйРазмер = Mathf.Abs(Mathf.Abs(размер.x) - Mathf.Abs(размер.y)) < допуск && Mathf.Abs(Mathf.Abs(размер.x) - Mathf.Abs(размер.z)) < допуск;
             List<Transform> дети = new List<Transform>();
             foreach (Transform ребёнок in обёртка) дети.Add(ребёнок);
+            // Анимацию ребёнка можно пересчитать, только если обёртка не растягивает его по-разному в разные стороны
+            if (!ровныйРазмер && дети.Exists(анимируемые.Contains)) break;
+
             foreach (Transform ребёнок in дети)
             {
                 Matrix4x4 итог = матрица * Matrix4x4.TRS(ребёнок.localPosition, ребёнок.localRotation, ребёнок.localScale);
@@ -799,10 +942,15 @@ public class ИмпортGLTF : ScriptedImporter
                 ребёнок.localPosition = итог.GetColumn(3);
                 ребёнок.localRotation = итог.rotation;
                 ребёнок.localScale = итог.lossyScale;
+                if (анимируемые.Contains(ребёнок)) поправкиАнимаций[ребёнок] = матрица;
             }
+            масштабОбёрток *= Mathf.Abs(размер.x);
             DestroyImmediate(обёртка.gameObject);
         }
     }
+
+    // Во сколько раз уменьшали убранные обёртки: 0.01 - это перевод сантиметров в метры
+    float масштабОбёрток = 1;
 
     #endregion
 
@@ -833,6 +981,11 @@ public class ИмпортGLTF : ScriptedImporter
                 float[] значения = Прочитать(Convert.ToInt32(выборка["output"]), out int размер);
                 string способ = выборка.TryGetValue("interpolation", out object и) ? (string)и : "LINEAR";
                 string что = (string)цель["path"];
+                if (поправкиАнимаций.TryGetValue(узел, out Matrix4x4 поправка) && (что == "translation" || что == "rotation" || что == "scale"))
+                {
+                    ЗаписатьСПоправкой(клип, путь, что, время, значения, способ, поправка);
+                    continue;
+                }
 
                 if (что == "translation") ЗаписатьКривые(клип, путь, typeof(Transform), new[] { "localPosition.x", "localPosition.y", "localPosition.z" }, время, значения, 3, способ, new[] { -1f, 1, 1 });
                 else if (что == "scale") ЗаписатьКривые(клип, путь, typeof(Transform), new[] { "localScale.x", "localScale.y", "localScale.z" }, время, значения, 3, способ, new[] { 1f, 1, 1 });
@@ -863,6 +1016,12 @@ public class ИмпортGLTF : ScriptedImporter
             AnimationClipSettings настройки = AnimationUtility.GetAnimationClipSettings(клип);
             настройки.loopTime = true;
             AnimationUtility.SetAnimationClipSettings(клип, настройки);
+            // У человека анимации переводятся в Humanoid: тогда они подходят к любым людям
+            if (аватар != null)
+            {
+                AnimationClip человеческий = СкелетЧеловека.ВЧеловеческий(клип, аватар, корень);
+                if (человеческий != null) { DestroyImmediate(клип); клип = человеческий; }
+            }
             контекст.AddObjectToAsset("анимация " + a, клип);
             клипы.Add(клип);
         }
@@ -885,6 +1044,43 @@ public class ИмпортGLTF : ScriptedImporter
         Animator аниматор = корень.gameObject.AddComponent<Animator>();
         аниматор.runtimeAnimatorController = контроллер;
         корень.gameObject.AddComponent<Аниматор>();
+    }
+
+    // Значения glTF переводятся в Unity и умножаются на матрицу убранной обёртки: положение = сдвиг + размер * поворот * положение,
+    // поворот = поворот обёртки * поворот, размер = размер обёртки * размер. Касательные пересчитываются так же, но без сдвига
+    static void ЗаписатьСПоправкой(AnimationClip клип, string путь, string что, float[] время, float[] значения, string способ, Matrix4x4 поправка)
+    {
+        bool кубическая = способ == "CUBICSPLINE";
+        int размер = что == "rotation" ? 4 : 3;
+        int частей = кубическая ? 3 : 1;
+        float[] новые = (float[])значения.Clone();
+        Quaternion поворот = поправка.rotation;
+        float масштаб = поправка.lossyScale.x;
+        Vector3 сдвиг = поправка.GetColumn(3);
+        for (int i = 0; i < время.Length; i++)
+            for (int ч = 0; ч < частей; ч++)
+            {
+                int м = (i * частей + ч) * размер;
+                bool значение = !кубическая || ч == 1;
+                if (что == "translation")
+                {
+                    Vector3 p = поворот * new Vector3(-значения[м], значения[м + 1], значения[м + 2]) * масштаб + (значение ? сдвиг : Vector3.zero);
+                    новые[м] = p.x; новые[м + 1] = p.y; новые[м + 2] = p.z;
+                }
+                else if (что == "rotation")
+                {
+                    Quaternion r = поворот * new Quaternion(значения[м], -значения[м + 1], -значения[м + 2], значения[м + 3]);
+                    новые[м] = r.x; новые[м + 1] = r.y; новые[м + 2] = r.z; новые[м + 3] = r.w;
+                }
+                else
+                {
+                    for (int c = 0; c < 3; c++) новые[м + c] = значения[м + c] * Mathf.Abs(масштаб);
+                }
+            }
+        string[] свойства = что == "translation" ? new[] { "localPosition.x", "localPosition.y", "localPosition.z" }
+            : что == "rotation" ? new[] { "localRotation.x", "localRotation.y", "localRotation.z", "localRotation.w" }
+            : new[] { "localScale.x", "localScale.y", "localScale.z" };
+        ЗаписатьКривые(клип, путь, typeof(Transform), свойства, время, новые, размер, способ, размер == 4 ? new[] { 1f, 1, 1, 1 } : new[] { 1f, 1, 1 });
     }
 
     static void ЗаписатьКривые(AnimationClip клип, string путь, Type тип, string[] свойства, float[] время, float[] значения, int размер, string способ, float[] множители)

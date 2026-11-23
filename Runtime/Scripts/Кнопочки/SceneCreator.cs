@@ -7,7 +7,7 @@ using UnityEngine;
 
 public static class SceneCreator
 {
-    [MenuItem("Assets/Create/Сцена", false, -100000)]
+    [MenuItem("Assets/Runity/Сцена", false, 2)]
     private static void CreateScene()
     {
         string parentFolder = GetSelectedFolder();

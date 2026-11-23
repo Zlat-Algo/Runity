@@ -401,6 +401,30 @@ internal class АниматорИгрокаEditor : RunityEditor<Анимато�
     {
         Текст("Этот объект сам включает нужную анимацию: стоит, идёт, прыгает, получает урон и так далее. Кнопка слева от поля переключает, что лежит в строке: Гиф - кадровая анимация Runity, Клип - обычный анимационный клип. Пустые строки пропускаются");
 
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button(new GUIContent("Найти анимации в папке...", "Разложит анимации из папки по состояниям по их названиям: Idle, Walk, Run, Jump, Fall, Land, Hit, Attack, Death (и русские). Человеку (Humanoid) подходят человеческие анимации от любых моделей")))
+        {
+            string папка = EditorUtility.OpenFolderPanel("Папка с анимациями", Application.dataPath, "");
+            if (!string.IsNullOrEmpty(папка))
+            {
+                string относительная = папка.Replace('\\', '/');
+                string корень = Application.dataPath.Replace('\\', '/');
+                if (!относительная.StartsWith(корень)) EditorUtility.DisplayDialog("Аниматор игрока", "Выберите папку внутри проекта (Assets)", "Понятно");
+                else
+                {
+                    int сколько = 0;
+                    foreach (UnityEngine.Object цель in targets) сколько = МанекенRunity.НайтиАнимации((АниматорИгрока)цель, "Assets" + относительная.Substring(корень.Length));
+                    if (сколько == 0) EditorUtility.DisplayDialog("Аниматор игрока", "Подходящих анимаций не нашлось. Для человека (Humanoid) нужны анимации, импортированные как Humanoid", "Понятно");
+                }
+            }
+        }
+        Animator основа = компонент.GetComponentInChildren<Animator>();
+        GUI.enabled = основа != null && основа.avatar != null && основа.avatar.isHuman;
+        if (GUILayout.Button(new GUIContent("Анимации манекена", "Поставит анимации манекена Runity в пустые состояния. Подходит любому человеку (Humanoid)")))
+            foreach (UnityEngine.Object цель in targets) МанекенRunity.АнимацииМанекена((АниматорИгрока)цель);
+        GUI.enabled = true;
+        EditorGUILayout.EndHorizontal();
+
         Пробел();
 
         serializedObject.Update();

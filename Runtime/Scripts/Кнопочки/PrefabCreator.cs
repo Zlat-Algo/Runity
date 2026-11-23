@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class PrefabCreator
 {
-    [MenuItem("Assets/Create/Префаб", false, -100000)]
+    [MenuItem("Assets/Runity/Префаб", false, 3)]
     private static void CreatePrefab()
     {
         string parentFolder = GetSelectedFolder();

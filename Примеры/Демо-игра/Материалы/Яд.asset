@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d931d258d5d6ca40807826aa8deb3a6, type: 3}
   m_Name: "\u042F\u0434"
   m_EditorClassIdentifier: "com.zlatalgo.runity::\u041C\u0430\u0442\u0435\u0440\u0438\u0430\u043B"
-  "_\u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B": {fileID: 2905424944164386616}
+  "_\u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B": {fileID: 8373164224057564061}
   "_\u0432\u0438\u0434": 0
   "_\u0446\u0432\u0435\u0442": {r: 0.4, g: 0.9, b: 0.2, a: 0.65}
   "_\u0442\u0435\u043A\u0441\u0442\u0443\u0440\u0430": {fileID: 0}
@@ -24,7 +24,7 @@ MonoBehaviour:
   "_\u0441\u0432\u0435\u0447\u0435\u043D\u0438\u0435": {r: 0.15, g: 0.4, b: 0.05, a: 1}
   "_\u043F\u0440\u043E\u0437\u0440\u0430\u0447\u043D\u044B\u0439":
     "\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435": 1
---- !u!21 &2905424944164386616
+--- !u!21 &8373164224057564061
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0

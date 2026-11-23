@@ -9,7 +9,6 @@ using UnityEngine.Serialization;
 /// <summary>
 /// Анимация из отдельных картинок, спрайтов из атласа или гифки. Проигрывается компонентом Проигрыватель кадров
 /// </summary>
-[CreateAssetMenu(fileName = "Новая анимация", menuName = "Runity/Кадровая анимация", order = -100)]
 public class КадроваяАнимация : ScriptableObject
 {
     [SerializeField, FormerlySerializedAs("frames")]

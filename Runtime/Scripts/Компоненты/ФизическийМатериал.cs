@@ -12,7 +12,6 @@ public enum СочетаниеФизики { Среднее, Наименьше�
 /// Физический материал: насколько поверхность скользкая и прыгучая. Один материал работает и в 3D, и в 2D: лёд, резина, батут, липкая грязь.
 /// Перетащите его в поле «Материал» любого коллайдера
 /// </summary>
-[CreateAssetMenu(fileName = "Новый физический материал", menuName = "Runity/Физический Материал", order = -89)]
 public class ФизическийМатериал : ScriptableObject
 {
     [SerializeField, HideInInspector] PhysicsMaterial _для3D;

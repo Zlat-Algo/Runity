@@ -21,7 +21,6 @@ public class ЦельЗадания
 /// <summary>
 /// Задание для игрока: название, описание и цели. Выдаётся и отслеживается Журналом заданий
 /// </summary>
-[CreateAssetMenu(fileName = "Новое задание", menuName = "Runity/Задание", order = -92)]
 public class Задание : ScriptableObject
 {
     [SerializeField, МногострочныйТекст(3)] string _описание = "";

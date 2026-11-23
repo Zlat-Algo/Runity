@@ -10,7 +10,6 @@ using UnityEngine;
 /// Список сцен игры. Порядок здесь определяет их номера в компоненте Сцены.
 /// Изменения сразу попадают в настройки сборки проекта
 /// </summary>
-[CreateAssetMenu(fileName = "Список сцен", menuName = "Runity/Список сцен", order = -99)]
 public class СписокСцен : ScriptableObject
 {
     // Тип SceneAsset есть только в редакторе, поэтому здесь хранится общий тип Object

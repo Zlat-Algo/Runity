@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class FolderCreator
 {
-    [MenuItem("Assets/Create/Папка", false, -100000)]
+    [MenuItem("Assets/Runity/Папка", false, 4)]
     private static void CreateFolder()
     {
         string parentFolder = GetSelectedFolder();

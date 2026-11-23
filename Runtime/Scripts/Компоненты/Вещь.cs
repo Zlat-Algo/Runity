@@ -8,7 +8,6 @@ using UnityEngine;
 /// <summary>
 /// Вещь для инвентаря: монета, ключ, зелье. Название вещи - это название её файла
 /// </summary>
-[CreateAssetMenu(fileName = "Новая вещь", menuName = "Runity/Вещь", order = -97)]
 public class Вещь : ScriptableObject
 {
     [SerializeField] Sprite _иконка;

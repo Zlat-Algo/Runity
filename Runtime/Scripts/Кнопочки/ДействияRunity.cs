@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -36,16 +36,22 @@ public static class ДействияRunity
         return найденные;
     }
 
-    // В правом щелчке по объектам в окне Hierarchy
-    [MenuItem("GameObject/Выбрать всё внутри", false, -1000)]
-    static void ВыбратьВсёВнутри(MenuCommand команда)
+    // В правом щелчке по выделенным объектам в окне Hierarchy - рядом с «Копировать», «Дублировать» и «Удалить», а не в меню создания объектов
+    [InitializeOnLoadMethod]
+    static void ДобавитьВМенюИерархии()
     {
-        // Пункт вызывается для каждого выделенного объекта - делаем работу один раз
-        if (команда.context != null && команда.context != Selection.activeGameObject) return;
-        Selection.objects = ВсёВнутри(Selection.gameObjects).Cast<Object>().ToArray();
+        UnityEditor.SceneManagement.SceneHierarchyHooks.addItemsToGameObjectContextMenu += (меню, объект) =>
+        {
+            if (Selection.gameObjects.Length == 0) return;
+            меню.AddSeparator("");
+            меню.AddItem(new GUIContent("Выбрать всё внутри"), false, ВыбратьВсёВнутри);
+        };
     }
 
-    [MenuItem("GameObject/Выбрать всё внутри", true)]
+    [MenuItem("Edit/Выбрать всё внутри", false, 150)]
+    static void ВыбратьВсёВнутри() => Selection.objects = ВсёВнутри(Selection.gameObjects).Cast<Object>().ToArray();
+
+    [MenuItem("Edit/Выбрать всё внутри", true)]
     static bool МожноВыбратьВсёВнутри() => Selection.gameObjects.Length > 0;
 
     /// <summary>
@@ -64,7 +70,7 @@ public static class ДействияRunity
 
     #region Распаковка
 
-    [MenuItem("Assets/Runity/Распаковать", false, 0)]
+    [MenuItem("Assets/Runity/Распаковать", false, 100)]
     static void Распаковать()
     {
         foreach (Object выбранный in Selection.objects)

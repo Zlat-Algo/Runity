@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -110,39 +111,45 @@ internal static class ПакетUnity
     }
 }
 
-// Раскладывает модель (fbx, glb, blend и другие) на обычные ассеты в папке: текстуры, материалы, сетки, анимации и префаб.
-// Материалы по возможности становятся Материалами Runity, а у компонентов префаба появляются аналоги Runity
+// Раскладывает модель (fbx, glb, blend и другие) на обычные ассеты в папке: текстуры, материалы, сетки, анимации, схему анимаций и префаб.
+// Материалы по возможности становятся Материалами Runity, а у компонентов префаба появляются аналоги Runity.
+// Картинки, которые уже лежат в проекте рядом с моделью, не копируются. Пустые обёртки сверху (RootNode и подобные) убираются
 internal static class РаспаковкаМодели
 {
     public static bool МожноРаспаковать(string путь) => AssetDatabase.LoadMainAssetAtPath(путь) is GameObject && !путь.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase);
 
+    static readonly string[] картинки = { ".png", ".jpg", ".jpeg", ".tga", ".psd", ".tif", ".tiff", ".bmp", ".exr", ".hdr" };
+
     public static string Распаковать(string путь)
     {
         GameObject модель = AssetDatabase.LoadAssetAtPath<GameObject>(путь);
-        string имя = Path.GetFileNameWithoutExtension(путь);
+        string имя = ИмпортGLTF.ЧистоеИмя(модель.name.Equals(Path.GetFileNameWithoutExtension(путь), StringComparison.OrdinalIgnoreCase) ? ИмпортGLTF.ИмяМодели(путь, null) : модель.name);
+        if (string.IsNullOrWhiteSpace(имя)) имя = Path.GetFileNameWithoutExtension(путь);
         string папка = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(Path.GetDirectoryName(путь), имя).Replace('\\', '/'));
         AssetDatabase.CreateFolder(Path.GetDirectoryName(папка).Replace('\\', '/'), Path.GetFileName(папка));
 
         Dictionary<Object, Object> замены = new Dictionary<Object, Object>();
         Object[] части = AssetDatabase.LoadAllAssetsAtPath(путь);
 
-        // Встроенные текстуры сохраняются картинками PNG
-        Dictionary<Texture2D, string> картинки = new Dictionary<Texture2D, string>();
+        // Встроенные текстуры: если такая картинка уже лежит рядом в проекте, берём её, иначе сохраняем картинкой PNG
+        Dictionary<Texture2D, string> новые = new Dictionary<Texture2D, string>();
         try
         {
             AssetDatabase.StartAssetEditing();
             foreach (Texture2D текстура in части.OfType<Texture2D>())
             {
+                Texture2D рядом = НайтиКартинкуРядом(путь, текстура.name);
+                if (рядом != null) { замены[текстура] = рядом; continue; }
                 string файл = Уникальный(папка, текстура.name, ".png");
                 File.WriteAllBytes(файл, ВКартинку(текстура));
-                картинки[текстура] = файл;
+                новые[текстура] = файл;
             }
         }
         finally
         {
             AssetDatabase.StopAssetEditing();
         }
-        foreach (KeyValuePair<Texture2D, string> картинка in картинки)
+        foreach (KeyValuePair<Texture2D, string> картинка in новые)
         {
             AssetDatabase.ImportAsset(картинка.Value);
             замены[картинка.Key] = AssetDatabase.LoadAssetAtPath<Texture2D>(картинка.Value);
@@ -160,18 +167,20 @@ internal static class РаспаковкаМодели
         {
             замены[материал] = СделатьМатериал(материал, папка, замены);
         }
+        ПометитьКартыНеровностей(части.OfType<Material>(), замены);
 
-        foreach (AnimationClip клип in части.OfType<AnimationClip>().Where(к => !к.name.StartsWith("__preview__")))
-        {
-            AnimationClip копия = Object.Instantiate(клип);
-            копия.name = клип.name;
-            AssetDatabase.CreateAsset(копия, Уникальный(папка, клип.name, ".anim"));
-            замены[клип] = копия;
-        }
-
-        // Префаб: та же модель, но с распакованными ассетами
+        // Префаб: та же модель, но с распакованными ассетами и без лишних обёрток сверху
         GameObject экземпляр = Object.Instantiate(модель);
         экземпляр.name = имя;
+        List<AnimationClip> клипы = части.OfType<AnimationClip>().Where(к => !к.name.StartsWith("__preview__")).ToList();
+        List<AnimationClip> копии = клипы.Select(к => { AnimationClip копия = Object.Instantiate(к); копия.name = к.name; return копия; }).ToList();
+        СократитьОбёртки(экземпляр.transform, копии);
+        for (int i = 0; i < копии.Count; i++)
+        {
+            AssetDatabase.CreateAsset(копии[i], Уникальный(папка, копии[i].name, ".anim"));
+            замены[клипы[i]] = копии[i];
+        }
+
         foreach (MeshFilter фильтр in экземпляр.GetComponentsInChildren<MeshFilter>(true))
             if (фильтр.sharedMesh != null && замены.TryGetValue(фильтр.sharedMesh, out Object сетка)) фильтр.sharedMesh = (Mesh)сетка;
         foreach (SkinnedMeshRenderer кожа in экземпляр.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -180,14 +189,115 @@ internal static class РаспаковкаМодели
             if (коллайдер.sharedMesh != null && замены.TryGetValue(коллайдер.sharedMesh, out Object сетка)) коллайдер.sharedMesh = (Mesh)сетка;
         foreach (Renderer отрисовщик in экземпляр.GetComponentsInChildren<Renderer>(true))
             отрисовщик.sharedMaterials = отрисовщик.sharedMaterials.Select(м => м != null && замены.TryGetValue(м, out Object новый) ? (Material)(новый is Материал русский ? (Material)русский : новый as Material) : м).ToArray();
+
+        // Своя схема анимаций из распакованных клипов: каждая анимация - состояние, первая играет сама
+        if (копии.Count > 0)
+        {
+            AnimatorController схема = AnimatorController.CreateAnimatorControllerAtPath(Уникальный(папка, имя + " (анимации)", ".controller"));
+            foreach (AnimationClip клип in копии) схема.AddMotion(клип);
+            Animator аниматор = экземпляр.GetComponent<Animator>();
+            if (аниматор == null) аниматор = экземпляр.AddComponent<Animator>();
+            аниматор.runtimeAnimatorController = схема;
+        }
+
         АналогиRunity.Добавить(экземпляр);
         string префаб = Уникальный(папка, имя, ".prefab");
         PrefabUtility.SaveAsPrefabAsset(экземпляр, префаб);
         Object.DestroyImmediate(экземпляр);
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"Модель {путь} распакована в папку {папка}");
+        Debug.Log($"Модель {путь} распакована в папку {папка}", AssetDatabase.LoadAssetAtPath<GameObject>(префаб));
         return папка;
+    }
+
+    // Картинка с тем же именем в папке модели, её подпапках или папке выше (Sketchfab кладёт текстуры в соседнюю папку textures)
+    static Texture2D НайтиКартинкуРядом(string путьМодели, string имя)
+    {
+        if (string.IsNullOrEmpty(имя)) return null;
+        string папкаМодели = Path.GetDirectoryName(путьМодели).Replace('\\', '/');
+        string выше = Path.GetDirectoryName(папкаМодели)?.Replace('\\', '/');
+        foreach (string где in new[] { папкаМодели, выше })
+        {
+            if (string.IsNullOrEmpty(где) || где == "Assets" && где != папкаМодели) continue;
+            foreach (string guid in AssetDatabase.FindAssets(имя + " t:Texture2D", new[] { где }))
+            {
+                string найденный = AssetDatabase.GUIDToAssetPath(guid);
+                if (Path.GetFileNameWithoutExtension(найденный).Equals(имя, StringComparison.OrdinalIgnoreCase) && картинки.Contains(Path.GetExtension(найденный).ToLowerInvariant()))
+                    return AssetDatabase.LoadAssetAtPath<Texture2D>(найденный);
+            }
+        }
+        return null;
+    }
+
+    // Картинка, которая служит картой неровностей, должна быть импортирована как Normal Map, иначе свет на модели ложится неправильно
+    static void ПометитьКартыНеровностей(IEnumerable<Material> материалы, Dictionary<Object, Object> замены)
+    {
+        foreach (Material материал in материалы)
+        {
+            if (!материал.HasProperty("_BumpMap") || материал.GetTexture("_BumpMap") == null) continue;
+            Texture карта = материал.GetTexture("_BumpMap");
+            if (замены.TryGetValue(карта, out Object новая)) карта = (Texture)новая;
+            string путь = AssetDatabase.GetAssetPath(карта);
+            if (AssetImporter.GetAtPath(путь) is TextureImporter импорт && импорт.textureType != TextureImporterType.NormalMap)
+            {
+                импорт.textureType = TextureImporterType.NormalMap;
+                импорт.SaveAndReimport();
+            }
+        }
+    }
+
+    // Убирает пустые обёртки с одним ребёнком сверху модели, сохраняя расположение частей. Пути в анимациях исправляются.
+    // Обёртку над анимированной частью со своим расположением оставляем: иначе анимация съехала бы
+    internal static void СократитьОбёртки(Transform корень, List<AnimationClip> клипы)
+    {
+        HashSet<Transform> кости = new HashSet<Transform>();
+        foreach (SkinnedMeshRenderer кожа in корень.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            foreach (Transform кость in кожа.bones) if (кость != null) кости.Add(кость);
+        HashSet<string> анимированные = new HashSet<string>();
+        foreach (AnimationClip клип in клипы)
+        {
+            foreach (EditorCurveBinding привязка in AnimationUtility.GetCurveBindings(клип)) анимированные.Add(привязка.path);
+            foreach (EditorCurveBinding привязка in AnimationUtility.GetObjectReferenceCurveBindings(клип)) анимированные.Add(привязка.path);
+        }
+
+        while (корень.childCount == 1)
+        {
+            Transform обёртка = корень.GetChild(0);
+            if (обёртка.GetComponents<Component>().Length > 1 || обёртка.childCount == 0 || кости.Contains(обёртка) || анимированные.Contains(обёртка.name)) break;
+            bool своёРасположение = обёртка.localPosition.sqrMagnitude > 1e-10f || Quaternion.Angle(обёртка.localRotation, Quaternion.identity) > 0.01f || (обёртка.localScale - Vector3.one).sqrMagnitude > 1e-10f;
+            bool анимированныйРебёнок = false;
+            foreach (Transform ребёнок in обёртка) анимированныйРебёнок |= анимированные.Contains(обёртка.name + "/" + ребёнок.name);
+            if (своёРасположение && анимированныйРебёнок) break;
+
+            string приставка = обёртка.name + "/";
+            List<Transform> дети = new List<Transform>();
+            foreach (Transform ребёнок in обёртка) дети.Add(ребёнок);
+            foreach (Transform ребёнок in дети) ребёнок.SetParent(корень, true);
+            Object.DestroyImmediate(обёртка.gameObject);
+
+            foreach (AnimationClip клип in клипы)
+            {
+                foreach (EditorCurveBinding привязка in AnimationUtility.GetCurveBindings(клип))
+                {
+                    if (!привязка.path.StartsWith(приставка)) continue;
+                    AnimationCurve кривая = AnimationUtility.GetEditorCurve(клип, привязка);
+                    AnimationUtility.SetEditorCurve(клип, привязка, null);
+                    EditorCurveBinding новая = привязка;
+                    новая.path = привязка.path.Substring(приставка.Length);
+                    AnimationUtility.SetEditorCurve(клип, новая, кривая);
+                }
+                foreach (EditorCurveBinding привязка in AnimationUtility.GetObjectReferenceCurveBindings(клип))
+                {
+                    if (!привязка.path.StartsWith(приставка)) continue;
+                    ObjectReferenceKeyframe[] ключи = AnimationUtility.GetObjectReferenceCurve(клип, привязка);
+                    AnimationUtility.SetObjectReferenceCurve(клип, привязка, null);
+                    EditorCurveBinding новая = привязка;
+                    новая.path = привязка.path.Substring(приставка.Length);
+                    AnimationUtility.SetObjectReferenceCurve(клип, новая, ключи);
+                }
+            }
+            анимированные = new HashSet<string>(анимированные.Select(п => п.StartsWith(приставка) ? п.Substring(приставка.Length) : п));
+        }
     }
 
     static string Уникальный(string папка, string имя, string расширение)

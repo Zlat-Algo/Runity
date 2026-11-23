@@ -78,7 +78,7 @@ public class РаспаковкаАрхивов : AssetPostprocessor
 
         string имя = Path.GetFileNameWithoutExtension(архив);
         if (имя.EndsWith(".tar", StringComparison.OrdinalIgnoreCase)) имя = Path.GetFileNameWithoutExtension(имя);
-        string папка = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(Path.GetDirectoryName(архив), имя).Replace('\\', '/'));
+        string папка = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(Path.GetDirectoryName(архив), ИмпортGLTF.ЧистоеИмя(имя)).Replace('\\', '/'));
         string временная = Path.Combine(Path.GetTempPath(), "Runity_" + Guid.NewGuid().ToString("N"));
 
         try
@@ -102,13 +102,22 @@ public class РаспаковкаАрхивов : AssetPostprocessor
                 return false;
             }
 
+            // Архивы внутри архива (так Sketchfab кладёт исходник fbx) распаковываются сразу, а одинаковые картинки не дублируются
+            РаспаковатьВложенные(временная);
+            УбратьДублиКартинок(временная);
+
             // Если всё содержимое архива лежит в одной папке, лишняя вложенность не нужна
             string корень = временная;
             string[] файлы = Directory.GetFiles(корень);
             string[] папки = Directory.GetDirectories(корень);
             if (файлы.Length == 0 && папки.Length == 1) корень = папки[0];
 
+            ПереименоватьБезликиеМодели(корень, ИмпортGLTF.ЧистоеИмя(Path.GetFileName(папка)));
             ПеренестиСодержимое(корень, папка);
+            // У пакета Unity свои префабы - его модели не распаковываем
+            if (расширение == ".unitypackage")
+                foreach (string файл in Directory.GetFiles(папка, "*", SearchOption.AllDirectories))
+                    АвтораспаковкаМоделей.пропустить.Add(файл.Replace('\\', '/'));
             File.Delete(архив);
             if (File.Exists(архив + ".meta")) File.Delete(архив + ".meta");
 
@@ -191,6 +200,72 @@ public class РаспаковкаАрхивов : AssetPostprocessor
         catch
         {
             return false;
+        }
+    }
+
+    static readonly string[] моделиРасширения = { ".fbx", ".gltf", ".glb", ".obj", ".blend", ".dae", ".3ds", ".stl", ".ply" };
+    static readonly string[] картинкиРасширения = { ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".tif", ".tiff", ".psd", ".exr", ".hdr" };
+
+    static void РаспаковатьВложенные(string папка)
+    {
+        for (int глубина = 0; глубина < 3; глубина++)
+        {
+            string[] вложенные = Directory.GetFiles(папка, "*.zip", SearchOption.AllDirectories);
+            if (вложенные.Length == 0) return;
+            foreach (string вложенный in вложенные)
+            {
+                string куда = Path.Combine(Path.GetDirectoryName(вложенный), Path.GetFileNameWithoutExtension(вложенный));
+                Directory.CreateDirectory(куда);
+                try
+                {
+                    РаспаковатьZip(вложенный, куда);
+                    File.Delete(вложенный);
+                    // Одна папка внутри папки с тем же именем - лишняя
+                    string[] файлы = Directory.GetFiles(куда), папки = Directory.GetDirectories(куда);
+                    if (файлы.Length == 0 && папки.Length == 1)
+                    {
+                        string внутри = папки[0];
+                        foreach (string ф in Directory.GetFiles(внутри)) File.Move(ф, Path.Combine(куда, Path.GetFileName(ф)));
+                        foreach (string п in Directory.GetDirectories(внутри)) Directory.Move(п, Path.Combine(куда, Path.GetFileName(п)));
+                        Directory.Delete(внутри, true);
+                    }
+                }
+                catch (Exception ошибка)
+                {
+                    Debug.LogWarning($"Не получилось распаковать вложенный архив {Path.GetFileName(вложенный)}: {ошибка.Message}");
+                }
+            }
+        }
+    }
+
+    // Одна и та же картинка часто лежит и рядом с моделью, и в папке textures. Оставляем ту, что рядом с моделью: её модель точно найдёт
+    static void УбратьДублиКартинок(string папка)
+    {
+        var группы = Directory.GetFiles(папка, "*", SearchOption.AllDirectories)
+            .Where(ф => картинкиРасширения.Contains(Path.GetExtension(ф).ToLowerInvariant()))
+            .GroupBy(ф => Path.GetFileName(ф).ToLowerInvariant())
+            .Where(г => г.Count() > 1);
+        foreach (var группа in группы)
+        {
+            string рядомСМоделью = группа.FirstOrDefault(ф => Directory.GetFiles(Path.GetDirectoryName(ф)).Any(с => моделиРасширения.Contains(Path.GetExtension(с).ToLowerInvariant())));
+            if (рядомСМоделью == null) continue;
+            foreach (string лишняя in группа.Where(ф => ф != рядомСМоделью)) File.Delete(лишняя);
+        }
+        // Опустевшие папки убираем
+        foreach (string п in Directory.GetDirectories(папка, "*", SearchOption.AllDirectories).OrderByDescending(п => п.Length))
+            if (Directory.Exists(п) && !Directory.EnumerateFileSystemEntries(п).Any()) Directory.Delete(п);
+    }
+
+    // scene.gltf из Sketchfab получает имя архива, чтобы модель в проекте называлась понятно
+    static void ПереименоватьБезликиеМодели(string папка, string имя)
+    {
+        if (string.IsNullOrWhiteSpace(имя)) return;
+        foreach (string модель in Directory.GetFiles(папка, "*", SearchOption.AllDirectories))
+        {
+            string расширение = Path.GetExtension(модель).ToLowerInvariant();
+            if ((расширение != ".gltf" && расширение != ".glb") || !Path.GetFileNameWithoutExtension(модель).Equals("scene", StringComparison.OrdinalIgnoreCase)) continue;
+            string новое = Path.Combine(Path.GetDirectoryName(модель), имя + расширение);
+            if (!File.Exists(новое)) File.Move(модель, новое);
         }
     }
 

@@ -596,7 +596,7 @@ public class RunityCustomObjects
     }
 
     [MenuItem("GameObject/Runity/Интерфейс/Основа/Экран загрузки", false, 17)]
-    [MenuItem("Assets/Create/Runity/Экран загрузки", false, -80)]
+    [MenuItem("Assets/Runity/Экран загрузки", false, 32)]
     private static void СоздатьЭкранЗагрузки()
     {
         string путь = "Assets/Resources/" + ЭкранЗагрузки.имяОбразца + ".prefab";

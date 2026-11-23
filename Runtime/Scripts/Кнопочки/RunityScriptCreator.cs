@@ -23,7 +23,7 @@ public class #SCRIPTNAME# : Компонент
     }
 }";
 
-    [MenuItem("Assets/Create/Скрипт", false, -100000)]
+    [MenuItem("Assets/Runity/Скрипт", false, 1)]
     private static void CreateMyClass()
     {
         string folder = GetSelectedFolder();
@@ -48,7 +48,7 @@ public class #SCRIPTNAME# : Компонент
         );
     }
 
-    [MenuItem("Assets/Create/Скрипт", true)]
+    [MenuItem("Assets/Runity/Скрипт", true)]
     private static bool ValidateCreateMyClass()
     {
         return true;

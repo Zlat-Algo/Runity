@@ -10,10 +10,10 @@ using UnityEngine.UI;
 /// </summary>
 public static class АнимацияВКлип
 {
-    [MenuItem("Assets/Runity/Превратить в анимационный клип", false, 2000)]
+    [MenuItem("Assets/Runity/Превратить в анимационный клип", false, 101)]
     static void ДляСпрайтера() => ПревратитьВыбранные(typeof(SpriteRenderer));
 
-    [MenuItem("Assets/Runity/Превратить в анимационный клип для интерфейса", false, 2001)]
+    [MenuItem("Assets/Runity/Превратить в анимационный клип для интерфейса", false, 102)]
     static void ДляИнтерфейса() => ПревратитьВыбранные(typeof(Image));
 
     [MenuItem("Assets/Runity/Превратить в анимационный клип", true)]

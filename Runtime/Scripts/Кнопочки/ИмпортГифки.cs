@@ -12,7 +12,7 @@ using UnityEngine;
 /// </summary>
 public static class ИмпортГифки
 {
-    [MenuItem("Assets/Create/Runity/Анимация из гифки...", false, -98)]
+    [MenuItem("Assets/Runity/Анимация из гифки...", false, 23)]
     static void СоздатьАнимацию()
     {
         string файл = ВыбранныйФайлГифки();
