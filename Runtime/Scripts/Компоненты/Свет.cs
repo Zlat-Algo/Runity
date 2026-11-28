@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -6,7 +6,19 @@ using UnityEngine;
 /// <summary>
 /// Какой формы свет
 /// </summary>
-public enum ТипСвета { Точечный, Направленный, Прожектор }
+public enum ТипСвета
+{
+    /// <summary>Светит во все стороны из одной точки, как лампочка</summary>
+    ИзТочки,
+    /// <summary>Светит на всю сцену в одну сторону, как солнце</summary>
+    Направленный,
+    /// <summary>Светит конусом в одну сторону, как фонарик</summary>
+    Конус,
+    /// <summary>Старое название света «Из точки»</summary>
+    [System.Obsolete("Теперь называется ИзТочки")] Точечный = ИзТочки,
+    /// <summary>Старое название света «Конус»</summary>
+    [System.Obsolete("Теперь называется Конус")] Прожектор = Конус,
+}
 
 /// <summary>
 /// Источник света в 3D: лампочка, солнце или фонарик. Может мерцать, как факел
@@ -24,20 +36,20 @@ public class Свет : RunityComponent
     public Light оригинал => (Light)оригинальныйКомпонент;
 
     /// <summary>
-    /// Точечный светит во все стороны, Направленный светит как солнце на всю сцену, Прожектор светит конусом
+    /// Из точки - светит во все стороны, как лампочка. Направленный - светит как солнце на всю сцену. Конус - светит в одну сторону, как фонарик
     /// </summary>
     public ТипСвета тип
     {
         get => оригинал.type switch
         {
             LightType.Directional => ТипСвета.Направленный,
-            LightType.Spot => ТипСвета.Прожектор,
-            _ => ТипСвета.Точечный
+            LightType.Spot => ТипСвета.Конус,
+            _ => ТипСвета.ИзТочки
         };
         set => оригинал.type = value switch
         {
             ТипСвета.Направленный => LightType.Directional,
-            ТипСвета.Прожектор => LightType.Spot,
+            ТипСвета.Конус => LightType.Spot,
             _ => LightType.Point
         };
     }
@@ -70,8 +82,18 @@ public class Свет : RunityComponent
     }
 
     /// <summary>
-    /// Ширина конуса Прожектора в градусах
+    /// Ширина конуса в градусах (для света «Конус»)
     /// </summary>
+    public Дробное уголКонуса
+    {
+        get => оригинал.spotAngle;
+        set => оригинал.spotAngle = value;
+    }
+
+    /// <summary>
+    /// Старое название «Угла конуса»
+    /// </summary>
+    [System.Obsolete("Теперь называется уголКонуса")]
     public Дробное уголПрожектора
     {
         get => оригинал.spotAngle;
@@ -168,9 +190,9 @@ internal class СветEditor : RunityEditor<Свет>
                 (title, value) => EditorGUILayout.FloatField(title, value));
         }
 
-        if (компонент.тип == ТипСвета.Прожектор)
+        if (компонент.тип == ТипСвета.Конус)
         {
-            Синхрополе("Угол прожектора", x => x.уголПрожектора,
+            Синхрополе("Ширина конуса", x => x.уголКонуса,
                 (title, value) => EditorGUILayout.Slider(title, value, 1, 179));
         }
 

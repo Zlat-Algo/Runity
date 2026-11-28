@@ -130,8 +130,8 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
             if (части.Length == 0) continue;
 
             Пробел();
-            string русское = АналогиRunity.Аналог(тип) is Type аналог ? ObjectNames.NicifyVariableName(аналог.Name) : ObjectNames.NicifyVariableName(тип.Name);
-            EditorGUILayout.LabelField(new GUIContent(русское, $"Настройки компонента Unity {тип.Name}"), EditorStyles.boldLabel);
+            string русское = ОписаниеНастроек.Компонент(тип.Name) ?? (АналогиRunity.Аналог(тип) is Type аналог ? ObjectNames.NicifyVariableName(аналог.Name) : ObjectNames.NicifyVariableName(тип.Name));
+            EditorGUILayout.LabelField(new GUIContent(русское, $"Настройки компонента Unity {тип.Name}, на котором построен этот компонент"), EditorStyles.boldLabel);
 
             if (сложные.Contains(тип.Name))
             {
@@ -148,10 +148,35 @@ internal abstract class RunityEditor<T> : Editor where T : RunityComponent
             for (bool есть = настройка.NextVisible(true); есть; есть = настройка.NextVisible(false))
             {
                 if (настройка.name == "m_Script" || настройка.name == "m_ObjectHideFlags") continue;
-                EditorGUILayout.PropertyField(настройка, new GUIContent(ПереводНастроек.Перевести(настройка.displayName), $"{настройка.displayName} - так эта настройка называется в Unity"), true);
+                НастройкаUnity(настройка, тип.Name);
             }
             данные.ApplyModifiedProperties();
         }
+        EditorGUI.indentLevel--;
+    }
+
+    // Настройка компонента Unity с понятным русским названием и описанием. Составные настройки (цвета кнопки, пределы шарнира)
+    // раскрываются по частям, чтобы и внутри всё было по-русски. События и списки рисуются как в Unity
+    static void НастройкаUnity(SerializedProperty настройка, string компонент)
+    {
+        var (имя, описание) = ОписаниеНастроек.Найти(компонент, настройка.displayName);
+        if (имя == null) return;
+        GUIContent подпись = new GUIContent(имя, описание);
+        bool составная = настройка.propertyType == SerializedPropertyType.Generic && !настройка.isArray && настройка.hasVisibleChildren
+            && настройка.FindPropertyRelative("m_PersistentCalls") == null;
+        if (!составная)
+        {
+            EditorGUILayout.PropertyField(настройка, подпись, true);
+            return;
+        }
+
+        настройка.isExpanded = EditorGUILayout.Foldout(настройка.isExpanded, подпись, true);
+        if (!настройка.isExpanded) return;
+        EditorGUI.indentLevel++;
+        SerializedProperty часть = настройка.Copy();
+        SerializedProperty конец = настройка.GetEndProperty();
+        for (bool есть = часть.NextVisible(true); есть && !SerializedProperty.EqualContents(часть, конец); есть = часть.NextVisible(false))
+            НастройкаUnity(часть, компонент);
         EditorGUI.indentLevel--;
     }
 

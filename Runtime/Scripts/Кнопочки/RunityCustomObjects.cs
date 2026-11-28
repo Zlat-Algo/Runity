@@ -18,6 +18,7 @@ public class RunityCustomObjects
 
         // 4. Делаем созданный объект выделенным в редакторе
         Selection.activeObject = newObj;
+        СвёрнутыеКомпоненты.Свернуть(newObj);
 
         return newObj;
     }
@@ -172,23 +173,6 @@ public class RunityCustomObjects
         newObj.AddComponent<Моделлер>();
     }
 
-    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (от первого лица)", false, -51)]
-    private static void ИгрокОтПервогоЛица(MenuCommand menuCommand)
-    {
-        GameObject newObj = CreateObject(menuCommand, "Игрок");
-
-        newObj.AddComponent<Персонаж>();
-
-        GameObject камера = new GameObject("Камера");
-        камера.transform.SetParent(newObj.transform, false);
-        камера.transform.localPosition = new Vector3(0, 0.6f, 0);
-        камера.tag = "MainCamera";
-        камера.AddComponent<Камера>().перспектива = true;
-        ДобавитьСлушателя(камера);
-
-        newObj.AddComponent<ОбзорМышкой>().камера = камера.transform;
-    }
-
     [MenuItem("GameObject/Runity/Передвижение/Самостоятельное/Брождение", false, -51)]
     private static void СоздатьБрождение(MenuCommand menuCommand)
     {
@@ -226,31 +210,7 @@ public class RunityCustomObjects
         newObj.AddComponent<Тайлер>();
 
         Selection.activeObject = newObj;
-    }
-
-    [MenuItem("GameObject/Runity/Передвижение/Игроки/Игрок (от третьего лица)", false, -51)]
-    private static void ИгрокОтТретьегоЛица(MenuCommand menuCommand)
-    {
-        GameObject newObj = CreateObject(menuCommand, "Игрок");
-
-        Персонаж персонаж = newObj.AddComponent<Персонаж>();
-        персонаж.относительноЧего = ОтносительноЧегоДвижение.ОтносительноКамеры;
-        персонаж.поворачиватьПоДвижению = true;
-
-        GameObject модель = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        модель.name = "Модель";
-        Object.DestroyImmediate(модель.GetComponent<Collider>());
-        модель.transform.SetParent(newObj.transform, false);
-        модель.AddComponent<Моделлер>();
-
-        GameObject камера = new GameObject("Камера");
-        Undo.RegisterCreatedObjectUndo(камера, "Create " + камера.name);
-        камера.transform.position = newObj.transform.position + new Vector3(0, 4, -7);
-        камера.transform.LookAt(newObj.transform);
-        камера.tag = "MainCamera";
-        камера.AddComponent<Камера>().перспектива = true;
-        камера.AddComponent<Следование>().цель = newObj.transform;
-        ДобавитьСлушателя(камера);
+        СвёрнутыеКомпоненты.Свернуть(newObj);
     }
 
     [MenuItem("GameObject/Runity/Передвижение/Навигация/Препятствие навигации", false, -51)]
@@ -282,20 +242,21 @@ public class RunityCustomObjects
         GameObjectUtility.SetParentAndAlign(newObj, menuCommand.context as GameObject);
         Undo.RegisterCreatedObjectUndo(newObj, "Create " + имя);
         Selection.activeObject = newObj;
+        СвёрнутыеКомпоненты.Свернуть(newObj);
 
         newObj.AddComponent<Моделлер>();
         newObj.AddComponent<TКоллайдер>();
         return newObj;
     }
 
-    [MenuItem("GameObject/Runity/3D/Свет/Точечный", false, -90)]
-    private static void СветТочечный(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Лампочка", ТипСвета.Точечный);
+    [MenuItem("GameObject/Runity/3D/Свет/Из точки", false, -90)]
+    private static void СветТочечный(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Лампочка", ТипСвета.ИзТочки);
 
     [MenuItem("GameObject/Runity/3D/Свет/Направленный (солнце)", false, -90)]
     private static void СветНаправленный(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Солнце", ТипСвета.Направленный).transform.rotation = Quaternion.Euler(50, -30, 0);
 
-    [MenuItem("GameObject/Runity/3D/Свет/Прожектор", false, -90)]
-    private static void СветПрожектор(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Прожектор", ТипСвета.Прожектор).transform.rotation = Quaternion.Euler(90, 0, 0);
+    [MenuItem("GameObject/Runity/3D/Свет/Конус", false, -90)]
+    private static void СветПрожектор(MenuCommand menuCommand) => СоздатьСвет(menuCommand, "Фонарь", ТипСвета.Конус).transform.rotation = Quaternion.Euler(90, 0, 0);
 
     static GameObject СоздатьСвет(MenuCommand menuCommand, string имя, ТипСвета тип)
     {
@@ -306,10 +267,10 @@ public class RunityCustomObjects
         return newObj;
     }
 
-    [MenuItem("GameObject/Runity/2D/Свет/Точечный", false, -100)]
+    [MenuItem("GameObject/Runity/2D/Свет/Из точки", false, -100)]
     private static void СоздатьСвет2D(MenuCommand menuCommand)
     {
-        CreateObject(menuCommand, "Свет 2D").AddComponent<Свет2D>().тип = ТипСвета2D.Точечный;
+        CreateObject(menuCommand, "Свет 2D").AddComponent<Свет2D>().тип = ТипСвета2D.ИзТочки;
     }
 
     [MenuItem("GameObject/Runity/2D/Свет/Глобальный", false, -100)]
@@ -425,6 +386,7 @@ public class RunityCustomObjects
         GameObjectUtility.SetParentAndAlign(элемент, родитель.gameObject);
         Undo.RegisterCreatedObjectUndo(элемент, "Create " + элемент.name);
         Selection.activeObject = элемент;
+        СвёрнутыеКомпоненты.Свернуть(элемент);
 
         foreach (Text текст in элемент.GetComponentsInChildren<Text>(true))
         {
@@ -516,6 +478,7 @@ public class RunityCustomObjects
 
         ПоместитьВИнтерфейс(menuCommand, newObj);
         Selection.activeObject = заполнение;
+        СвёрнутыеКомпоненты.Свернуть(заполнение);
     }
 
     [MenuItem("GameObject/Runity/Интерфейс/Элементы/Картинка", false, 11)]
@@ -780,6 +743,7 @@ public class RunityCustomObjects
             ("Сыграть ещё раз", "ИгровоеМеню/ Заново ()"), ("В главное меню", "ИгровоеМеню/ ВМеню ()"));
 
         Selection.activeObject = объектМеню;
+        СвёрнутыеКомпоненты.Свернуть(объектМеню);
     }
 
     /// <summary>

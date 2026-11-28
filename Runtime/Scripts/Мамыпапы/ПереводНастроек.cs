@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
 
@@ -31,7 +31,7 @@ internal static class ПереводНастроек
         ["Sprite Sort Point"] = "Точка сортировки", ["Additional Settings"] = "Дополнительно", ["Lighting"] = "Освещение", ["Probes"] = "Пробы",
 
         // Свет
-        ["Type"] = "Тип", ["Range"] = "Дальность", ["Spot Angle"] = "Угол прожектора", ["Intensity"] = "Яркость", ["Indirect Multiplier"] = "Сила отражённого света",
+        ["Type"] = "Тип", ["Range"] = "Дальность", ["Spot Angle"] = "Ширина конуса", ["Intensity"] = "Яркость", ["Indirect Multiplier"] = "Сила отражённого света",
         ["Shadow Type"] = "Тип теней", ["Culling Mask"] = "Слои", ["Render Mode"] = "Способ отрисовки", ["Temperature"] = "Температура", ["Use Color Temperature"] = "Цвет по температуре",
         ["Bounce Intensity"] = "Сила отражённого света", ["Strength"] = "Сила", ["Bias"] = "Смещение теней", ["Normal Bias"] = "Смещение по нормали", ["Near Plane"] = "Ближняя граница",
         ["Cookie"] = "Узор света", ["Flare"] = "Блик", ["Halo"] = "Ореол", ["Shadow Resolution"] = "Качество теней",

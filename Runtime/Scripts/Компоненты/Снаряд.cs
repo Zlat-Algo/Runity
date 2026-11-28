@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
@@ -56,11 +56,11 @@ public class Снаряд : RunityComponent
     /// </summary>
     public Теги тегиПрепятствий { get => _тегиПрепятствий; set => _тегиПрепятствий = value ?? new Теги(); }
 
-    [SerializeField] ДействиеСнарядаПриПрепятствии _приПрепятствии;
+    [SerializeField, UnityEngine.Serialization.FormerlySerializedAs("_приПрепятствии")] ДействиеСнарядаПриПрепятствии _действиеПриПрепятствии;
     /// <summary>
     /// Что делает снаряд, когда врезается в препятствие
     /// </summary>
-    public ДействиеСнарядаПриПрепятствии действиеПриПрепятствии { get => _приПрепятствии; set => _приПрепятствии = value; }
+    public ДействиеСнарядаПриПрепятствии действиеПриПрепятствии { get => _действиеПриПрепятствии; set => _действиеПриПрепятствии = value; }
 
     [SerializeField] Число _отскоковДоУничтожения = 3;
     /// <summary>

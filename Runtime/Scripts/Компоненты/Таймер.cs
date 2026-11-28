@@ -115,8 +115,11 @@ public class Таймер : RunityComponent
     /// </summary>
     public События приКаждойСекунде => _приКаждойСекунде;
 
-    // Действия из старой версии таймера. Новые действия добавляются в «При истечении»
-    [SerializeField] UnityEvent _действия;
+    [SerializeField, UnityEngine.Serialization.FormerlySerializedAs("_действия")] UnityEvent _старыеДействия;
+    /// <summary>
+    /// Действия из старой версии таймера: срабатывают вместе с «При истечении». Новые действия лучше добавлять в «При истечении»
+    /// </summary>
+    public UnityEvent старыеДействия => _старыеДействия;
 
     [SerializeField] bool _пауза;
     /// <summary>
@@ -177,7 +180,7 @@ public class Таймер : RunityComponent
     void Срабатывание()
     {
         _приИстечении.Вызвать();
-        _действия?.Invoke();
+        _старыеДействия?.Invoke();
 
         if (повторять)
         {
@@ -300,9 +303,10 @@ internal class ТаймерEditor : RunityEditor<Таймер>
         ОтобразитьСобытие("При запуске", "_приЗапуске");
         ОтобразитьСобытие("При паузе", "_приПаузе");
         ОтобразитьСобытие("При каждой секунде", "_приКаждойСекунде");
-        if (компонент.GetType().GetField("_действия", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(компонент) is UnityEvent старые && старые.GetPersistentEventCount() > 0)
+        Отметить("старыеДействия");
+        if (компонент.GetType().GetField("_старыеДействия", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(компонент) is UnityEvent старые && старые.GetPersistentEventCount() > 0)
         {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_действия"), new GUIContent("Действия из старой версии"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_старыеДействия"), new GUIContent("Действия из старой версии"));
         }
         ЗакончитьСобытия();
 

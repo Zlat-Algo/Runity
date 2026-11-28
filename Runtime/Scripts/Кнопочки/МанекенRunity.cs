@@ -306,10 +306,9 @@ public static class МанекенRunity
         if (персонаж == null) return;
         Undo.RegisterCreatedObjectUndo(персонаж, персонаж.name);
         Selection.activeObject = персонаж;
+        СвёрнутыеКомпоненты.Свернуть(персонаж);
     }
 
-    [MenuItem("GameObject/Runity/3D/Манекен", false, -99)]
-    static void СоздатьМанекена(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Манекен);
     [MenuItem("GameObject/Runity/3D/Персонажи/Манекен", false, -98)]
     static void СоздатьМанекена2(MenuCommand команда) => СоздатьИзМеню(команда, ВидПерсонажа.Манекен);
     [MenuItem("GameObject/Runity/3D/Персонажи/Манекен-девушка", false, -97)]

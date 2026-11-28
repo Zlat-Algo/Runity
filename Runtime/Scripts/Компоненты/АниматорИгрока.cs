@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -134,6 +135,12 @@ public class АниматорИгрока : RunityComponent
     /// </summary>
     public Флажок отзеркаливать { get => _отзеркаливать; set => _отзеркаливать = value; }
 
+    [SerializeField] Дробное _плавностьПерехода = 0.2;
+    /// <summary>
+    /// За сколько секунд одна анимация плавно перетекает в другую, как в схеме анимаций Unity. 0 - переключаться сразу
+    /// </summary>
+    public Дробное плавностьПерехода { get => _плавностьПерехода; set => _плавностьПерехода = Mathf.Max(0, value); }
+
     [SerializeField] Дробное _порогСкорости = 0.1;
     /// <summary>
     /// С какой скорости персонаж считается идущим, а не стоящим
@@ -155,7 +162,7 @@ public class АниматорИгрока : RunityComponent
     СостояниеИгрока? разовое;
     float разовоеОсталось;
     bool умер;
-    bool былНаЗемле = true;
+    float вВоздухеСекунд;
     int прошлоеЗдоровье = int.MinValue;
     bool атакерБылГотов = true;
     bool лучБылГотов = true;
@@ -163,7 +170,12 @@ public class АниматорИгрока : RunityComponent
 
     PlayableGraph граф;
     AnimationPlayableOutput выход;
-    AnimationClipPlayable клипСейчас;
+    AnimationMixerPlayable смеситель;
+    // Клипы, которые сейчас смешиваются: последний - новый, он набирает силу, остальные затухают
+    readonly List<(AnimationClipPlayable клип, float вес)> слои = new List<(AnimationClipPlayable, float)>();
+
+    // Персонаж, физическое тело и другие компоненты могут быть на самом объекте или на родителе, если модель вложена в Игрока
+    T Найти<T>() where T : Component => GetComponentInParent<T>();
 
     void Start() => прошлоеМесто = transform.position;
 
@@ -185,9 +197,16 @@ public class АниматорИгрока : RunityComponent
     {
         Vector3 скорость = Скорость();
         bool наЗемле = НаЗемле(скорость);
-        bool видСверху = TryGetComponent(out Rigidbody2D тело2D) && тело2D.gravityScale == 0;
+        Rigidbody2D тело2D = Найти<Rigidbody2D>();
+        bool видСверху = тело2D != null && тело2D.gravityScale == 0;
 
-        ПроверитьРазовые(наЗемле);
+        // Земля под ногами может мигать на один кадр (на склоне, на краю, в начале прыжка). В воздухе персонаж считается
+        // только через мгновение или если он явно летит вверх, а приземление - только после настоящего полёта
+        float былоВВоздухе = вВоздухеСекунд;
+        вВоздухеСекунд = наЗемле ? 0 : вВоздухеСекунд + Время.времяСПрошлогоКадра;
+        bool вВоздухе = !наЗемле && (вВоздухеСекунд > 0.12f || скорость.y > 0.5f);
+
+        ПроверитьРазовые(наЗемле && былоВВоздухе > 0.25f);
 
         if (разовое.HasValue)
         {
@@ -198,10 +217,13 @@ public class АниматорИгрока : RunityComponent
         Vector3 поЗемле = видСверху ? new Vector3(скорость.x, скорость.y, 0) : new Vector3(скорость.x, 0, скорость.z);
         bool движется = поЗемле.magnitude > порогСкорости;
 
+        // Если после приземления сразу пошли, ходьба не ждёт конца анимации приземления
+        if (разовое == СостояниеИгрока.Приземляется && движется) разовое = null;
+
         СостояниеИгрока новое;
         if (разовое.HasValue) новое = разовое.Value;
-        else if (!наЗемле && !видСверху) новое = скорость.y > 0 ? СостояниеИгрока.Прыгает : СостояниеИгрока.Падает;
-        else if (движется) новое = TryGetComponent(out Бег _) && Управление.ускорениеУдерживается ? СостояниеИгрока.Бежит : СостояниеИгрока.Идёт;
+        else if (вВоздухе && !видСверху) новое = скорость.y > 0 ? СостояниеИгрока.Прыгает : СостояниеИгрока.Падает;
+        else if (движется) новое = Найти<Бег>() != null && Управление.ускорениеУдерживается ? СостояниеИгрока.Бежит : СостояниеИгрока.Идёт;
         else новое = СостояниеИгрока.Стоит;
 
         bool смена = новое != состояние;
@@ -217,14 +239,15 @@ public class АниматорИгрока : RunityComponent
         }
 
         Включить(нужная, перезапустить: смена && разовое.HasValue);
-        былНаЗемле = наЗемле;
+        Смешать();
     }
 
-    void ПроверитьРазовые(bool наЗемле)
+    // приземлился - персонаж только что встал на землю после настоящего полёта, а не после мигания земли под ногами
+    void ПроверитьРазовые(bool приземлился)
     {
         if (умер) return;
 
-        if (TryGetComponent(out Здоровье здоровье))
+        if (Найти<Здоровье>() is Здоровье здоровье)
         {
             int сейчас = здоровье.текущее;
             if (прошлоеЗдоровье != int.MinValue)
@@ -240,19 +263,19 @@ public class АниматорИгрока : RunityComponent
             прошлоеЗдоровье = сейчас;
         }
 
-        if (TryGetComponent(out Атакер атакер))
+        if (Найти<Атакер>() is Атакер атакер)
         {
             if (атакерБылГотов && !атакер.готов) Начать(СостояниеИгрока.Атакует, _атакует);
             атакерБылГотов = атакер.готов;
         }
 
-        if (TryGetComponent(out Луч луч))
+        if (Найти<Луч>() is Луч луч)
         {
             if (лучБылГотов && !луч.готов) Начать(СостояниеИгрока.Атакует, _атакует);
             лучБылГотов = луч.готов;
         }
 
-        if (наЗемле && !былНаЗемле) Начать(СостояниеИгрока.Приземляется, _приземляется);
+        if (приземлился) Начать(СостояниеИгрока.Приземляется, _приземляется);
     }
 
     // Если у состояния нет анимации, оно просто пропускается
@@ -316,7 +339,7 @@ public class АниматорИгрока : RunityComponent
 
         if (анимация.вид == ВидАнимации.Гиф)
         {
-            if (граф.IsValid()) выход.SetSourcePlayable(Playable.Null);
+            if (граф.IsValid()) ОчиститьСлои();
 
             if (!TryGetComponent(out ПроигрывательКадров проигрыватель))
             {
@@ -341,20 +364,72 @@ public class АниматорИгрока : RunityComponent
 
             граф = PlayableGraph.Create(name);
             выход = AnimationPlayableOutput.Create(граф, "Аниматор игрока", аниматор);
+            смеситель = AnimationMixerPlayable.Create(граф, 0);
+            выход.SetSourcePlayable(смеситель);
             граф.Play();
         }
 
-        if (клипСейчас.IsValid()) клипСейчас.Destroy();
-        клипСейчас = AnimationClipPlayable.Create(граф, клип);
-        выход.SetSourcePlayable(клипСейчас);
+        // Самые слабые старые слои убираются, чтобы одновременно смешивалось не больше трёх анимаций
+        while (слои.Count >= 3)
+        {
+            int слабый = 0;
+            for (int i = 1; i < слои.Count; i++) if (слои[i].вес < слои[слабый].вес) слабый = i;
+            слои[слабый].клип.Destroy();
+            слои.RemoveAt(слабый);
+        }
+
+        AnimationClipPlayable новый = AnimationClipPlayable.Create(граф, клип);
+        слои.Add((новый, слои.Count == 0 || плавностьПерехода <= 0 ? 1 : 0));
+        Подключить();
+        Смешать(0);
+    }
+
+    void Подключить()
+    {
+        for (int i = 0; i < смеситель.GetInputCount(); i++) граф.Disconnect(смеситель, i);
+        смеситель.SetInputCount(слои.Count);
+        for (int i = 0; i < слои.Count; i++) граф.Connect(слои[i].клип, 0, смеситель, i);
+    }
+
+    void ОчиститьСлои()
+    {
+        foreach (var слой in слои) слой.клип.Destroy();
+        слои.Clear();
+        if (смеситель.IsValid()) смеситель.SetInputCount(0);
+    }
+
+    // Новая анимация набирает силу за время перехода, старые делят остаток и затухают. Сумма всегда 1, поэтому
+    // человек не проваливается в позу буквой Т посреди перехода
+    void Смешать(float прошло = -1)
+    {
+        if (!смеситель.IsValid() || слои.Count == 0) return;
+        if (прошло < 0) прошло = Время.времяСПрошлогоКадра;
+        int последний = слои.Count - 1;
+        float сила = плавностьПерехода <= 0 ? 1 : Mathf.Min(1, слои[последний].вес + прошло / (float)плавностьПерехода);
+        float старые = 0;
+        for (int i = 0; i < последний; i++) старые += слои[i].вес;
+        float остаток = 1 - сила;
+        for (int i = 0; i < последний; i++)
+            слои[i] = (слои[i].клип, старые > 0 ? слои[i].вес / старые * остаток : 0);
+        слои[последний] = (слои[последний].клип, сила);
+
+        bool убрать = false;
+        for (int i = 0; i < последний; i++) if (слои[i].вес <= 0.001f) убрать = true;
+        if (убрать)
+        {
+            for (int i = последний - 1; i >= 0; i--)
+                if (слои[i].вес <= 0.001f) { слои[i].клип.Destroy(); слои.RemoveAt(i); }
+            Подключить();
+        }
+        for (int i = 0; i < слои.Count; i++) смеситель.SetInputWeight(i, слои[i].вес);
     }
 
     Vector3 Скорость()
     {
         Vector3 результат;
-        if (TryGetComponent(out Rigidbody2D тело2D)) результат = тело2D.linearVelocity;
-        else if (TryGetComponent(out Rigidbody тело)) результат = тело.linearVelocity;
-        else if (TryGetComponent(out CharacterController контроллер)) результат = контроллер.velocity;
+        if (Найти<Rigidbody2D>() is Rigidbody2D тело2D) результат = тело2D.linearVelocity;
+        else if (Найти<Rigidbody>() is Rigidbody тело && !тело.isKinematic) результат = тело.linearVelocity;
+        else if (Найти<CharacterController>() is CharacterController контроллер) результат = контроллер.velocity;
         else результат = Время.времяСПрошлогоКадра > 0 ? (transform.position - прошлоеМесто) / Время.времяСПрошлогоКадра : Vector3.zero;
 
         прошлоеМесто = transform.position;
@@ -363,9 +438,9 @@ public class АниматорИгрока : RunityComponent
 
     bool НаЗемле(Vector3 скорость)
     {
-        if (TryGetComponent(out Персонаж персонаж)) return персонаж.наЗемле;
-        if (TryGetComponent(out Прыжок прыжок)) return прыжок.чегоТоКасается;
-        if (TryGetComponent(out Rigidbody2D тело2D) && тело2D.gravityScale == 0) return true;
+        if (Найти<Персонаж>() is Персонаж персонаж) return персонаж.наЗемле;
+        if (Найти<Прыжок>() is Прыжок прыжок) return прыжок.чегоТоКасается;
+        if (Найти<Rigidbody2D>() is Rigidbody2D тело2D && тело2D.gravityScale == 0) return true;
         return Mathf.Abs(скорость.y) < 0.1f;
     }
 }
@@ -448,6 +523,9 @@ internal class АниматорИгрокаEditor : RunityEditor<Анимато�
 
         Поле("Отзеркаливать", x => x.отзеркаливать,
             (title, value) => EditorGUILayout.Toggle(title, value));
+
+        Поле("Плавность перехода", x => x.плавностьПерехода,
+            (title, value) => EditorGUILayout.Slider(title, value, 0, 1));
 
         Поле("Порог скорости", x => x.порогСкорости,
             (title, value) => EditorGUILayout.FloatField(title, value));
